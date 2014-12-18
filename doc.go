@@ -25,8 +25,11 @@ To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on 
 	recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst", nil)
 
 * The first argument is a space seperated list of names for the option without the dashes
+
 * The second parameter is the default value for the option
+
 * The third parameter is the option description, as will be shown in the help messages
+
 * The last parameter is an optional OptExtra struct.
 For the time being there is one field, EnvVar where you could set a space separated list of environment
 variables to be used to initialize the option's value
@@ -62,8 +65,11 @@ To accept arguments, you need to explicitly declare them by calling one of the (
 	dst := cp.StringArg("DST", "", "the destination", nil)
 
 * The first argument is the argument name as will be shown in the help messages
+
 * The second parameter is the default value for the argument
+
 * The third parameter is the argument description, as will be shown in the help messages
+
 * The last parameter is an optional ArgExtra struct.
 For the time being there is one field, EnvVar where you could set a space separated list of environment
 variables to be used to initialize the argument's value
@@ -84,7 +90,9 @@ the Command func on the command struct:
 	})
 
 * The first argument is the command name, as will be shown in the help messages and as will need to be input by the user in the command line to call the command
+
 * The second argument is the command description as will be shown in the help messages
+
 * The third argument is a CmdInitializer, a function that receives a pointer to a Cmd struct representing the command.
 In this function, you can add options and arguments by calling the same methods as you would with an app struct (BoolOpt, StringArg, ...).
 You would also assign a function to the Action field of the Cmd struct for it to be executed when the command is invoked.
@@ -121,6 +129,7 @@ This can be useful to indicate that an argument is optional for example, or that
 You can set a spec string on:
 
 * The app: to configure the syntax for global options and arguments
+
 * A command: to configure the syntax for that command's options and arguments
 
 In both cases, a spec string is assigned to the Spec field:
@@ -239,7 +248,9 @@ Default spec
 By default, and unless a spec string is set by the user, mow.cli auto-generates one for the app and every command using this logic:
 
 * Start with an empty spec string
+
 * If at least one option was declared, append "[OPTIONS]" to the spec string
+
 * For every declared argument, append it, in the order of declaration, to the spec string
 
 For example, given this command delcaration:
