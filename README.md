@@ -2,6 +2,32 @@
 
 A framework to build command line applications in Go with most of the burden of arguments parsing and validation placed on the framework instead of the user.
 
+
+## Motivation
+
+The default `flag` package is fun and very easy to use but has several limitations:
+
+* No argument validation: it only handles flags, it is up to use to manually parse and validations the command arguments
+* Doesn't handle option folding: `-abc` (synonym for `-a -b -c`)
+* Doesn't handle glued options name and value: `-Ivalue`
+* Doesn't handle commands and sub commands
+* Doesn't handle mandatory/optional flags nor flag exclusion `--stop|--start`
+* And the list goes on
+
+Docopt fixes many of these limitations but also suffers from these limitations:
+
+* No contexual help: either your call is correct and it works, or the whole help message is dumped, no matter the path you took
+* It is up to you to switch on the parse result and decide what code path to execute and which parameters to pass
+
+Another popular CLI library in the Goland is `codegangsta/cli`.
+It brings many good ideas to the table: very readable (albeit a bit on the verbose side) and it spares you the switching part as it calls the correct code path.
+It too suffers from the following limitations:
+
+* Option duplication: you need to declare a flag in the command flags list (with its name and type), and then to use it, in your action you need to extract it from a context object using its name and type
+* Doesn't handle argument validation
+
+mow.cli is my humble attempt at solving these issues and providing an alternative.
+
 ## Installation
 
 To install this library, simply run:
