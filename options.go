@@ -6,21 +6,156 @@ import (
 	"strings"
 )
 
-type option struct {
-	names []string
-	desc  string
-	value reflect.Value
+type opt struct {
+	name   string
+	desc   string
+	envVar string
+	names  []string
+	value  reflect.Value
 }
 
-type OptExtra struct {
+type BoolOpt struct {
+	BoolParam
+
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
 	EnvVar string
+	// The option's inital value
+	Value bool
 }
 
-func (o *option) isBool() bool {
+type StringOpt struct {
+	StringParam
+
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
+	EnvVar string
+	// The option's inital value
+	Value string
+}
+
+type IntOpt struct {
+	IntParam
+
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
+	EnvVar string
+	// The option's inital value
+	Value int
+}
+
+type StringsOpt struct {
+	StringsParam
+
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option.
+	// The env variable should contain a comma separated list of values
+	EnvVar string
+	// The option's inital value
+	Value []string
+}
+
+type IntsOpt struct {
+	IntsParam
+
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option.
+	// The env variable should contain a comma separated list of values
+	EnvVar string
+	// The option's inital value
+	Value []int
+}
+
+/*
+BoolOpt defines a boolean option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) BoolOpt(name string, value bool, desc string) *bool {
+	return c.mkOpt(opt{name: name, desc: desc}, value).(*bool)
+}
+
+/*
+StringOpt defines a string option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringOpt(name string, value string, desc string) *string {
+	return c.mkOpt(opt{name: name, desc: desc}, value).(*string)
+}
+
+/*
+IntOpt defines an int option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntOpt(name string, value int, desc string) *int {
+	return c.mkOpt(opt{name: name, desc: desc}, value).(*int)
+}
+
+/*
+StringsOpt defines a string slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringsOpt(name string, value []string, desc string) *[]string {
+	return c.mkOpt(opt{name: name, desc: desc}, value).(*[]string)
+}
+
+/*
+IntsOpt defines an int slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntsOpt(name string, value []int, desc string) *[]int {
+	return c.mkOpt(opt{name: name, desc: desc}, value).(*[]int)
+}
+
+func (o *opt) isBool() bool {
 	return o.value.Elem().Kind() == reflect.Bool
 }
 
-func (o *option) match(args []string, c parseContext) (bool, int) {
+func (o *opt) match(args []string, c parseContext) (bool, int) {
 	if len(args) == 0 {
 		return false, 0
 	}
@@ -41,28 +176,24 @@ func (o *option) match(args []string, c parseContext) (bool, int) {
 	return false, 0
 }
 
-func (o *option) String() string {
+func (o *opt) String() string {
 	return fmt.Sprintf("Opt(%v)", o.names)
 }
 
-func (o *option) get() interface{} {
+func (o *opt) get() interface{} {
 	return o.value.Elem().Interface()
 }
-func (o *option) set(s string) error {
+func (o *opt) set(s string) error {
 	return vset(o.value, s)
 }
 
-func (c *Cmd) mkOpt(names string, defaultValue interface{}, desc string, extra *OptExtra) interface{} {
+func (c *Cmd) mkOpt(opt opt, defaultValue interface{}) interface{} {
 	value := reflect.ValueOf(defaultValue)
 	res := reflect.New(value.Type())
 
-	envVars := ""
-	if extra != nil {
-		envVars = extra.EnvVar
-	}
-	vinit(res, envVars, defaultValue)
+	vinit(res, opt.envVar, defaultValue)
 
-	namesSl := strings.Split(names, " ")
+	namesSl := strings.Split(opt.name, " ")
 	for i, name := range namesSl {
 		prefix := "-"
 		if len(name) > 1 {
@@ -71,115 +202,13 @@ func (c *Cmd) mkOpt(names string, defaultValue interface{}, desc string, extra *
 		namesSl[i] = prefix + name
 	}
 
-	opt := &option{
-		namesSl,
-		desc,
-		res,
-	}
-	c.options = append(c.options, opt)
+	opt.names = namesSl
+	opt.value = res
+
+	c.options = append(c.options, &opt)
 	for _, name := range namesSl {
-		c.optionsIdx[name] = opt
+		c.optionsIdx[name] = &opt
 	}
 
 	return res.Interface()
-}
-
-/*
-BoolOpt defines a boolean option (flag) on the command c with the names `names` with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: git push [-f]
-
-	Options:
- 	  -f, --force=false      $desc
-
-`names` is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
-The one letter names will then be called with a single dash (short option), the others with two (long options).
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) BoolOpt(names string, value bool, desc string, extra *OptExtra) *bool {
-	return c.mkOpt(names, value, desc, extra).(*bool)
-}
-
-/*
-StringOpt defines a string option on the command c with the names `names` with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: git clone [-o]
-
-	Options:
- 	  -o, --origin=""      $desc
-
-`names` is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
-The one letter names will then be called with a single dash (short option), the others with two (long options).
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) StringOpt(names string, value string, desc string, extra *OptExtra) *string {
-	return c.mkOpt(names, value, desc, extra).(*string)
-}
-
-/*
-StringsOpt defines a string slice option on the command c with the names `names` with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: docker run [-e...]
-
-	Options:
- 	  -e, --env=[]      $desc
-
-`names` is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
-The one letter names will then be called with a single dash (short option), the others with two (long options).
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) StringsOpt(names string, value []string, desc string, extra *OptExtra) *[]string {
-	return c.mkOpt(names, value, desc, extra).(*[]string)
-}
-
-/*
-IntOpt defines an int option on the command c with the names `names` with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: tail [-n]
-
-	Options:
- 	  -n, --number=0      $desc
-
-`names` is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
-The one letter names will then be called with a single dash (short option), the others with two (long options).
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) IntOpt(names string, value int, desc string, extra *OptExtra) *int {
-	return c.mkOpt(names, value, desc, extra).(*int)
-}
-
-/*
-IntsOpt defines an int slice option on the command c with the names `names` with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: bar [-n...]
-
-	Options:
- 	  -n, --number=[]      $desc
-
-`names` is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
-The one letter names will then be called with a single dash (short option), the others with two (long options).
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) IntsOpt(names string, value []int, desc string, extra *OptExtra) *[]int {
-	return c.mkOpt(names, value, desc, extra).(*[]int)
 }

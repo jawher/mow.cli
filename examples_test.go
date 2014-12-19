@@ -1,4 +1,4 @@
-package cli_test
+package cli
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 func Example_greet() {
 	app := App("greet", "Greet")
 	app.Spec = "[NAME]"
-	name := app.StringArg("NAME", "stranger", "Your name", &OptExtra{EnvVar: "USER"})
+	name := app.String(StringArg{Name: "NAME", Value: "stranger", Desc: "Your name", EnvVar: "USER"})
 	app.Action = func() {
 		fmt.Printf("Hello %s\n", *name)
 	}
@@ -20,20 +20,27 @@ func Example_cp() {
 	cp.Spec = "[-R [-H | -L | -P]] [-fi | -n] SRC... DST"
 
 	var (
-		recursive = cp.BoolOpt("R", false, "copy src files recursively", nil)
+		recursive = cp.Bool(BoolOpt{
+			Name:  "R",
+			Value: false,
+			Desc:  "copy src files recursively",
+		})
 
-		followSymbolicCL   = cp.BoolOpt("H", false, "If the -R option is specified, symbolic links on the command line are followed.  (Symbolic links encountered in the tree traversal are not followed.)", nil)
-		followSymbolicTree = cp.BoolOpt("L", false, "If the -R option is specified, all symbolic links are followed.", nil)
-		followSymbolicNo   = cp.BoolOpt("P", true, "If the -R option is specified, no symbolic links are followed.  This is the default.", nil)
+		followSymbolicCL   = cp.Bool(BoolOpt{Name: "H", Value: false, Desc: "If the -R option is specified, symbolic links on the command line are followed.  (Symbolic links encountered in the tree traversal are not followed.)"})
+		followSymbolicTree = cp.Bool(BoolOpt{Name: "L", Value: false, Desc: "If the -R option is specified, all symbolic links are followed."})
+		followSymbolicNo   = cp.Bool(BoolOpt{Name: "P", Value: true, Desc: "If the -R option is specified, no symbolic links are followed.  This is the default."})
 
-		force       = cp.BoolOpt("f", false, "If the destination file cannot be opened, remove it and create a new file, without prompting for confirmation regardless of its permissions.  (The -f option overrides any previous -n option.)", nil)
-		interactive = cp.BoolOpt("i", false, "Cause cp to write a prompt to the standard error output before copying a file that would overwrite an existing file.  If the response from the standard input begins with the character `y' or `Y', the file copy is attempted.  (The -i option overrides any previous -n option.)", nil)
-		noOverwrite = cp.BoolOpt("f", false, "Do not overwrite an existing file.  (The -n option overrides any previous -f or -i options.)", nil)
+		force       = cp.Bool(BoolOpt{Name: "f", Value: false, Desc: "If the destination file cannot be opened, remove it and create a new file, without prompting for confirmation regardless of its permissions.  (The -f option overrides any previous -n option.)"})
+		interactive = cp.Bool(BoolOpt{Name: "i", Value: false, Desc: "Cause cp to write a prompt to the standard error output before copying a file that would overwrite an existing file.  If the response from the standard input begins with the character `y' or `Y', the file copy is attempted.  (The -i option overrides any previous -n option.)"})
+		noOverwrite = cp.Bool(BoolOpt{Name: "f", Value: false, Desc: "Do not overwrite an existing file.  (The -n option overrides any previous -f or -i options.)"})
 	)
 
 	var (
-		src = cp.StringsArg("SRC", nil, "The source files to copy", nil)
-		dst = cp.StringsArg("DST", nil, "The destination directory", nil)
+		src = cp.Strings(StringsArg{
+			Name: "SRC",
+			Desc: "The source files to copy",
+		})
+		dst = cp.Strings(StringsArg{Name: "DST", Value: nil, Desc: "The destination directory"})
 	)
 
 	cp.Action = func() {
@@ -62,15 +69,15 @@ func Example_docker() {
 		cmd.Spec = "[-d|--rm] IMAGE [COMMAND [ARG...]]"
 
 		var (
-			detached = cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID", nil)
-			rm       = cmd.BoolOpt("rm", false, "Automatically remove the container when it exits (incompatible with -d)", nil)
-			memory   = cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)", nil)
+			detached = cmd.Bool(BoolOpt{Name: "d detach", Value: false, Desc: "Detached mode: run the container in the background and print the new container ID"})
+			rm       = cmd.Bool(BoolOpt{Name: "rm", Value: false, Desc: "Automatically remove the container when it exits (incompatible with -d)"})
+			memory   = cmd.String(StringOpt{Name: "m memory", Value: "", Desc: "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)"})
 		)
 
 		var (
-			image   = cmd.StringArg("IMAGE", "", "", nil)
-			command = cmd.StringArg("COMMAND", "", "The command to run", nil)
-			args    = cmd.StringsArg("ARG", nil, "The command arguments", nil)
+			image   = cmd.String(StringArg{Name: "IMAGE", Value: "", Desc: ""})
+			command = cmd.String(StringArg{Name: "COMMAND", Value: "", Desc: "The command to run"})
+			args    = cmd.Strings(StringsArg{Name: "ARG", Value: nil, Desc: "The command arguments"})
 		)
 
 		cmd.Action = func() {
@@ -90,9 +97,9 @@ func Example_docker() {
 	docker.Command("pull", "Pull an image or a repository from the registry", func(cmd *Cmd) {
 		cmd.Spec = "[-a] NAME"
 
-		all = cmd.BoolOpt("a all-tags", false, "Download all tagged images in the repository", nil)
+		all := cmd.Bool(BoolOpt{Name: "a all-tags", Value: false, Desc: "Download all tagged images in the repository"})
 
-		name = cmd.StringArg("NAME", "", "Image name (optionally NAME:TAG)", nil)
+		name := cmd.String(StringArg{Name: "NAME", Value: "", Desc: "Image name (optionally NAME:TAG)"})
 
 		cmd.Action = func() {
 			if *all {

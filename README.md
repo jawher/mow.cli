@@ -14,7 +14,7 @@ The default `flag` package is fun and very easy to use but has several limitatio
 * Doesn't handle mandatory/optional flags nor flag exclusion `--stop|--start`
 * And the list goes on
 
-Docopt fixes many of these limitations but also suffers from these limitations:
+Docopt fixes many of these limitations but it too exhibits the following problems:
 
 * No contexual help: either your call is correct and it works, or the whole help message is dumped, no matter the path you took
 * It is up to you to switch on the parse result and decide what code path to execute and which parameters to pass
@@ -23,7 +23,7 @@ Another popular CLI library in the Goland is `codegangsta/cli`.
 It brings many good ideas to the table: very readable (albeit a bit on the verbose side) and it spares you the switching part as it calls the correct code path.
 It too suffers from the following limitations:
 
-* Option duplication: you need to declare a flag in the command flags list (with its name and type), and then to use it, in your action you need to extract it from a context object using its name and type
+* Option duplication: you need to declare a flag in the command flags list (with its name and type), and then to use it, in your action you need to extract it from a context object using its name and type again.
 * Doesn't handle argument validation
 
 mow.cli is my humble attempt at solving these issues and providing an alternative.
@@ -60,15 +60,26 @@ cp.Run(os.Args)
 
 To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on the app:
 ```go
-recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst", nil)
+recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 ```
 
 * The first argument is a space seperated list of names for the option without the dashes
 * The second parameter is the default value for the option
-* The third parameter is the option description, as will be shown in the help messages
-* The last parameter is an optional OptExtra struct.
-For the time being there is one field, EnvVar where you could set a space separated list of environment
-variables to be used to initialize the option's value
+* The third and last parameter is the option description, as will be shown in the help messages
+
+There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the option:
+
+```go
+recursive = cp.Bool(BoolOpt{
+    Name:  "R rece",
+    Value: false,
+    Desc:  "copy src files recursively",
+    EnvVar: "",
+})
+```
+
+The field names are self-describing.
+There EnvVar field is a space separated list of environment variables names to be used to initialize the option.
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
@@ -106,16 +117,30 @@ repeat the option to accumulate the values in the resulting slice:
 To accept arguments, you need to explicitly declare them by calling one of the (String[s]|Int[s]|Bool)Arg methods on the app:
 
 ```go
-src := cp.StringArg("SRC", "", "the file to copy", nil)
-dst := cp.StringArg("DST", "", "the destination", nil)
+src := cp.StringArg("SRC", "", "the file to copy")
+dst := cp.StringArg("DST", "", "the destination")
 ```
 
 * The first argument is the argument name as will be shown in the help messages
 * The second parameter is the default value for the argument
 * The third parameter is the argument description, as will be shown in the help messages
-* The last parameter is an optional ArgExtra struct.
-For the time being there is one field, EnvVar where you could set a space separated list of environment
-variables to be used to initialize the argument's value
+
+
+There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the argument:
+
+```go
+src = cp.Strings(StringsArg{
+    Name:  "SRC",
+    Desc:  "The source files to copy",
+    Value: "",
+    EnvVar: "",
+})
+```
+
+The field names are self-describing.
+The Value field is where you can set the inital value for the argument.
+
+EnvVar accepts a space separated list of environment variables names to be used to initialize the argument.
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
@@ -165,6 +190,17 @@ bzk.Command("job", "actions on jobs", func(cmd *cli.Cmd) {
 ```
 
 This could go on to any depth if need be.
+
+
+As a side-note: it may seem a bit weird the way mow.cli uses a function to initialize a command instead of just returning the command struct.
+
+The motivation behind this choice is scoping: as with the standard flag package, adding an option or an argument returns a pointer to a value which will be populated when the app is run.
+
+Since you'll want to store these pointers in variables, and to avoid having dozens of them in the same scope (the main func for example or as global variables),
+mow.cli's API was specifically tailored to take a func parameter (called CmdInitializer) which accepts the command struct.
+
+This way, the command specific variables scope is limited to this function.
+
 
 ## Spec
 
@@ -260,7 +296,7 @@ x.Spec="SRC..."
 x.Spec="-e..."
 ```
 
-Grouping
+### Grouping
 
 You can group items using parenthesis. This is useful in combination with the choice and repetition operators (`|` and `...`):
 

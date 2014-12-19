@@ -22,7 +22,7 @@ Options
 
 To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on the app:
 
-	recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst", nil)
+	recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 
 * The first argument is a space seperated list of names for the option without the dashes
 
@@ -30,9 +30,17 @@ To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on 
 
 * The third parameter is the option description, as will be shown in the help messages
 
-* The last parameter is an optional OptExtra struct.
-For the time being there is one field, EnvVar where you could set a space separated list of environment
-variables to be used to initialize the option's value
+There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the option:
+
+	recursive = cp.Bool(BoolOpt{
+		Name:  "R",
+		Value: false,
+		Desc:  "copy src files recursively",
+		EnvVar: "",
+	})
+
+The field names are self-describing.
+There EnvVar field is a space separated list of environment variables names to be used to initialize the option.
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
@@ -61,8 +69,8 @@ Arguments
 
 To accept arguments, you need to explicitly declare them by calling one of the (String[s]|Int[s]|Bool)Arg methods on the app:
 
-	src := cp.StringArg("SRC", "", "the file to copy", nil)
-	dst := cp.StringArg("DST", "", "the destination", nil)
+	src := cp.StringArg("SRC", "", "the file to copy")
+	dst := cp.StringArg("DST", "", "the destination")
 
 * The first argument is the argument name as will be shown in the help messages
 
@@ -70,9 +78,20 @@ To accept arguments, you need to explicitly declare them by calling one of the (
 
 * The third parameter is the argument description, as will be shown in the help messages
 
-* The last parameter is an optional ArgExtra struct.
-For the time being there is one field, EnvVar where you could set a space separated list of environment
-variables to be used to initialize the argument's value
+There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the argument:
+
+	src = cp.Strings(StringsArg{
+		Name:  "SRC",
+		Desc:  "The source files to copy",
+		Value: "",
+		EnvVar: "",
+	})
+
+The field names are self-describing.
+The Value field is where you can set the inital value for the argument.
+
+EnvVar accepts a space separated list of environment variables names to be used to initialize the argument.
+
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
@@ -98,10 +117,10 @@ In this function, you can add options and arguments by calling the same methods 
 You would also assign a function to the Action field of the Cmd struct for it to be executed when the command is invoked.
 
 	docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
-		detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID", nil)
-		memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)", nil)
+		detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID")
+		memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)")
 
-		image := cmd.StringArg("IMAGE", "", "", nil)
+		image := cmd.StringArg("IMAGE", "", "The image to run")
 
 		cmd.Action = func() {
 			if *detached {
@@ -120,6 +139,17 @@ You can also add sub commands by calling Command on the Cmd struct:
 	})
 
 This could go on to any depth if need be.
+
+As a side-note: it may seem a bit weird the way mow.cli uses a function to initialize a command
+instead of just returning the command struct.
+
+The motivation behind this choice is scoping: as with the standard flag package, adding an option or an argument
+returns a pointer to a value which will be populated when the app is run.
+
+Since you'll want to store these pointers in variables, and to avoid having dozens of them in the same scope (the main func for example or as global variables),
+mow.cli's API was specifically tailored to take a func parameter (called CmdInitializer) which accepts the command struct.
+
+This way, the command specific variables scope is limited to this function.
 
 Spec
 
@@ -255,11 +285,11 @@ By default, and unless a spec string is set by the user, mow.cli auto-generates 
 
 For example, given this command delcaration:
 	docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
-		detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID", nil)
-		memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)", nil)
+		detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID")
+		memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)")
 
-		image := cmd.StringArg("IMAGE", "", "", nil)
-		args := cmd.StringsArg("ARG", "", "", nil)
+		image := cmd.StringArg("IMAGE", "", "")
+		args := cmd.StringsArg("ARG", "", "")
 	})
 The auto-generated spec string would be:
 	[OPTIONS] IMAGE ARG

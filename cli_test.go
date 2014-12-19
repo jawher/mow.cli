@@ -16,8 +16,8 @@ func TestTheCpCase(t *testing.T) {
 	app := App("cp", "")
 	app.Spec = "SRC... DST"
 
-	src := app.StringsArg("SRC", nil, "", nil)
-	dst := app.StringArg("DST", "", "", nil)
+	src := app.Strings(StringsArg{Name: "SRC", Value: nil, Desc: ""})
+	dst := app.String(StringArg{Name: "DST", Value: "", Desc: ""})
 
 	ex := false
 	app.Action = func() {
@@ -33,8 +33,8 @@ func TestTheCpCase(t *testing.T) {
 
 func TestImplicitSpec(t *testing.T) {
 	app := App("test", "")
-	x := app.BoolOpt("x", false, "", nil)
-	y := app.StringOpt("y", "", "", nil)
+	x := app.Bool(BoolOpt{Name: "x", Value: false, Desc: ""})
+	y := app.String(StringOpt{Name: "y", Value: "", Desc: ""})
 	called := false
 	app.Action = func() {
 		called = true
@@ -69,7 +69,7 @@ func TestHelpShortcut(t *testing.T) {
 			app := App("x", "")
 			app.Spec = "Y"
 
-			app.StringArg("Y", "", "", nil)
+			app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 			app.Run([]string{"x", "y", "-h", "z"})
 		},
 		func(err error) {
@@ -105,7 +105,7 @@ func TestSubCommands(t *testing.T) {
 
 func TestContinueOnError(t *testing.T) {
 	app := App("say", "")
-	app.StringOpt("f", "", "", nil)
+	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
 	app.Spec = "-f"
 	app.ErrorHandling = flag.ContinueOnError
 	called := false
@@ -124,7 +124,7 @@ func TestExitOnError(t *testing.T) {
 			app := App("x", "")
 			app.Spec = "Y"
 
-			app.StringArg("Y", "", "", nil)
+			app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 			app.Run([]string{"x", "y", "z"})
 		},
 		func(err error) {
@@ -137,7 +137,7 @@ func TestExitOnError(t *testing.T) {
 
 func TestPanicOnError(t *testing.T) {
 	app := App("say", "")
-	app.StringOpt("f", "", "", nil)
+	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
 	app.Spec = "-f"
 	app.ErrorHandling = flag.PanicOnError
 	called := false

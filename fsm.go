@@ -106,11 +106,11 @@ func dot(s *state, counter *int, visited map[*state]bool, ids map[*state]int) []
 
 type parseContext struct {
 	args map[*arg][]string
-	opts map[*option][]string
+	opts map[*opt][]string
 }
 
 func newParseContext() parseContext {
-	return parseContext{map[*arg][]string{}, map[*option][]string{}}
+	return parseContext{map[*arg][]string{}, map[*opt][]string{}}
 }
 
 func (pc parseContext) merge(o parseContext) {

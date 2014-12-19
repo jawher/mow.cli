@@ -26,8 +26,8 @@ type Cmd struct {
 	desc string
 
 	commands   []*Cmd
-	options    []*option
-	optionsIdx map[string]*option
+	options    []*opt
+	optionsIdx map[string]*opt
 	args       []*arg
 	argsIdx    map[string]*arg
 
@@ -36,6 +36,35 @@ type Cmd struct {
 	fsm *state
 }
 
+/*
+BoolParam represents a Bool option or argument
+*/
+type BoolParam interface{}
+
+/*
+StringParam represents a String option or argument
+*/
+type StringParam interface{}
+
+/*
+IntParam represents an Int option or argument
+*/
+type IntParam interface{}
+
+/*
+StringsParam represents a string slice option or argument
+*/
+type StringsParam interface{}
+
+/*
+IntsParam represents an int slice option or argument
+*/
+type IntsParam interface{}
+
+/*
+CmdInitializer is a function that configures a command by adding options, arguments, a spec, sub commands and the code
+to execute when the command is called
+*/
 type CmdInitializer func(*Cmd)
 
 /*
@@ -57,11 +86,96 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 		desc:          desc,
 		init:          init,
 		commands:      []*Cmd{},
-		options:       []*option{},
-		optionsIdx:    map[string]*option{},
+		options:       []*opt{},
+		optionsIdx:    map[string]*opt{},
 		args:          []*arg{},
 		argsIdx:       map[string]*arg{},
 	})
+}
+
+/*
+Bool can be used to add a bool option or argument to a command.
+It accepts either a BoolOpt or a BoolArg struct.
+
+The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Bool(p BoolParam) *bool {
+	switch x := p.(type) {
+	case BoolOpt:
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*bool)
+	case BoolArg:
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*bool)
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
+String can be used to add a string option or argument to a command.
+It accepts either a StringOpt or a StringArg struct.
+
+The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) String(p StringParam) *string {
+	switch x := p.(type) {
+	case StringOpt:
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*string)
+	case StringArg:
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*string)
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
+Int can be used to add an int option or argument to a command.
+It accepts either a IntOpt or a IntArg struct.
+
+The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Int(p IntParam) *int {
+	switch x := p.(type) {
+	case IntOpt:
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*int)
+	case IntArg:
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*int)
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
+Strings can be used to add a string slice option or argument to a command.
+It accepts either a StringsOpt or a StringsArg struct.
+
+The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Strings(p StringsParam) *[]string {
+	switch x := p.(type) {
+	case StringsOpt:
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]string)
+	case StringsArg:
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]string)
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
+Ints can be used to add an int slice option or argument to a command.
+It accepts either a IntsOpt or a IntsArg struct.
+
+The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Ints(p IntsParam) *[]int {
+	switch x := p.(type) {
+	case IntsOpt:
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]int)
+	case IntsArg:
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]int)
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
 }
 
 func (c *Cmd) doInit() error {

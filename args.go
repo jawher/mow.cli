@@ -7,17 +7,120 @@ import (
 )
 
 type arg struct {
-	name  string
-	desc  string
+	name   string
+	desc   string
+	envVar string
+
 	value reflect.Value
 }
 
-/*
-Extra configuration for a command argument
-*/
-type ArgExtra struct {
-	// A list of space separated environment variables names to be used to initialize the argument
+type BoolArg struct {
+	BoolParam
+
+	// The argument name as will be shown in help messages
+	Name string
+	// The argument description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this argument
 	EnvVar string
+	// The argument's inital value
+	Value bool
+}
+
+type StringArg struct {
+	StringParam
+
+	// The argument name as will be shown in help messages
+	Name string
+	// The argument description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this argument
+	EnvVar string
+	// The argument's inital value
+	Value string
+}
+type IntArg struct {
+	IntParam
+
+	// The argument name as will be shown in help messages
+	Name string
+	// The argument description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this argument
+	EnvVar string
+	// The argument's inital value
+	Value int
+}
+type StringsArg struct {
+	StringsParam
+
+	// The argument name as will be shown in help messages
+	Name string
+	// The argument description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this argument.
+	// The env variable should contain a comma separated list of values
+	EnvVar string
+	// The argument's inital value
+	Value []string
+}
+type IntsArg struct {
+	IntsParam
+
+	// The argument name as will be shown in help messages
+	Name string
+	// The argument description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this argument.
+	// The env variable should contain a comma separated list of values
+	EnvVar string
+	// The argument's inital value
+	Value []int
+}
+
+/*
+BoolArg defines a boolean argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) BoolArg(name string, value bool, desc string) *bool {
+	return c.mkArg(arg{name: name, desc: desc}, value).(*bool)
+}
+
+/*
+StringArg defines a string argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringArg(name string, value string, desc string) *string {
+	return c.mkArg(arg{name: name, desc: desc}, value).(*string)
+}
+
+/*
+IntArg defines an int argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntArg(name string, value int, desc string) *int {
+	return c.mkArg(arg{name: name, desc: desc}, value).(*int)
+}
+
+/*
+StringsArg defines a string slice argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringsArg(name string, value []string, desc string) *[]string {
+	return c.mkArg(arg{name: name, desc: desc}, value).(*[]string)
+}
+
+/*
+IntsArg defines an int slice argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntsArg(name string, value []int, desc string) *[]int {
+	return c.mkArg(arg{name: name, desc: desc}, value).(*[]int)
 }
 
 func (arg *arg) match(args []string, c parseContext) (bool, int) {
@@ -43,108 +146,16 @@ func (a *arg) set(s string) error {
 	return vset(a.value, s)
 }
 
-func (c *Cmd) mkArg(name string, defaultValue interface{}, desc string, extra *ArgExtra) interface{} {
-	value := reflect.ValueOf(defaultValue)
+func (c *Cmd) mkArg(arg arg, defaultvalue interface{}) interface{} {
+	value := reflect.ValueOf(defaultvalue)
 	res := reflect.New(value.Type())
 
-	envVars := ""
-	if extra != nil {
-		envVars = extra.EnvVar
-	}
-	vinit(res, envVars, defaultValue)
+	vinit(res, arg.envVar, defaultvalue)
 
-	arg := &arg{
-		name,
-		desc,
-		res,
-	}
-	c.args = append(c.args, arg)
-	c.argsIdx[name] = arg
+	arg.value = res
+
+	c.args = append(c.args, &arg)
+	c.argsIdx[arg.name] = &arg
 
 	return res.Interface()
-}
-
-/*
-BoolArg defines a boolean argument on the command c named `name`, with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: git clone REPO
-
-	Arguments:
- 	  REPO=""      $desc
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) BoolArg(name string, value bool, desc string, extra *ArgExtra) *bool {
-	return c.mkArg(name, value, desc, extra).(*bool)
-}
-
-/*
-StringArg defines a string argument on the command c named `name`, with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: git clone REPO
-
-	Arguments:
- 	  REPO=""      $desc
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) StringArg(name string, value string, desc string, extra *ArgExtra) *string {
-	return c.mkArg(name, value, desc, extra).(*string)
-}
-
-/*
-StringsArg defines a string slice argument on the command c named `name`, with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: cp SRC...
-
-	Arguments:
- 	  SRC=[]      $desc
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) StringsArg(name string, value []string, desc string, extra *ArgExtra) *[]string {
-	return c.mkArg(name, value, desc, extra).(*[]string)
-}
-
-/*
-IntArg defines an int argument on the command c named `name`, with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: foo COUNT
-
-	Arguments:
- 	  COUNT=0      $desc
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) IntArg(name string, value int, desc string, extra *ArgExtra) *int {
-	return c.mkArg(name, value, desc, extra).(*int)
-}
-
-/*
-IntsArg defines an int slice argument on the command c named `name`, with an initial value of `value` and a description of `desc`
-which will be used in help messages, e.g.:
-
-	Usage: sort NUMBERS...
-
-	Arguments:
- 	  NUMBERS=[]      $desc
-
-When needed, extra can be used to pass more options.
-
-The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
-*/
-func (c *Cmd) IntsArg(name string, value []int, desc string, extra *ArgExtra) *[]int {
-	return c.mkArg(name, value, desc, extra).(*[]int)
 }

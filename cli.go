@@ -26,7 +26,7 @@ func App(name, desc string) *Cli {
 		&Cmd{
 			name:          name,
 			desc:          desc,
-			optionsIdx:    map[string]*option{},
+			optionsIdx:    map[string]*opt{},
 			argsIdx:       map[string]*arg{},
 			ErrorHandling: flag.ExitOnError,
 		},

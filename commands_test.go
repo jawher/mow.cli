@@ -15,25 +15,25 @@ func TestNormalize(t *testing.T) {
 		{func(cmd *Cmd) {
 		}, []string{}, []string{}},
 		{func(cmd *Cmd) {
-			cmd.BoolOpt("a", true, "", nil)
+			cmd.Bool(BoolOpt{Name: "a", Value: true, Desc: ""})
 		}, []string{"ab"}, []string{"ab"}},
 		{func(cmd *Cmd) {
-			cmd.BoolOpt("a", true, "", nil)
+			cmd.Bool(BoolOpt{Name: "a", Value: true, Desc: ""})
 		}, []string{"-a"}, []string{"-a"}},
 		{func(cmd *Cmd) {
-			cmd.BoolOpt("a", true, "", nil)
-			cmd.BoolOpt("b", true, "", nil)
+			cmd.Bool(BoolOpt{Name: "a", Value: true, Desc: ""})
+			cmd.Bool(BoolOpt{Name: "b", Value: true, Desc: ""})
 		}, []string{"-ab"}, []string{"-a", "-b"}},
 		{func(cmd *Cmd) {
-			cmd.StringOpt("s", "", "", nil)
+			cmd.String(StringOpt{Name: "s", Value: "", Desc: ""})
 		}, []string{"-shello"}, []string{"-s", "hello"}},
 		{func(cmd *Cmd) {
-			cmd.BoolOpt("a", true, "", nil)
-			cmd.StringOpt("b", "", "", nil)
+			cmd.Bool(BoolOpt{Name: "a", Value: true, Desc: ""})
+			cmd.String(StringOpt{Name: "b", Value: "", Desc: ""})
 		}, []string{"-ab", "test"}, []string{"-a", "-b", "test"}},
 	}
 	for _, cas := range cases {
-		cmd := &Cmd{optionsIdx: map[string]*option{}}
+		cmd := &Cmd{optionsIdx: map[string]*opt{}}
 		cas.opts(cmd)
 		nz, cons, err := cmd.normalize(cas.input)
 		require.Nil(t, err, "Unexpected error %v", err)
