@@ -153,10 +153,9 @@ func (p *uParser) atom() (*state, *state) {
 	case p.found(utOptSeq):
 		end = newState(p.cmd)
 		sq := p.matchedToken.val
-		fmt.Printf("sq='%s'\n", sq)
+
 		for i, _ := range sq {
 			sn := sq[i : i+1]
-			fmt.Printf("check opt '%s'\n", sn)
 			opt, declared := p.cmd.optionsIdx["-"+sn]
 			if !declared {
 				panic(fmt.Sprintf("Undeclared option %s", sn))
