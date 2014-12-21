@@ -77,9 +77,11 @@ func (p *uParser) parse() (s *state, err error) {
 	if !p.eof() {
 		s = nil
 		err = &parseError{p.cmd.Spec, "Unexpected input", p.token().pos}
+		return
 	}
 
 	e.terminal = true
+	s.simplify()
 
 	return
 }
@@ -174,9 +176,11 @@ func (p *uParser) atom() (*state, *state) {
 		panic("Unexpected input: was expecting a command or a positional argument or an option")
 	}
 	if p.found(utRep) {
-		for _, tr := range start.transitions {
-			end.t(tr.matcher, tr.next)
-		}
+		start2, end2 := newState(p.cmd), newState(p.cmd)
+		start2.t(shortcut, start)
+		end.t(shortcut, end2)
+		end2.t(shortcut, start2)
+		start, end = start2, end2
 	}
 	return start, end
 }
