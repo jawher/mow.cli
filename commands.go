@@ -411,7 +411,11 @@ func (c *Cmd) normalizeShortOpt(arg string) ([]string, error) {
 		default:
 			res = append(res, name)
 			if len(arg) > 2 {
-				res = append(res, arg[2:])
+				val := arg[2:]
+				if strings.HasPrefix(val, "=") {
+					val = arg[3:]
+				}
+				res = append(res, val)
 			}
 		}
 	}
