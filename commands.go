@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -102,9 +103,9 @@ The result should be stored in a variable (a pointer to a bool) which will be po
 func (c *Cmd) Bool(p BoolParam) *bool {
 	switch x := p.(type) {
 	case BoolOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*bool)
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*bool)
 	case BoolArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*bool)
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*bool)
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -119,9 +120,9 @@ The result should be stored in a variable (a pointer to a string) which will be 
 func (c *Cmd) String(p StringParam) *string {
 	switch x := p.(type) {
 	case StringOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*string)
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*string)
 	case StringArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*string)
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*string)
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -136,9 +137,9 @@ The result should be stored in a variable (a pointer to an int) which will be po
 func (c *Cmd) Int(p IntParam) *int {
 	switch x := p.(type) {
 	case IntOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*int)
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*int)
 	case IntArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*int)
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*int)
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -153,9 +154,9 @@ The result should be stored in a variable (a pointer to a string slice) which wi
 func (c *Cmd) Strings(p StringsParam) *[]string {
 	switch x := p.(type) {
 	case StringsOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]string)
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]string)
 	case StringsArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]string)
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]string)
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -170,9 +171,9 @@ The result should be stored in a variable (a pointer to an int slice) which will
 func (c *Cmd) Ints(p IntsParam) *[]int {
 	switch x := p.(type) {
 	case IntsOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]int)
+		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]int)
 	case IntsArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar}, x.Value).(*[]int)
+		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]int)
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -245,7 +246,10 @@ func (c *Cmd) PrintHelp() {
 		fmt.Fprintf(out, "\nArguments:\n")
 
 		for _, arg := range c.args {
-			fmt.Fprintf(w, "  %s=%#v\t%s\n", arg.name, arg.get(), arg.desc)
+			desc := c.formatDescription(arg.desc, arg.envVar)
+			value := c.formatArgValue(arg)
+
+			fmt.Fprintf(w, "  %s%s\t%s\n", arg.name, value, desc)
 		}
 		w.Flush()
 	}
@@ -254,7 +258,9 @@ func (c *Cmd) PrintHelp() {
 		fmt.Fprintf(out, "\nOptions:\n")
 
 		for _, opt := range c.options {
-			fmt.Fprintf(w, "  %s=%#v\t%s\n", strings.Join(opt.names, ", "), opt.get(), opt.desc)
+			desc := c.formatDescription(opt.desc, opt.envVar)
+			value := c.formatOptValue(opt)
+			fmt.Fprintf(w, "  %s%s\t%s\n", strings.Join(opt.names, ", "), value, desc)
 		}
 		w.Flush()
 	}
@@ -271,6 +277,41 @@ func (c *Cmd) PrintHelp() {
 	if len(c.commands) > 0 {
 		fmt.Fprintf(out, "\nRun '%s COMMAND --help' for more information on a command.\n", path)
 	}
+}
+
+func (c *Cmd) formatArgValue(arg *arg) string {
+	var value string
+	if arg.hideValue {
+		value = " "
+	} else {
+		value = fmt.Sprintf("=%#v", arg.get())
+	}
+	return value
+}
+
+func (c *Cmd) formatOptValue(opt *opt) string {
+	var value string
+	if opt.hideValue {
+		value = " "
+	} else {
+		value = fmt.Sprintf("=%#v", opt.get())
+	}
+	return value
+}
+
+func (c *Cmd) formatDescription(desc, envVar string) string {
+	var b bytes.Buffer
+	b.WriteString(desc)
+	if len(envVar) > 0 {
+		b.WriteString(" (")
+		sep := ""
+		for _, envVal := range strings.Split(envVar, " ") {
+			b.WriteString(fmt.Sprintf("%s$%s", sep, envVal))
+			sep = " "
+		}
+		b.WriteString(")")
+	}
+	return strings.TrimSpace(b.String())
 }
 
 func (c *Cmd) parse(args []string) error {
