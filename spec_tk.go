@@ -9,17 +9,18 @@ import (
 type uTokenType string
 
 const (
-	utPos      uTokenType = "Pos"
-	utOpenPar  uTokenType = "OpenPar"
-	utClosePar uTokenType = "ClosePar"
-	utOpenSq   uTokenType = "OpenSq"
-	utCloseSq  uTokenType = "CloseSq"
-	utChoice   uTokenType = "Choice"
-	utOptions  uTokenType = "Options"
-	utRep      uTokenType = "Rep"
-	utShortOpt uTokenType = "ShortOpt"
-	utLongOpt  uTokenType = "LongOpt"
-	utOptSeq   uTokenType = "OptSeq"
+	utPos        uTokenType = "Pos"
+	utOpenPar    uTokenType = "OpenPar"
+	utClosePar   uTokenType = "ClosePar"
+	utOpenSq     uTokenType = "OpenSq"
+	utCloseSq    uTokenType = "CloseSq"
+	utChoice     uTokenType = "Choice"
+	utOptions    uTokenType = "Options"
+	utRep        uTokenType = "Rep"
+	utShortOpt   uTokenType = "ShortOpt"
+	utLongOpt    uTokenType = "LongOpt"
+	utOptSeq     uTokenType = "OptSeq"
+	utDoubleDash uTokenType = "DblDash"
 )
 
 type uToken struct {
@@ -132,8 +133,12 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 				}
 			case o == '-':
 				pos++
-				for ; pos < eof; pos++ {
-					ok := isOkLongOpt(usage[pos])
+				if pos == eof || usage[pos] == ' ' {
+					tkp(utDoubleDash, "--", start)
+					continue
+				}
+				for pos0 := pos; pos < eof; pos++ {
+					ok := isOkLongOpt(usage[pos], pos == pos0)
 					if !ok {
 						break
 					}
@@ -188,6 +193,6 @@ func isLetter(c uint8) bool {
 func isDigit(c uint8) bool {
 	return c >= '0' && c <= '9'
 }
-func isOkLongOpt(c uint8) bool {
-	return isLetter(c) || isDigit(c) || c == '_' || c == '-'
+func isOkLongOpt(c uint8, first bool) bool {
+	return isLetter(c) || isDigit(c) || c == '_' || (!first && c == '-')
 }

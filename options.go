@@ -156,7 +156,7 @@ func (o *opt) isBool() bool {
 }
 
 func (o *opt) match(args []string, c parseContext) (bool, int) {
-	if len(args) == 0 {
+	if len(args) == 0 || c.rejectOptions {
 		return false, 0
 	}
 	for _, name := range o.names {

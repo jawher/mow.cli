@@ -279,6 +279,7 @@ func (c *Cmd) parse(args []string) error {
 		c.onError(nil)
 		return nil
 	}
+
 	nargs, nargsLen, err := c.normalize(args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
@@ -345,6 +346,7 @@ func (c *Cmd) normalize(args []string) (res []string, consumed int, err error) {
 	err = nil
 	res = []string{}
 	consumed = 0
+	afterOptionsEnd := false
 	for _, arg := range args {
 		for _, sub := range c.commands {
 			if arg == sub.name {
@@ -352,7 +354,10 @@ func (c *Cmd) normalize(args []string) (res []string, consumed int, err error) {
 			}
 		}
 		switch {
-		case strings.HasPrefix(arg, "--"):
+		case !afterOptionsEnd && arg == "--":
+			res = append(res, arg)
+			afterOptionsEnd = true
+		case !afterOptionsEnd && strings.HasPrefix(arg, "--"):
 			var parts []string
 			parts, err = c.normalizeLongOpt(arg)
 			if err != nil {
@@ -360,7 +365,7 @@ func (c *Cmd) normalize(args []string) (res []string, consumed int, err error) {
 			}
 			res = append(res, parts...)
 
-		case strings.HasPrefix(arg, "-"):
+		case !afterOptionsEnd && strings.HasPrefix(arg, "-"):
 			var parts []string
 			parts, err = c.normalizeShortOpt(arg)
 			if err != nil {

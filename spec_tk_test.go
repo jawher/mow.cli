@@ -44,6 +44,7 @@ func TestUTokenize(t *testing.T) {
 		{"--sig-proxy", []*uToken{{utLongOpt, "--sig-proxy", 0}}},
 
 		{"-aBc", []*uToken{{utOptSeq, "aBc", 1}}},
+		{"--", []*uToken{{utDoubleDash, "--", 0}}},
 	}
 	for _, c := range cases {
 		t.Logf("test %s", c.usage)
@@ -80,18 +81,18 @@ func TestUTokenizeErrors(t *testing.T) {
 		pos   int
 	}{
 		{"-", 1},
-		{"--", 2},
+		{"---x", 2},
 		{"-x-", 2},
 	}
 
 	for _, c := range cases {
 		t.Logf("test %s", c.usage)
-		_, err := uTokenize(c.usage)
+		tks, err := uTokenize(c.usage)
 		if err == nil {
-			t.Errorf("Tokenize('%s') should have failed", c.usage)
+			t.Errorf("Tokenize('%s') should have failed, instead got %v", c.usage, tks)
 			continue
 		}
-		t.Logf("Got error %v", err)
+		t.Logf("Got expected error %v", err)
 		if err.pos != c.pos {
 			t.Errorf("[Tokenize '%s']: error pos mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, c.pos, err.pos)
 

@@ -42,6 +42,22 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	require.NotNil(t, err, "cmd parse should have failed")
 }
 
+func badSpec(t *testing.T, spec string, init CmdInitializer) {
+	cmd := &Cmd{
+		name:       "test",
+		optionsIdx: map[string]*opt{},
+		argsIdx:    map[string]*arg{},
+	}
+	cmd.Spec = spec
+	cmd.ErrorHandling = flag.ContinueOnError
+	init(cmd)
+
+	t.Logf("testing bad spec %s", spec)
+	err := cmd.doInit()
+	require.NotNil(t, err, "Bad spec %s should have failed to parse", spec)
+	t.Logf("Bad spec %s did fail to parse with error: %v", spec, err)
+}
+
 func TestSpecBoolOpt(t *testing.T) {
 	var f *bool
 	init := func(c *Cmd) {
@@ -580,4 +596,143 @@ func TestSpecC5(t *testing.T) {
 	require.Equal(t, []string{"C"}, *g)
 	require.True(t, *x)
 
+}
+
+func TestSpecOptionsEndExplicit(t *testing.T) {
+	var x *[]string
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+	}
+	spec := "-- X..."
+
+	okCmd(t, spec, init, []string{"A"})
+	require.Equal(t, []string{"A"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "A"})
+	require.Equal(t, []string{"A"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "-x"})
+	require.Equal(t, []string{"-x"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "A", "B"})
+	require.Equal(t, []string{"A", "B"}, *x)
+}
+
+func TestSpecOptionsEndImplicit(t *testing.T) {
+	var x *[]string
+	var f *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+	}
+	spec := "-f|X..."
+
+	okCmd(t, spec, init, []string{"A"})
+	require.Equal(t, []string{"A"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "A"})
+	require.Equal(t, []string{"A"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "-f"})
+	require.Equal(t, []string{"-f"}, *x)
+
+	okCmd(t, spec, init, []string{"-f"})
+	require.True(t, *f)
+}
+
+func TestSpecChoiceWithOptionsEndInLastPos(t *testing.T) {
+	var x *[]string
+	var f *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+	}
+	spec := "-f|(-- X...)"
+
+	okCmd(t, spec, init, []string{"A", "B"})
+	require.Equal(t, []string{"A", "B"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "-f", "B"})
+	require.Equal(t, []string{"-f", "B"}, *x)
+
+	okCmd(t, spec, init, []string{"--", "A", "B"})
+	require.Equal(t, []string{"A", "B"}, *x)
+
+	okCmd(t, spec, init, []string{"-f"})
+	require.True(t, *f)
+}
+
+func TestSpecChoiceWithOptionsEnd(t *testing.T) {
+	var x *[]string
+	var f *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+	}
+	spec := "(-- X...)|-f"
+
+	badSpec(t, spec, init)
+}
+
+func TestSpecOptionAfterOptionsEnd(t *testing.T) {
+	var x *[]string
+	var f *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+	}
+
+	spec := "-- X... -f"
+	badSpec(t, spec, init)
+}
+
+func TestSpecOptionAfterOptionsEndInAChoice(t *testing.T) {
+	var x *[]string
+	var f, d *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+		d = c.BoolOpt("d", false, "")
+	}
+
+	spec := "-f | (-- X...) -d"
+	badSpec(t, spec, init)
+}
+
+func TestSpecOptionAfterOptionalOptionsEnd(t *testing.T) {
+	var x *[]string
+	var f, d *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+		d = c.BoolOpt("d", false, "")
+	}
+
+	spec := "-f [-- X] -d"
+	badSpec(t, spec, init)
+}
+
+func TestSpecOptionAfterOptionalOptionsEndInAChoice(t *testing.T) {
+	var x *[]string
+	var f, d *bool
+	init := func(c *Cmd) {
+		x = c.StringsArg("X", nil, "")
+		f = c.BoolOpt("f", false, "")
+		d = c.BoolOpt("d", false, "")
+	}
+
+	spec := "(-f | [-- X]) -d"
+	badSpec(t, spec, init)
+}
+
+func TestSpecOptionAfterOptionsEndIsParsedAsArg(t *testing.T) {
+	var cmd *string
+	var args *[]string
+	init := func(c *Cmd) {
+		cmd = c.StringArg("CMD", "", "")
+		args = c.StringsArg("ARG", nil, "")
+	}
+
+	spec := "-- CMD [ARG...]"
+	okCmd(t, spec, init, []string{"--", "go", "test", "-v"})
 }

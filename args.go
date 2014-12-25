@@ -127,7 +127,7 @@ func (arg *arg) match(args []string, c parseContext) (bool, int) {
 	if len(args) == 0 {
 		return false, 0
 	}
-	if strings.HasPrefix(args[0], "-") {
+	if !c.rejectOptions && strings.HasPrefix(args[0], "-") {
 		return false, 0
 	}
 	c.args[arg] = append(c.args[arg], args[0])

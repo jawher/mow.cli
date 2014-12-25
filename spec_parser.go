@@ -8,7 +8,7 @@ func uParse(c *Cmd) (*state, error) {
 		return nil, err
 	}
 
-	p := &uParser{c, tokens, 0, nil}
+	p := &uParser{cmd: c, tokens: tokens}
 	return p.parse()
 }
 
@@ -19,6 +19,8 @@ type uParser struct {
 	tkpos int
 
 	matchedToken *uToken
+
+	rejectOptions bool
 }
 
 type upMatcher interface {
@@ -132,12 +134,20 @@ func (p *uParser) atom() (*state, *state) {
 		}
 		end = start.t(arg, newState(p.cmd))
 	case p.found(utOptions):
+		if p.rejectOptions {
+			p.back()
+			panic("No options after --")
+		}
 		end = newState(p.cmd)
 		for _, opt := range p.cmd.options {
 			start.t(opt, end)
 		}
 		end.t(shortcut, start)
 	case p.found(utShortOpt):
+		if p.rejectOptions {
+			p.back()
+			panic("No options after --")
+		}
 		name := p.matchedToken.val
 		opt, declared := p.cmd.optionsIdx[name]
 		if !declared {
@@ -146,6 +156,10 @@ func (p *uParser) atom() (*state, *state) {
 		end = start.t(opt, newState(p.cmd))
 
 	case p.found(utLongOpt):
+		if p.rejectOptions {
+			p.back()
+			panic("No options after --")
+		}
 		name := p.matchedToken.val
 		opt, declared := p.cmd.optionsIdx[name]
 		if !declared {
@@ -153,6 +167,10 @@ func (p *uParser) atom() (*state, *state) {
 		}
 		end = start.t(opt, newState(p.cmd))
 	case p.found(utOptSeq):
+		if p.rejectOptions {
+			p.back()
+			panic("No options after --")
+		}
 		end = newState(p.cmd)
 		sq := p.matchedToken.val
 
@@ -172,6 +190,10 @@ func (p *uParser) atom() (*state, *state) {
 		start, end = p.seq(true)
 		start.t(shortcut, end)
 		p.expect(utCloseSq)
+	case p.found(utDoubleDash):
+		p.rejectOptions = true
+		// just consume the -- and parse the following atom
+		return p.atom()
 	default:
 		panic("Unexpected input: was expecting a command or a positional argument or an option")
 	}
@@ -198,6 +220,8 @@ func (p *uParser) canAtom() bool {
 	case p.is(utOpenPar):
 		return true
 	case p.is(utOpenSq):
+		return true
+	case p.is(utDoubleDash):
 		return true
 	default:
 		return false
@@ -226,6 +250,9 @@ func (p *uParser) expect(t uTokenType) {
 	}
 }
 
+func (p *uParser) back() {
+	p.tkpos--
+}
 func (p *uParser) eof() bool {
 	return p.tkpos >= len(p.tokens)
 }

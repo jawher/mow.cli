@@ -129,12 +129,13 @@ func dot(s *state, visited map[*state]bool) []string {
 }
 
 type parseContext struct {
-	args map[*arg][]string
-	opts map[*opt][]string
+	args          map[*arg][]string
+	opts          map[*opt][]string
+	rejectOptions bool
 }
 
 func newParseContext() parseContext {
-	return parseContext{map[*arg][]string{}, map[*opt][]string{}}
+	return parseContext{map[*arg][]string{}, map[*opt][]string{}, false}
 }
 
 func (pc parseContext) merge(o parseContext) {
@@ -178,6 +179,11 @@ func (s *state) apply(args []string, pc parseContext) bool {
 	}
 	sort.Sort(s.transitions)
 
+	if len(args) > 0 && args[0] == "--" && !pc.rejectOptions {
+		pc.rejectOptions = true
+		args = args[1:]
+	}
+
 	type match struct {
 		tr       *transition
 		consumes int
@@ -187,6 +193,7 @@ func (s *state) apply(args []string, pc parseContext) bool {
 	matches := []*match{}
 	for _, tr := range s.transitions {
 		fresh := newParseContext()
+		fresh.rejectOptions = pc.rejectOptions
 		if ok, cons := tr.matcher.match(args, fresh); ok {
 			matches = append(matches, &match{tr, cons, fresh})
 		}

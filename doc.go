@@ -96,6 +96,33 @@ EnvVar accepts a space separated list of environment variables names to be used 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
 
+
+
+Operators
+
+The -- operator marks the end of options.
+Everything that follow will be treated as an argument,
+even if starts with a dash.
+
+For example, given the touch command which takes a filename as an argument (and possibly other options):
+
+
+	file := cp.StringArg("FILE", "", "the file to create")
+
+
+If we try to create a file named -f this way:
+
+
+	touch -f
+
+Would fail, because -f will be parsed as an option not as an argument.
+The fix is to prefix the filename with the -- operator:
+
+
+	touch -- -f
+
+
+
 Commands
 
 mow.cli supports nesting commands and sub commands.
@@ -247,6 +274,17 @@ This is a special syntax (the square brackets are not for marking an optional it
 This is equivalent to a repeatable choice between all the available options.
 For example, if an app or a command declares 4 options a, b, c and d, [OPTIONS] is equivalent to
 	x.Spec = "[-a | -b | -c | -d]..."
+
+
+Operators
+
+The -- operator can be used in the spec strings as a hint to both the user (since it will be shown in the help screens) and to the mow.cli spec parser as it will reject any spec string containing options after the -- operator:
+
+
+	x.Spec = "gomon -tri [-- CMD [ARG...]]"
+
+
+Spec Grammar
 
 Here's the EBNF grammar for the Specs language:
 
