@@ -217,6 +217,8 @@ func (p *uParser) canAtom() bool {
 		return true
 	case p.is(utLongOpt):
 		return true
+	case p.is(utOptSeq):
+		return true
 	case p.is(utOpenPar):
 		return true
 	case p.is(utOpenSq):

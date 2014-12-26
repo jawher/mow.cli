@@ -94,6 +94,72 @@ func TestSpecBoolOpt(t *testing.T) {
 	}
 }
 
+func TestSpecOptFolding(t *testing.T) {
+	var a, b, c *bool
+	var d *string
+	init := func(cmd *Cmd) {
+		a = cmd.BoolOpt("a", false, "")
+		b = cmd.BoolOpt("b", false, "")
+		c = cmd.BoolOpt("c", false, "")
+
+		d = cmd.StringOpt("d", "", "")
+	}
+
+	cases := []struct {
+		spec    string
+		args    []string
+		a, b, c bool
+		d       string
+	}{
+		{
+			"[-abcd...]", []string{},
+			false, false, false,
+			"",
+		},
+		{
+			"[-abcd...]", []string{"-ab"},
+			true, true, false,
+			"",
+		},
+
+		{
+			"[-abcd...]", []string{"-ad", "TEST"},
+			true, false, false,
+			"TEST",
+		},
+
+		{
+			"[-abcd...]", []string{"-abd", "TEST"},
+			true, true, false,
+			"TEST",
+		},
+		{
+			"[-abcd...]", []string{"-abcd", "TEST"},
+			true, true, true,
+			"TEST",
+		},
+		{
+			"[-abcd...]", []string{"-bcd", "TEST"},
+			false, true, true,
+			"TEST",
+		},
+		{
+			"[-abcd...]", []string{"-ac"},
+			true, false, true,
+			"",
+		},
+	}
+
+	for _, cas := range cases {
+		okCmd(t, cas.spec, init, cas.args)
+		require.Equal(t, cas.a, *a)
+		require.Equal(t, cas.b, *b)
+		require.Equal(t, cas.c, *c)
+		require.Equal(t, cas.d, *d)
+	}
+
+}
+
 func TestSpecStrOpt(t *testing.T) {
 	var f *string
 	init := func(c *Cmd) {
