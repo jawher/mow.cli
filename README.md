@@ -92,6 +92,7 @@ In the command line, mow.cli accepts the following syntaxes
 
 
 * `-f` : a single dash for the one letter names
+* `-f=false` : a single dash for the one letter names, equal sign followed by true or false
 * `--force` :  double dash for longer option names
 * `-it` : mow.cli supports option folding, this is equivalent to: -i -t
 

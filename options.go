@@ -161,10 +161,6 @@ func (o *opt) match(args []string, c parseContext) (bool, int) {
 	}
 	for _, name := range o.names {
 		if args[0] == name {
-			if o.isBool() {
-				c.opts[o] = append(c.opts[o], "true")
-				return true, 1
-			}
 			if len(args) < 2 {
 				return false, 0
 			}

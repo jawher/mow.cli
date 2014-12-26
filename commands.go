@@ -385,16 +385,22 @@ func (c *Cmd) normalize(args []string) (res []string, consumed int, err error) {
 func (c *Cmd) normalizeLongOpt(arg string) ([]string, error) {
 	res := []string{}
 	kv := strings.Split(arg, "=")
-	name := arg
+	name := kv[0]
+
+	opt, declared := c.optionsIdx[name]
+	if !declared {
+		return nil, fmt.Errorf("Illegal option %s", name)
+	}
+
 	if len(kv) == 2 {
-		name = kv[0]
 		res = append(res, name, kv[1])
 	} else {
 		res = append(res, name)
+		if opt.isBool() {
+			res = append(res, "true")
+		}
 	}
-	if _, declared := c.optionsIdx[name]; !declared {
-		return nil, fmt.Errorf("Illegal option %s", name)
-	}
+
 	return res, nil
 }
 
@@ -409,12 +415,22 @@ func (c *Cmd) normalizeShortOpt(arg string) ([]string, error) {
 		switch {
 		case opt.isBool():
 			res = append(res, name)
-
-			parts, err := c.normalizeShortOpt("-" + arg[2:])
+			if len(arg) == 2 {
+				res = append(res, "true")
+				return res, nil
+			}
+			rem := arg[2:]
+			if strings.HasPrefix(rem, "=") {
+				res = append(res, rem[1:])
+				return res, nil
+			}
+			res = append(res, "true")
+			parts, err := c.normalizeShortOpt("-" + rem)
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, parts...)
+			return res, nil
 		default:
 			res = append(res, name)
 			if len(arg) > 2 {

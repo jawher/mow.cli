@@ -61,17 +61,31 @@ func badSpec(t *testing.T, spec string, init CmdInitializer) {
 func TestSpecBoolOpt(t *testing.T) {
 	var f *bool
 	init := func(c *Cmd) {
-		f = c.BoolOpt("f", false, "")
+		f = c.BoolOpt("f force", false, "")
 	}
 	spec := "-f"
+
 	okCmd(t, spec, init, []string{"-f"})
 	require.True(t, *f)
+
+	okCmd(t, spec, init, []string{"--force"})
+	require.True(t, *f)
+
+	okCmd(t, spec, init, []string{"-f=true"})
+	require.True(t, *f)
+
+	okCmd(t, spec, init, []string{"--force=true"})
+	require.True(t, *f)
+
+	okCmd(t, spec, init, []string{"--force=false"})
+	require.False(t, *f)
 
 	badCases := [][]string{
 		{},
 		{"-g"},
 		{"-f", "-g"},
 		{"-g", "-f"},
+		{"-f", "true"},
 		{"-f", "xxx"},
 		{"xxx", "-f"},
 	}
