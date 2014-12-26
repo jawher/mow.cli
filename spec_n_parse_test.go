@@ -736,3 +736,40 @@ func TestSpecOptionAfterOptionsEndIsParsedAsArg(t *testing.T) {
 	spec := "-- CMD [ARG...]"
 	okCmd(t, spec, init, []string{"--", "go", "test", "-v"})
 }
+
+func TestSpecSingleDash(t *testing.T) {
+	var path *string
+	var f *bool
+
+	init := func(c *Cmd) {
+		path = c.StringArg("PATH", "", "'-' can be used to read from stdin' ")
+		f = c.BoolOpt("f", false, "")
+	}
+
+	spec := "[-f] PATH"
+
+	okCmd(t, spec, init, []string{"TEST"})
+	require.Equal(t, "TEST", *path)
+	require.False(t, *f)
+
+	okCmd(t, spec, init, []string{"-f", "TEST"})
+	require.Equal(t, "TEST", *path)
+	require.True(t, *f)
+
+	okCmd(t, spec, init, []string{"-"})
+	require.Equal(t, "-", *path)
+	require.False(t, *f)
+
+	okCmd(t, spec, init, []string{"-f", "-"})
+	require.Equal(t, "-", *path)
+	require.True(t, *f)
+
+	okCmd(t, spec, init, []string{"--", "-"})
+	require.Equal(t, "-", *path)
+	require.False(t, *f)
+
+	okCmd(t, spec, init, []string{"-f", "--", "-"})
+	require.Equal(t, "-", *path)
+	require.True(t, *f)
+
+}

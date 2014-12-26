@@ -354,6 +354,8 @@ func (c *Cmd) normalize(args []string) (res []string, consumed int, err error) {
 			}
 		}
 		switch {
+		case arg == "-":
+			res = append(res, arg)
 		case !afterOptionsEnd && arg == "--":
 			res = append(res, arg)
 			afterOptionsEnd = true
