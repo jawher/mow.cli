@@ -7,11 +7,12 @@ import (
 )
 
 type opt struct {
-	name   string
-	desc   string
-	envVar string
-	names  []string
-	value  reflect.Value
+	name      string
+	desc      string
+	envVar    string
+	names     []string
+	value     reflect.Value
+	hideValue bool
 }
 
 type BoolOpt struct {
@@ -26,6 +27,8 @@ type BoolOpt struct {
 	EnvVar string
 	// The option's inital value
 	Value bool
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
 }
 
 type StringOpt struct {
@@ -40,6 +43,8 @@ type StringOpt struct {
 	EnvVar string
 	// The option's inital value
 	Value string
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
 }
 
 type IntOpt struct {
@@ -54,6 +59,8 @@ type IntOpt struct {
 	EnvVar string
 	// The option's inital value
 	Value int
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
 }
 
 type StringsOpt struct {
@@ -69,6 +76,8 @@ type StringsOpt struct {
 	EnvVar string
 	// The option's inital value
 	Value []string
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
 }
 
 type IntsOpt struct {
@@ -84,6 +93,8 @@ type IntsOpt struct {
 	EnvVar string
 	// The option's inital value
 	Value []int
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
 }
 
 /*

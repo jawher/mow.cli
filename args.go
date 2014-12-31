@@ -7,9 +7,10 @@ import (
 )
 
 type arg struct {
-	name   string
-	desc   string
-	envVar string
+	name      string
+	desc      string
+	envVar    string
+	hideValue bool
 
 	value reflect.Value
 }
@@ -25,6 +26,8 @@ type BoolArg struct {
 	EnvVar string
 	// The argument's inital value
 	Value bool
+	// A boolean to display or not the current value of the argument in the help message
+	HideValue bool
 }
 
 type StringArg struct {
@@ -38,7 +41,10 @@ type StringArg struct {
 	EnvVar string
 	// The argument's inital value
 	Value string
+	// A boolean to display or not the current value of the argument in the help message
+	HideValue bool
 }
+
 type IntArg struct {
 	IntParam
 
@@ -50,7 +56,10 @@ type IntArg struct {
 	EnvVar string
 	// The argument's inital value
 	Value int
+	// A boolean to display or not the current value of the argument in the help message
+	HideValue bool
 }
+
 type StringsArg struct {
 	StringsParam
 
@@ -63,7 +72,10 @@ type StringsArg struct {
 	EnvVar string
 	// The argument's inital value
 	Value []string
+	// A boolean to display or not the current value of the argument in the help message
+	HideValue bool
 }
+
 type IntsArg struct {
 	IntsParam
 
@@ -76,6 +88,8 @@ type IntsArg struct {
 	EnvVar string
 	// The argument's inital value
 	Value []int
+	// A boolean to display or not the current value of the argument in the help message
+	HideValue bool
 }
 
 /*
