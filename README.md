@@ -1,6 +1,7 @@
 # mow.cli
 
 [![Build Status](https://travis-ci.org/jawher/mow.cli.svg?branch=master)](https://travis-ci.org/jawher/mow.cli)
+[![GoDoc](https://godoc.org/github.com/jawher/mow.cli?status.svg)](https://godoc.org/github.com/jawher/mow.cli)
 
 A framework to build command line applications in Go with most of the burden of arguments parsing and validation placed on the framework instead of the user.
 
