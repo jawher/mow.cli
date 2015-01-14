@@ -112,40 +112,59 @@ func TestSpecOptFolding(t *testing.T) {
 		d       string
 	}{
 		{
-			"[-abcd...]", []string{},
+			"[-abcd]", []string{},
 			false, false, false,
 			"",
 		},
 		{
-			"[-abcd...]", []string{"-ab"},
+			"[-abcd]", []string{"-ab"},
+			true, true, false,
+			"",
+		},
+		{
+			"[-abcd]", []string{"-ba"},
 			true, true, false,
 			"",
 		},
 
 		{
-			"[-abcd...]", []string{"-ad", "TEST"},
+			"[-abcd]", []string{"-ad", "TEST"},
 			true, false, false,
 			"TEST",
 		},
-
 		{
-			"[-abcd...]", []string{"-abd", "TEST"},
+			"[-abcd]", []string{"-abd", "TEST"},
 			true, true, false,
 			"TEST",
 		},
 		{
-			"[-abcd...]", []string{"-abcd", "TEST"},
+			"[-abcd]", []string{"-abcd", "TEST"},
 			true, true, true,
 			"TEST",
 		},
 		{
-			"[-abcd...]", []string{"-bcd", "TEST"},
+			"[-abcd]", []string{"-bcd", "TEST"},
 			false, true, true,
 			"TEST",
 		},
 		{
-			"[-abcd...]", []string{"-ac"},
+			"[-abcd]", []string{"-cbd", "TEST"},
+			false, true, true,
+			"TEST",
+		},
+		{
+			"[-abcd]", []string{"-ac"},
 			true, false, true,
+			"",
+		},
+		{
+			"[-abcd]", []string{"-ca"},
+			true, false, true,
+			"",
+		},
+		{
+			"[-abcd]", []string{"-cab"},
+			true, true, true,
 			"",
 		},
 	}

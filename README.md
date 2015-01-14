@@ -343,18 +343,23 @@ This is a shortcut to declare a choice between multiple options:
 x.Spec = "-abcd"
 ```
 
-Is equivalent to
+Is **almost** equivalent to:
+
 ```go
-x.Spec = "-a | -b | -c | -d"
+x.Spec = "(-a | -b | -c | -d)..."
 ```
+
+I.e. any combination of the listed options in any order, with at least one option.
 
 ### All options
 
 Another shortcut:
+
 ```go    
 x.Spec = "[OPTIONS]"
 ```
-This is a special syntax (the square brackets are not for marking an optional item, and the uppercased word is not for an argument).
+
+This is a special syntax (the square brackets are not for marking an optional item, and the uppercased word is not for an argument).  
 This is equivalent to a repeatable choice between all the available options.
 For example, if an app or a command declares 4 options a, b, c and d, `[OPTIONS]` is equivalent to
 

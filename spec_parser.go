@@ -139,10 +139,7 @@ func (p *uParser) atom() (*state, *state) {
 			panic("No options after --")
 		}
 		end = newState(p.cmd)
-		for _, opt := range p.cmd.options {
-			start.t(opt, end)
-		}
-		end.t(shortcut, start)
+		start.t(optsMatcher(p.cmd.options), end)
 	case p.found(utShortOpt):
 		if p.rejectOptions {
 			p.back()
@@ -173,16 +170,16 @@ func (p *uParser) atom() (*state, *state) {
 		}
 		end = newState(p.cmd)
 		sq := p.matchedToken.val
-
+		opts := []*opt{}
 		for i, _ := range sq {
 			sn := sq[i : i+1]
 			opt, declared := p.cmd.optionsIdx["-"+sn]
 			if !declared {
 				panic(fmt.Sprintf("Undeclared option %s", sn))
 			}
-
-			start.t(opt, end)
+			opts = append(opts, opt)
 		}
+		start.t(optsMatcher(opts), end)
 	case p.found(utOpenPar):
 		start, end = p.seq(true)
 		p.expect(utClosePar)

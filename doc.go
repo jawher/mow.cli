@@ -264,8 +264,9 @@ Option group
 
 This is a shortcut to declare a choice between multiple options:
 	x.Spec = "-abcd"
-Is equivalent to
-	x.Spec = "-a | -b | -c | -d"
+Is *almost* equivalent to:
+	x.Spec = "(-a | -b | -c | -d)..."
+I.e. any combination of the listed options in any order, with at least one option.
 
 All options
 
