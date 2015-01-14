@@ -94,6 +94,49 @@ func TestSpecBoolOpt(t *testing.T) {
 	}
 }
 
+func TestDefaultSpec(t *testing.T) {
+	var (
+		a *bool
+		b *string
+		c *string
+	)
+
+	type call struct {
+		args []string
+		a    bool
+		b, c string
+	}
+	cases := []struct {
+		init  func(cmd *Cmd)
+		calls []call
+	}{
+		{
+			func(cmd *Cmd) {
+				a = cmd.BoolOpt("a", false, "")
+				b = cmd.StringOpt("b", "", "")
+				c = cmd.StringArg("C", "", "")
+			},
+			[]call{
+				{[]string{"X"}, false, "", "X"},
+				{[]string{"-a", "X"}, true, "", "X"},
+				{[]string{"-b=Z", "X"}, false, "Z", "X"},
+				{[]string{"-b=Z", "-a", "X"}, true, "Z", "X"},
+				{[]string{"-a", "-b=Z", "X"}, true, "Z", "X"},
+			},
+		},
+	}
+
+	for _, cas := range cases {
+		for _, cl := range cas.calls {
+			okCmd(t, "", cas.init, cl.args)
+			require.Equal(t, cl.a, *a)
+			require.Equal(t, cl.b, *b)
+			require.Equal(t, cl.c, *c)
+		}
+	}
+
+}
+
 func TestSpecOptFolding(t *testing.T) {
 	var a, b, c *bool
 	var d *string
