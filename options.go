@@ -222,30 +222,26 @@ func (c *Cmd) mkOpt(opt opt, defaultValue interface{}) interface{} {
 
 type optsMatcher []*opt
 
-func (om optsMatcher) try(visited map[*opt]bool, args []string, c parseContext) (bool, int) {
+func (om optsMatcher) try(args []string, c parseContext) (bool, int) {
 	if len(args) == 0 || c.rejectOptions {
 		return false, 0
 	}
 	for _, o := range om {
-		if v, found := visited[o]; !found || !v {
-			if ok, cons := o.match(args, c); ok {
-				visited[o] = true
-				return ok, cons
-			}
+		if ok, cons := o.match(args, c); ok {
+			return ok, cons
 		}
 	}
 	return false, 0
 }
 
 func (om optsMatcher) match(args []string, c parseContext) (bool, int) {
-	visited := map[*opt]bool{}
-	ok, cons := om.try(visited, args, c)
+	ok, cons := om.try(args, c)
 	if !ok {
 		return false, 0
 	}
 	consTot := cons
 	for {
-		ok, cons := om.try(visited, args[consTot:], c)
+		ok, cons := om.try(args[consTot:], c)
 		if !ok {
 			return true, consTot
 		}

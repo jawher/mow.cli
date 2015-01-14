@@ -343,7 +343,7 @@ This is a shortcut to declare a choice between multiple options:
 x.Spec = "-abcd"
 ```
 
-Is **almost** equivalent to:
+Is equivalent to:
 
 ```go
 x.Spec = "(-a | -b | -c | -d)..."
