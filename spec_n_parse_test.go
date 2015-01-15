@@ -913,5 +913,197 @@ func TestSpecSingleDash(t *testing.T) {
 	okCmd(t, spec, init, []string{"-f", "--", "-"})
 	require.Equal(t, "-", *path)
 	require.True(t, *f)
+}
+
+func TestSpecOptOrdering(t *testing.T) {
+	var a, b, c *bool
+	var d, e, f *string
+
+	init := func(cmd *Cmd) {
+		a = cmd.BoolOpt("a", false, "")
+		b = cmd.BoolOpt("b", false, "")
+		c = cmd.BoolOpt("c", false, "")
+		d = cmd.StringOpt("d", "", "")
+
+		e = cmd.StringArg("E", "", "")
+		f = cmd.StringArg("F", "", "")
+	}
+
+	cases := []struct {
+		spec    string
+		args    []string
+		a, b, c bool
+		d, e, f string
+	}{
+		{
+			"-a -b",
+			[]string{"-a", "-b"},
+			true, true, false,
+			"", "", "",
+		},
+		{
+			"-a -b",
+			[]string{"-b", "-a"},
+			true, true, false,
+			"", "", "",
+		},
+
+		{
+			"-a [-b]",
+			[]string{"-a"},
+			true, false, false,
+			"", "", "",
+		},
+		{
+			"-a [-b]",
+			[]string{"-b", "-a"},
+			true, true, false,
+			"", "", "",
+		},
+		{
+			"-a [-b]",
+			[]string{"-b", "-a"},
+			true, true, false,
+			"", "", "",
+		},
+
+		{
+			"[-a -b]",
+			[]string{"-a", "-b"},
+			true, true, false,
+			"", "", "",
+		},
+		{
+			"[-a -b]",
+			[]string{"-b", "-a"},
+			true, true, false,
+			"", "", "",
+		},
+
+		{
+			"[-a [-b]]",
+			[]string{"-a"},
+			true, false, false,
+			"", "", "",
+		},
+		{
+			"[-a [-b]]",
+			[]string{"-a", "-b"},
+			true, true, false,
+			"", "", "",
+		},
+		{
+			"[-a [-b]]",
+			[]string{"-b", "-a"},
+			true, true, false,
+			"", "", "",
+		},
+
+		{
+			"-a | -b -c",
+			[]string{"-a", "-c"},
+			true, false, true,
+			"", "", "",
+		},
+		{
+			"-a | -b -c",
+			[]string{"-c", "-a"},
+			true, false, true,
+			"", "", "",
+		},
+		{
+			"-a | -b -c",
+			[]string{"-b", "-c"},
+			false, true, true,
+			"", "", "",
+		},
+		{
+			"-a | -b -c",
+			[]string{"-c", "-b"},
+			false, true, true,
+			"", "", "",
+		},
+
+		{
+			"(-a | -b) (-c | -d)",
+			[]string{"-a", "-c"},
+			true, false, true,
+			"", "", "",
+		},
+		{
+			"(-a | -b) (-c | -d)",
+			[]string{"-c", "-a"},
+			true, false, true,
+			"", "", "",
+		},
+
+		{
+			"(-a | -b) [-c | -d]",
+			[]string{"-a"},
+			true, false, false,
+			"", "", "",
+		},
+		{
+			"(-a | -b) [-c | -d]",
+			[]string{"-a", "-c"},
+			true, false, true,
+			"", "", "",
+		},
+		{
+			"(-a | -b) [-c | -d]",
+			[]string{"-d=X", "-b"},
+			false, true, false,
+			"X", "", "",
+		},
+
+		{
+			"-a -b E -c -d",
+			[]string{"-a", "-b", "E", "-c", "-d", "D"},
+			true, true, true,
+			"D", "E", "",
+		},
+
+		{
+			"-a -b E -c -d",
+			[]string{"-a", "-b", "E", "-c", "-d", "D"},
+			true, true, true,
+			"D", "E", "",
+		},
+		{
+			"-a -b E -c -d",
+			[]string{"-b", "-a", "E", "-c", "-d", "D"},
+			true, true, true,
+			"D", "E", "",
+		},
+		{
+			"-a -b E -c -d",
+			[]string{"-a", "-b", "E", "-d", "D", "-c"},
+			true, true, true,
+			"D", "E", "",
+		},
+
+		{
+			"-a -d...",
+			[]string{"-a", "-d", "1"},
+			true, false, false,
+			"1", "", "",
+		},
+		{
+			"-a -d...",
+			[]string{"-d", "1", "-d", "2", "-a"},
+			true, false, false,
+			"2", "", "",
+		},
+	}
+
+	for _, cas := range cases {
+		okCmd(t, cas.spec, init, cas.args)
+		require.Equal(t, cas.a, *a)
+		require.Equal(t, cas.b, *b)
+		require.Equal(t, cas.c, *c)
+		require.Equal(t, cas.d, *d)
+		require.Equal(t, cas.e, *e)
+		require.Equal(t, cas.f, *f)
+	}
 
 }

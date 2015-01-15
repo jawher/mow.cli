@@ -88,9 +88,29 @@ func (s *state) simplifySelf(start *state) bool {
 	return false
 }
 
+func fsmCopy(s, e *state) (*state, *state) {
+	cache := map[*state]*state{}
+	s.copy(cache)
+	return cache[s], cache[e]
+}
+
+func (s *state) copy(cache map[*state]*state) *state {
+	c := newState(s.cmd)
+	c.terminal = s.terminal
+	cache[s] = c
+	for _, tr := range s.transitions {
+		dest := tr.next
+		if destCopy, found := cache[dest]; found {
+			c.transitions = append(c.transitions, &transition{tr.matcher, destCopy})
+			continue
+		}
+		c.transitions = append(c.transitions, &transition{tr.matcher, dest.copy(cache)})
+	}
+	return c
+}
+
 func (s *state) simplify() {
 	simplify(s, s, map[*state]bool{})
-
 }
 
 func simplify(start, s *state, visited map[*state]bool) {
@@ -104,6 +124,29 @@ func simplify(start, s *state, visited map[*state]bool) {
 	for s.simplifySelf(start) {
 	}
 
+}
+
+func (s *state) onlyOpts() bool {
+	return onlyOpts(s, map[*state]bool{})
+}
+
+func onlyOpts(s *state, visited map[*state]bool) bool {
+	if visited[s] {
+		return true
+	}
+	visited[s] = true
+
+	for _, tr := range s.transitions {
+		switch tr.matcher.(type) {
+		case *arg:
+			return false
+		}
+		if !onlyOpts(tr.next, visited) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (s *state) dot() string {
@@ -123,7 +166,7 @@ func dot(s *state, visited map[*state]bool) []string {
 		res = append(res, dot(tr.next, visited)...)
 	}
 	if s.terminal {
-		res = append(res, fmt.Sprintf("S%d [peripheries=2]", s.id))
+		res = append(res, fmt.Sprintf("\tS%d [peripheries=2]", s.id))
 	}
 	return res
 }
