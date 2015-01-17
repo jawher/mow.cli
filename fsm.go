@@ -48,6 +48,14 @@ func (s *state) t(matcher upMatcher, next *state) *state {
 	return next
 }
 
+func (s *state) has(tr *transition) bool {
+	for _, t := range s.transitions {
+		if t.next == tr.next && t.matcher == tr.matcher {
+			return true
+		}
+	}
+	return false
+}
 func incoming(s, into *state, visited map[*state]bool) []*transition {
 	res := []*transition{}
 	if visited[s] {
@@ -69,23 +77,6 @@ func removeItemAt(idx int, arr transitions) transitions {
 	copy(res, arr[:idx])
 	copy(res[idx:], arr[idx+1:])
 	return res
-}
-
-func (s *state) simplifySelf(start *state) bool {
-	for idx, tr := range s.transitions {
-		if _, ok := tr.matcher.(upShortcut); ok {
-			next := tr.next
-			s.transitions = removeItemAt(idx, s.transitions)
-			for _, tr := range next.transitions {
-				s.transitions = append(s.transitions, tr)
-			}
-			if next.terminal {
-				s.terminal = true
-			}
-			return true
-		}
-	}
-	return false
 }
 
 func fsmCopy(s, e *state) (*state, *state) {
@@ -123,7 +114,25 @@ func simplify(start, s *state, visited map[*state]bool) {
 	}
 	for s.simplifySelf(start) {
 	}
+}
 
+func (s *state) simplifySelf(start *state) bool {
+	for idx, tr := range s.transitions {
+		if _, ok := tr.matcher.(upShortcut); ok {
+			next := tr.next
+			s.transitions = removeItemAt(idx, s.transitions)
+			for _, tr := range next.transitions {
+				if !s.has(tr) {
+					s.transitions = append(s.transitions, tr)
+				}
+			}
+			if next.terminal {
+				s.terminal = true
+			}
+			return true
+		}
+	}
+	return false
 }
 
 func (s *state) onlyOpts() bool {
