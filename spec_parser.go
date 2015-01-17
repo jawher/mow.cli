@@ -253,11 +253,7 @@ func (p *uParser) atom() (*state, *state) {
 		panic("Unexpected input: was expecting a command or a positional argument or an option")
 	}
 	if p.found(utRep) {
-		start2, end2 := newState(p.cmd), newState(p.cmd)
-		start2.t(shortcut, start)
-		end.t(shortcut, end2)
-		end2.t(shortcut, start2)
-		start, end = start2, end2
+		end.t(shortcut, start)
 	}
 	return start, end
 }
