@@ -235,7 +235,7 @@ func (c *Cmd) PrintHelp() {
 		sub = "COMMAND [arg...]"
 	}
 	path := strings.Join(full, " ")
-	fmt.Fprintf(out, "\nUsage: %s %s %s\n\n", path, c.Spec, sub)
+	fmt.Fprintf(out, "\nUsage: %s %s %s\n\n", path, strings.TrimSpace(c.Spec), sub)
 	if len(c.desc) > 0 {
 		fmt.Fprintf(out, "%s\n", c.desc)
 	}
