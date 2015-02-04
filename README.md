@@ -370,10 +370,14 @@ x.Spec = "[-a | -b | -c | -d]..."
 
 ### Operators
 
-The `--` operator can be used in the spec strings as a hint to both the user (since it will be shown in the help screens) and to the mow.cli spec parser as it will reject any spec string containing options after the `--` operator:
+The `--` operator can be used in a spec string to automatically treat everything following it as an options.
+
+In other words, placing a `--` in the spec string automatically inserts a `--` in the same position in the program call arguments.
+
+This lets you write programs like the `time` utility for example:
 
 ```go
-x.Spec = "gomon -tri [-- CMD [ARG...]]"
+x.Spec = "time -lp [-- CMD [ARG...]]"
 ```
 
 ## Grammar

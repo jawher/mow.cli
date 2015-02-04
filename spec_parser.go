@@ -23,40 +23,6 @@ type uParser struct {
 	rejectOptions bool
 }
 
-type upMatcher interface {
-	match(args []string, c parseContext) (bool, int)
-}
-
-type upShortcut bool
-
-func (u upShortcut) match(args []string, c parseContext) (bool, int) {
-	return true, 0
-}
-
-func (u upShortcut) String() string {
-	return "*"
-}
-
-const (
-	shortcut = upShortcut(true)
-)
-
-type upExactly string
-
-func (u upExactly) match(args []string, c parseContext) (bool, int) {
-	if len(args) == 0 {
-		return false, 0
-	}
-	if args[0] == string(u) {
-		return true, 1
-	}
-	return false, 0
-}
-
-func (u upExactly) String() string {
-	return "==" + string(u)
-}
-
 func (p *uParser) parse() (s *state, err error) {
 	defer func() {
 		if v := recover(); v != nil {
@@ -247,8 +213,8 @@ func (p *uParser) atom() (*state, *state) {
 		p.expect(utCloseSq)
 	case p.found(utDoubleDash):
 		p.rejectOptions = true
-		// just consume the -- and parse the following atom
-		return p.atom()
+		end = start.t(optsEnd, newState(p.cmd))
+		return start, end
 	default:
 		panic("Unexpected input: was expecting a command or a positional argument or an option")
 	}

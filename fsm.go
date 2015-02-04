@@ -28,6 +28,8 @@ func (t transitions) Less(i, j int) bool {
 	switch a.(type) {
 	case upShortcut:
 		return false
+	case upOptsEnd:
+		return false
 	case *arg:
 		return false
 	default:
@@ -202,7 +204,11 @@ func (pc parseContext) merge(o parseContext) {
 
 func (s *state) parse(args []string) error {
 	pc := newParseContext()
-	if !s.apply(args, pc) {
+	ok, err := s.apply(args, pc)
+	if err != nil {
+		return err
+	}
+	if !ok {
 		return fmt.Errorf("incorrect usage")
 	}
 
@@ -225,38 +231,45 @@ func (s *state) parse(args []string) error {
 	return nil
 }
 
-func (s *state) apply(args []string, pc parseContext) bool {
+func (s *state) apply(args []string, pc parseContext) (bool, error) {
 	if s.terminal && len(args) == 0 {
-		return true
+		return true, nil
 	}
 	sort.Sort(s.transitions)
 
-	if len(args) > 0 && args[0] == "--" && !pc.rejectOptions {
-		pc.rejectOptions = true
-		args = args[1:]
+	if len(args) > 0 {
+		arg := args[0]
+
+		if !pc.rejectOptions && arg == "--" {
+			pc.rejectOptions = true
+			args = args[1:]
+		}
 	}
 
 	type match struct {
-		tr       *transition
-		consumes int
-		pc       parseContext
+		tr  *transition
+		rem []string
+		pc  parseContext
 	}
 
 	matches := []*match{}
 	for _, tr := range s.transitions {
 		fresh := newParseContext()
 		fresh.rejectOptions = pc.rejectOptions
-		if ok, cons := tr.matcher.match(args, fresh); ok {
-			matches = append(matches, &match{tr, cons, fresh})
+		if ok, rem := tr.matcher.match(args, &fresh); ok {
+			matches = append(matches, &match{tr, rem, fresh})
 		}
 	}
 
 	for _, m := range matches {
-		ok := m.tr.next.apply(args[m.consumes:], m.pc)
+		ok, err := m.tr.next.apply(m.rem, m.pc)
+		if err != nil {
+			return false, err
+		}
 		if ok {
 			pc.merge(m.pc)
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

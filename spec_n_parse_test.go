@@ -176,7 +176,17 @@ func TestSpecOptFolding(t *testing.T) {
 			"TEST",
 		},
 		{
+			"[-abcd]", []string{"-adTEST"},
+			true, false, false,
+			"TEST",
+		},
+		{
 			"[-abcd]", []string{"-abd", "TEST"},
+			true, true, false,
+			"TEST",
+		},
+		{
+			"[-abcd]", []string{"-abdTEST"},
 			true, true, false,
 			"TEST",
 		},
@@ -876,7 +886,17 @@ func TestSpecOptionAfterOptionsEndIsParsedAsArg(t *testing.T) {
 	}
 
 	spec := "-- CMD [ARG...]"
-	okCmd(t, spec, init, []string{"--", "go", "test", "-v"})
+	cases := [][]string{
+		{"ls"},
+		{"ls", "-l"},
+		{"ls", "--test"},
+		{"ls", "--test=true"},
+		{"ls", "--test", "-f"},
+	}
+
+	for _, cas := range cases {
+		okCmd(t, spec, init, cas)
+	}
 }
 
 func TestSpecSingleDash(t *testing.T) {

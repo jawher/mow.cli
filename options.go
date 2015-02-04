@@ -166,23 +166,6 @@ func (o *opt) isBool() bool {
 	return o.value.Elem().Kind() == reflect.Bool
 }
 
-func (o *opt) match(args []string, c parseContext) (bool, int) {
-	if len(args) == 0 || c.rejectOptions {
-		return false, 0
-	}
-	for _, name := range o.names {
-		if args[0] == name {
-			if len(args) < 2 {
-				return false, 0
-			}
-			val := args[1]
-			c.opts[o] = append(c.opts[o], val)
-			return true, 2
-		}
-	}
-	return false, 0
-}
-
 func (o *opt) String() string {
 	return fmt.Sprintf("Opt(%v)", o.names)
 }
@@ -218,39 +201,4 @@ func (c *Cmd) mkOpt(opt opt, defaultValue interface{}) interface{} {
 	}
 
 	return res.Interface()
-}
-
-type optsMatcher []*opt
-
-func (om optsMatcher) try(args []string, c parseContext) (bool, int) {
-	if len(args) == 0 || c.rejectOptions {
-		return false, 0
-	}
-	for _, o := range om {
-		if ok, cons := o.match(args, c); ok {
-			return ok, cons
-		}
-	}
-	return false, 0
-}
-
-func (om optsMatcher) match(args []string, c parseContext) (bool, int) {
-	ok, cons := om.try(args, c)
-	if !ok {
-		return false, 0
-	}
-	consTot := cons
-	for {
-		ok, cons := om.try(args[consTot:], c)
-		if !ok {
-			return true, consTot
-		}
-		consTot += cons
-	}
-	return true, consTot
-}
-
-func (om optsMatcher) String() string {
-	return fmt.Sprintf("Opts(%v)", []*opt(om))
-
 }

@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"reflect"
-	"strings"
 )
 
 type arg struct {
@@ -135,17 +134,6 @@ The result should be stored in a variable (a pointer to an int slice) which will
 */
 func (c *Cmd) IntsArg(name string, value []int, desc string) *[]int {
 	return c.mkArg(arg{name: name, desc: desc}, value).(*[]int)
-}
-
-func (arg *arg) match(args []string, c parseContext) (bool, int) {
-	if len(args) == 0 {
-		return false, 0
-	}
-	if !c.rejectOptions && strings.HasPrefix(args[0], "-") && args[0] != "-" {
-		return false, 0
-	}
-	c.args[arg] = append(c.args[arg], args[0])
-	return true, 1
 }
 
 func (a *arg) String() string {

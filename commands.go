@@ -321,15 +321,9 @@ func (c *Cmd) parse(args []string) error {
 		return nil
 	}
 
-	nargs, nargsLen, err := c.normalize(args)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
-		c.PrintHelp()
-		c.onError(err)
-		return err
-	}
+	nargsLen := c.getOptsAndArgs(args)
 
-	if err := c.fsm.parse(nargs); err != nil {
+	if err := c.fsm.parse(args[:nargsLen]); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
 		c.PrintHelp()
 		c.onError(err)
@@ -357,11 +351,14 @@ func (c *Cmd) parse(args []string) error {
 		}
 	}
 
+	var err error
 	switch {
 	case strings.HasPrefix(arg, "-"):
-		fmt.Fprintf(os.Stderr, "Error: illegal option %s\n", arg)
+		err = fmt.Errorf("Error: illegal option %s", arg)
+		fmt.Fprintln(os.Stderr, err.Error())
 	default:
-		fmt.Fprintf(os.Stderr, "Error: illegal input %s\n", arg)
+		err = fmt.Errorf("Error: illegal input %s", arg)
+		fmt.Fprintln(os.Stderr, err.Error())
 	}
 	c.PrintHelp()
 	c.onError(err)
@@ -383,105 +380,16 @@ func (c *Cmd) helpRequested(args []string) bool {
 	return false
 }
 
-func (c *Cmd) normalize(args []string) (res []string, consumed int, err error) {
-	err = nil
-	res = []string{}
-	consumed = 0
-	afterOptionsEnd := false
+func (c *Cmd) getOptsAndArgs(args []string) int {
+	consumed := 0
+
 	for _, arg := range args {
 		for _, sub := range c.commands {
 			if arg == sub.name {
-				return
+				return consumed
 			}
-		}
-		switch {
-		case arg == "-":
-			res = append(res, arg)
-		case !afterOptionsEnd && arg == "--":
-			res = append(res, arg)
-			afterOptionsEnd = true
-		case !afterOptionsEnd && strings.HasPrefix(arg, "--"):
-			var parts []string
-			parts, err = c.normalizeLongOpt(arg)
-			if err != nil {
-				return
-			}
-			res = append(res, parts...)
-
-		case !afterOptionsEnd && strings.HasPrefix(arg, "-"):
-			var parts []string
-			parts, err = c.normalizeShortOpt(arg)
-			if err != nil {
-				return
-			}
-			res = append(res, parts...)
-		default:
-			res = append(res, arg)
 		}
 		consumed++
 	}
-	return
-}
-
-func (c *Cmd) normalizeLongOpt(arg string) ([]string, error) {
-	res := []string{}
-	kv := strings.Split(arg, "=")
-	name := kv[0]
-
-	opt, declared := c.optionsIdx[name]
-	if !declared {
-		return nil, fmt.Errorf("Illegal option %s", name)
-	}
-
-	if len(kv) == 2 {
-		res = append(res, name, kv[1])
-	} else {
-		res = append(res, name)
-		if opt.isBool() {
-			res = append(res, "true")
-		}
-	}
-
-	return res, nil
-}
-
-func (c *Cmd) normalizeShortOpt(arg string) ([]string, error) {
-	res := []string{}
-	if len(arg) > 1 {
-		name := arg[0:2]
-		opt, declared := c.optionsIdx[name]
-		if !declared {
-			return nil, fmt.Errorf("Illegal option %s", name)
-		}
-		switch {
-		case opt.isBool():
-			res = append(res, name)
-			if len(arg) == 2 {
-				res = append(res, "true")
-				return res, nil
-			}
-			rem := arg[2:]
-			if strings.HasPrefix(rem, "=") {
-				res = append(res, rem[1:])
-				return res, nil
-			}
-			res = append(res, "true")
-			parts, err := c.normalizeShortOpt("-" + rem)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, parts...)
-			return res, nil
-		default:
-			res = append(res, name)
-			if len(arg) > 2 {
-				val := arg[2:]
-				if strings.HasPrefix(val, "=") {
-					val = arg[3:]
-				}
-				res = append(res, val)
-			}
-		}
-	}
-	return res, nil
+	return consumed
 }
