@@ -154,6 +154,7 @@ func (p *uParser) atom() (*state, *state) {
 		name := p.matchedToken.val
 		arg, declared := p.cmd.argsIdx[name]
 		if !declared {
+			p.back()
 			panic(fmt.Sprintf("Undeclared arg %s", name))
 		}
 		end = start.t(arg, newState(p.cmd))
@@ -172,6 +173,7 @@ func (p *uParser) atom() (*state, *state) {
 		name := p.matchedToken.val
 		opt, declared := p.cmd.optionsIdx[name]
 		if !declared {
+			p.back()
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
 		end = start.t(opt, newState(p.cmd))
@@ -184,6 +186,7 @@ func (p *uParser) atom() (*state, *state) {
 		name := p.matchedToken.val
 		opt, declared := p.cmd.optionsIdx[name]
 		if !declared {
+			p.back()
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
 		end = start.t(opt, newState(p.cmd))
@@ -199,6 +202,7 @@ func (p *uParser) atom() (*state, *state) {
 			sn := sq[i : i+1]
 			opt, declared := p.cmd.optionsIdx["-"+sn]
 			if !declared {
+				p.back()
 				panic(fmt.Sprintf("Undeclared option %s", sn))
 			}
 			opts = append(opts, opt)
