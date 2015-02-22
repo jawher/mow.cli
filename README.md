@@ -31,6 +31,10 @@ It too suffers from the following limitations:
 
 mow.cli is my humble attempt at solving these issues and providing an alternative.
 
+Here's a quick demo of mow.cli's contexual help messages:
+
+![help](http://i.imgur.com/LGrRiyJ.gif)
+
 ## Installation
 
 To install this library, simply run:
