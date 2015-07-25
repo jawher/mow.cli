@@ -299,10 +299,17 @@ x.StringArg("DST", ...)
 
 ### Ordering
 
-The order of the elements in a spec string is respected and enforced when parsing the command line arguments:
+Except for options, The order of the elements in a spec string is respected and enforced when parsing the command line arguments:
+
 ```go
-x.Spec = "-f SRC DST"
+x.Spec = "-f -g SRC -h DST"
 ```
+
+Consecutive options (`-f` and `-g` for example) get parsed regardless of the order they are specified in (both `-f=5 -g=6` and `-g=6 -f=5` are valid).
+
+Order between options and arguments is significant (`-f` and `-g` must appear before the `SRC` argument).
+
+Same goes for arguments, where `SRC` must appear before `DST`.
 
 ### Optionality
 
