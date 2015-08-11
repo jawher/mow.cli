@@ -230,12 +230,19 @@ func (c *Cmd) PrintHelp() {
 	out := os.Stderr
 
 	full := append(c.parents, c.name)
-	sub := ""
-	if len(c.commands) > 0 {
-		sub = "COMMAND [arg...]"
-	}
 	path := strings.Join(full, " ")
-	fmt.Fprintf(out, "\nUsage: %s %s %s\n\n", path, strings.TrimSpace(c.Spec), sub)
+	fmt.Fprintf(out, "\nUsage: %s", path)
+
+	spec := strings.TrimSpace(c.Spec)
+	if len(spec) > 0 {
+		fmt.Fprintf(out, " %s", spec)
+	}
+
+	if len(c.commands) > 0 {
+		fmt.Fprint(out, " COMMAND [arg...]")
+	}
+	fmt.Fprint(out, "\n\n")
+
 	if len(c.desc) > 0 {
 		fmt.Fprintf(out, "%s\n", c.desc)
 	}
