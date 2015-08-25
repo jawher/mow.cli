@@ -86,7 +86,7 @@ func (p *uParser) seq(required bool) (*state, *state) {
 		return pair{s, e}
 	}
 
-	var p0 *pair = nil
+	var p0 *pair
 	for _, p1 := range comps {
 		if !p1.s.onlyOpts() {
 			if p0 != nil {
@@ -198,7 +198,7 @@ func (p *uParser) atom() (*state, *state) {
 		end = newState(p.cmd)
 		sq := p.matchedToken.val
 		opts := []*opt{}
-		for i, _ := range sq {
+		for i := range sq {
 			sn := sq[i : i+1]
 			opt, declared := p.cmd.optionsIdx["-"+sn]
 			if !declared {

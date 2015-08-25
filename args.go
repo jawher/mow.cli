@@ -14,6 +14,7 @@ type arg struct {
 	value reflect.Value
 }
 
+// BoolArg describes a boolean argument
 type BoolArg struct {
 	BoolParam
 
@@ -29,6 +30,7 @@ type BoolArg struct {
 	HideValue bool
 }
 
+// StringArg describes a string argument
 type StringArg struct {
 	StringParam
 
@@ -44,6 +46,7 @@ type StringArg struct {
 	HideValue bool
 }
 
+// IntArg describes an int argument
 type IntArg struct {
 	IntParam
 
@@ -59,6 +62,7 @@ type IntArg struct {
 	HideValue bool
 }
 
+// StringsArg describes a string slice argument
 type StringsArg struct {
 	StringsParam
 
@@ -75,6 +79,7 @@ type StringsArg struct {
 	HideValue bool
 }
 
+// IntsArg describes an int slice argument
 type IntsArg struct {
 	IntsParam
 

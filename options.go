@@ -15,6 +15,7 @@ type opt struct {
 	hideValue bool
 }
 
+// BoolOpt describes a boolean option
 type BoolOpt struct {
 	BoolParam
 
@@ -31,6 +32,7 @@ type BoolOpt struct {
 	HideValue bool
 }
 
+// StringOpt describes a string option
 type StringOpt struct {
 	StringParam
 
@@ -47,6 +49,7 @@ type StringOpt struct {
 	HideValue bool
 }
 
+// IntOpt describes an int option
 type IntOpt struct {
 	IntParam
 
@@ -63,6 +66,7 @@ type IntOpt struct {
 	HideValue bool
 }
 
+// StringsOpt describes a string slice option
 type StringsOpt struct {
 	StringsParam
 
@@ -80,6 +84,7 @@ type StringsOpt struct {
 	HideValue bool
 }
 
+// IntsOpt describes an int slice option
 type IntsOpt struct {
 	IntsParam
 

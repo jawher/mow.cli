@@ -124,7 +124,7 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 				typ := utShortOpt
 				if pos-start > 2 {
 					typ = utOptSeq
-					start += 1
+					start++
 				}
 				opt := usage[start:pos]
 				tkp(typ, opt, start)
