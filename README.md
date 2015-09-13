@@ -3,14 +3,14 @@
 [![Build Status](https://travis-ci.org/jawher/mow.cli.svg?branch=master)](https://travis-ci.org/jawher/mow.cli)
 [![GoDoc](https://godoc.org/github.com/jawher/mow.cli?status.svg)](https://godoc.org/github.com/jawher/mow.cli)
 
-A framework to build command line applications in Go with most of the burden of arguments parsing and validation placed on the framework instead of the user.
+A framework to build command line applications in Go with most of the burden of arguments parsing and validation placed on the framework instead of the developer.
 
 
 ## Motivation
 
 The default `flag` package is fun and very easy to use but has several limitations:
 
-* No argument validation: it only handles flags, it is up to use to manually parse and validations the command arguments
+* No argument validation: it only handles flags, it is up to the developer to manually parse and validations the command arguments
 * Doesn't handle option folding: `-abc` (synonym for `-a -b -c`)
 * Doesn't handle glued options name and value: `-Ivalue`
 * Doesn't handle commands and sub commands
