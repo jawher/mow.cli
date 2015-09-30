@@ -170,7 +170,6 @@ func (om optsMatcher) match(args []string, c *parseContext) (bool, []string) {
 		}
 		nargs = nnargs
 	}
-	return true, nargs
 }
 
 func (om optsMatcher) String() string {

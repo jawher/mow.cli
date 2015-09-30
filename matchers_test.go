@@ -81,10 +81,10 @@ func TestBoolOptMatcher(t *testing.T) {
 func TestOptMatcher(t *testing.T) {
 	names := []string{"-f", "--force"}
 	opts := []*opt{
-		&opt{names: names, value: reflect.New(reflect.TypeOf(""))},
-		&opt{names: names, value: reflect.New(reflect.TypeOf(1))},
-		&opt{names: names, value: reflect.New(reflect.TypeOf([]string{}))},
-		&opt{names: names, value: reflect.New(reflect.TypeOf([]int{}))},
+		{names: names, value: reflect.New(reflect.TypeOf(""))},
+		{names: names, value: reflect.New(reflect.TypeOf(1))},
+		{names: names, value: reflect.New(reflect.TypeOf([]string{}))},
+		{names: names, value: reflect.New(reflect.TypeOf([]int{}))},
 	}
 
 	cases := []struct {
