@@ -31,7 +31,7 @@ It too suffers from the following limitations:
 
 mow.cli is my humble attempt at solving these issues and providing an alternative.
 
-Here's a quick demo of mow.cli's contexual help messages:
+Here's a quick demo of mow.cli's contextual help messages:
 
 ![help](http://i.imgur.com/LGrRiyJ.gif)
 
@@ -70,7 +70,7 @@ To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on 
 recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 ```
 
-* The first argument is a space seperated list of names for the option without the dashes
+* The first argument is a space separated list of names for the option without the dashes
 * The second parameter is the default value for the option
 * The third and last parameter is the option description, as will be shown in the help messages
 
@@ -146,7 +146,7 @@ src = cp.Strings(StringsArg{
 ```
 
 The field names are self-describing.
-The Value field is where you can set the inital value for the argument.
+The Value field is where you can set the initial value for the argument.
 
 EnvVar accepts a space separated list of environment variables names to be used to initialize the argument.
 
@@ -313,7 +313,7 @@ Same goes for arguments, where `SRC` must appear before `DST`.
 
 ### Optionality
 
-You can mark iterms as optional in a spec string by enclosing them in squqre brackets :`[...]`
+You can mark items as optional in a spec string by enclosing them in square brackets :`[...]`
 ```go
 x.Spec = "[-x]"
 ```
@@ -345,7 +345,7 @@ x.Spec = "(-e COMMAND)... | (-x|-y)"
 ```
 
 The parenthesis in the example above serve to mark that it is the sequence of a -e flag followed by an argument that is repeatable, and that
-all that is mutually exclusive to a choice betwwen -x and -y options.
+all that is mutually exclusive to a choice between -x and -y options.
 
 ### Option group
 
@@ -431,7 +431,7 @@ By default, and unless a spec string is set by the user, mow.cli auto-generates 
 * If at least one option was declared, append `[OPTIONS]` to the spec string
 * For every declared argument, append it, in the order of declaration, to the spec string
 
-For example, given this command delcaration:
+For example, given this command declaration:
 
 ```go
 docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
