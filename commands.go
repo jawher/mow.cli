@@ -17,6 +17,10 @@ command to create a sub command
 type Cmd struct {
 	// The code to execute when this command is matched
 	Action func()
+	// The code to execute before this command or any of its children is matched
+	Before func()
+	// The code to execute after this command or any of its children is matched
+	After func()
 	// The command options and arguments
 	Spec string
 	// The command error handling strategy
@@ -210,13 +214,13 @@ func (c *Cmd) onError(err error) {
 	if err != nil {
 		switch c.ErrorHandling {
 		case flag.ExitOnError:
-			os.Exit(2)
+			exiter(2)
 		case flag.PanicOnError:
 			panic(err)
 		}
 	} else {
 		if c.ErrorHandling == flag.ExitOnError {
-			os.Exit(2)
+			exiter(2)
 		}
 	}
 }
@@ -321,7 +325,7 @@ func (c *Cmd) formatDescription(desc, envVar string) string {
 	return strings.TrimSpace(b.String())
 }
 
-func (c *Cmd) parse(args []string) error {
+func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 	if c.helpRequested(args) {
 		c.PrintHelp()
 		c.onError(nil)
@@ -337,10 +341,31 @@ func (c *Cmd) parse(args []string) error {
 		return err
 	}
 
+	newInFlow := &step{
+		do:    c.Before,
+		error: outFlow,
+		desc:  fmt.Sprintf("%s.Before", c.name),
+	}
+	inFlow.success = newInFlow
+
+	newOutFlow := &step{
+		do:      c.After,
+		success: outFlow,
+		error:   outFlow,
+		desc:    fmt.Sprintf("%s.After", c.name),
+	}
+
 	args = args[nargsLen:]
 	if len(args) == 0 {
 		if c.Action != nil {
-			c.Action()
+			newInFlow.success = &step{
+				do:      c.Action,
+				success: newOutFlow,
+				error:   newOutFlow,
+				desc:    fmt.Sprintf("%s.Action", c.name),
+			}
+
+			entry.run(nil)
 			return nil
 		}
 		c.PrintHelp()
@@ -354,7 +379,7 @@ func (c *Cmd) parse(args []string) error {
 			if err := sub.doInit(); err != nil {
 				panic(err)
 			}
-			return sub.parse(args[1:])
+			return sub.parse(args[1:], entry, newInFlow, newOutFlow)
 		}
 	}
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"os"
 )
 
 /*
@@ -44,5 +45,21 @@ func (cli *Cli) Run(args []string) error {
 	if err := cli.doInit(); err != nil {
 		panic(err)
 	}
-	return cli.parse(args[1:])
+	inFlow := &step{desc: "RootIn"}
+	outFlow := &step{desc: "RootOut"}
+	return cli.parse(args[1:], inFlow, inFlow, outFlow)
+}
+
+/*
+Exit causes the app the exit with the specified exit code while giving the After interceptors a chance to run.
+This should be used instead of os.Exit.
+ */
+func Exit(code int) {
+	panic(exit(code))
+}
+
+type exit int
+
+var exiter = func(code int) {
+	os.Exit(code)
 }

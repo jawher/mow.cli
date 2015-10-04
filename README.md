@@ -235,6 +235,52 @@ mow.cli's API was specifically tailored to take a func parameter (called CmdInit
 
 This way, the command specific variables scope is limited to this function.
 
+## Interceptors
+
+It is possible to define snippets of code to be executed before and after a command or any of its sub commands is executed.
+
+For example, given an app with multiple commands but with a global flag which toggles a verbose mode:
+
+```go
+app := cli.App("app", "bla bla")
+
+verbose := app.Bool(cli.BoolOpt{
+	Name:  "verbose",
+	Value: false,
+	Desc:  "Enable debug logs",
+})
+
+app.Command("command1", "...", func(cmd *cli.Cmd) {
+
+})
+
+app.Command("command2", "...", func(cmd *cli.Cmd) {
+
+})
+```
+
+Instead of repeating yourself by checking if the verbose flag is set or not, and setting the debug level in every command (and its sub-commands),
+a before interceptor can be set on the `app` instead:
+
+```go
+app.Before = func() {
+	if (*verbose) {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+}
+```
+
+Whenever a valid command is called by the user, all the before interceptors defined on the app and the intermediate commands
+will be called, in order from the root to the leaf.
+
+Similarly, if you need to execute a code snippet after a command has been called, e.g. to cleanup resources allocated in before interceptors,
+simply set the `After` field of the app struct or any other command.
+`After` interceptors will be called, in order from the leaf up to the root (the opposite order of the `Before` interceptors).
+
+Here's a diagram which shows in when and in which order multiple `Before` and `After` interceptors get executed:
+
+![flow](http://i.imgur.com/oUEa8Sh.png)
+
 ## Spec
 
 An app or command's call syntax can be customized using spec strings.
@@ -460,6 +506,12 @@ The auto-generated spec string would be:
 ```
 
 Which should suffice for simple cases. If not, the spec string has to be set explicitly.
+
+## Exiting
+
+`mow.cli` provides the `Exit` function which accepts an exit code and exits the app with the provided code.
+
+You are highly encouraged to call `cli.Exit` instead of `os.Exit` for the `After` interceptors to be executed.
 
 ## License
 
