@@ -45,6 +45,11 @@ func TestUTokenize(t *testing.T) {
 
 		{"-aBc", []*uToken{{utOptSeq, "aBc", 1}}},
 		{"--", []*uToken{{utDoubleDash, "--", 0}}},
+		{"=<bla>", []*uToken{{utOptValue, "=<bla>", 0}}},
+		{"=<bla-bla>", []*uToken{{utOptValue, "=<bla-bla>", 0}}},
+		{"=<bla--bla>", []*uToken{{utOptValue, "=<bla--bla>", 0}}},
+		{"-p=<file-path>", []*uToken{{utShortOpt, "-p", 0}, {utOptValue, "=<file-path>", 2}}},
+		{"--path=<absolute-path>", []*uToken{{utLongOpt, "--path", 0}, {utOptValue, "=<absolute-path>", 6}}},
 	}
 	for _, c := range cases {
 		t.Logf("test %s", c.usage)
@@ -83,6 +88,11 @@ func TestUTokenizeErrors(t *testing.T) {
 		{"-", 1},
 		{"---x", 2},
 		{"-x-", 2},
+
+		{"=", 1},
+		{"=<", 2},
+		{"=<dsdf", 6},
+		{"=<>", 2},
 	}
 
 	for _, c := range cases {

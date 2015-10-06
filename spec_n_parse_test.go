@@ -1127,3 +1127,33 @@ func TestSpecOptOrdering(t *testing.T) {
 	}
 
 }
+
+func TestSpecOptInlineValue(t *testing.T) {
+	var f, g, x *string
+	var y *[]string
+	init := func(c *Cmd) {
+		f = c.StringOpt("f", "", "")
+		g = c.StringOpt("giraffe", "", "")
+		x = c.StringOpt("x", "", "")
+		y = c.StringsOpt("y", nil, "")
+	}
+	spec := "-x=<wolf-name> [ -f=<fish-name> | --giraffe=<giraffe-name> ] -y=<dog>..."
+
+	okCmd(t, spec, init, []string{"-x=a", "-y=b"})
+	require.Equal(t, "a", *x)
+	require.Equal(t, []string{"b"}, *y)
+
+	okCmd(t, spec, init, []string{"-x=a", "-y=b", "-y=c"})
+	require.Equal(t, "a", *x)
+	require.Equal(t, []string{"b", "c"}, *y)
+
+	okCmd(t, spec, init, []string{"-x=a", "-f=f", "-y=b"})
+	require.Equal(t, "a", *x)
+	require.Equal(t, "f", *f)
+	require.Equal(t, []string{"b"}, *y)
+
+	okCmd(t, spec, init, []string{"-x=a", "--giraffe=g", "-y=b"})
+	require.Equal(t, "a", *x)
+	require.Equal(t, "g", *g)
+	require.Equal(t, []string{"b"}, *y)
+}

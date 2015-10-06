@@ -177,7 +177,7 @@ func (p *uParser) atom() (*state, *state) {
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
 		end = start.t(opt, newState(p.cmd))
-
+		p.found(utOptValue)
 	case p.found(utLongOpt):
 		if p.rejectOptions {
 			p.back()
@@ -190,6 +190,7 @@ func (p *uParser) atom() (*state, *state) {
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
 		end = start.t(opt, newState(p.cmd))
+		p.found(utOptValue)
 	case p.found(utOptSeq):
 		if p.rejectOptions {
 			p.back()
