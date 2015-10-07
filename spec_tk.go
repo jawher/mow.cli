@@ -20,6 +20,7 @@ const (
 	utShortOpt   uTokenType = "ShortOpt"
 	utLongOpt    uTokenType = "LongOpt"
 	utOptSeq     uTokenType = "OptSeq"
+	utOptValue   uTokenType = "OptValue"
 	utDoubleDash uTokenType = "DblDash"
 )
 
@@ -113,7 +114,6 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 
 			switch o := usage[pos]; {
 			case isLetter(o):
-
 				pos++
 				for ; pos < eof; pos++ {
 					ok := isLetter(usage[pos])
@@ -149,6 +149,31 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 				}
 				tkp(utLongOpt, opt, start)
 			}
+
+		case '=':
+			start := pos
+			pos++
+			if pos >= eof || usage[pos] != '<' {
+				return nil, err("Unexpected end of usage, was expecting '=<'")
+			}
+			closed := false
+			for ; pos < eof; pos++ {
+				closed = usage[pos] == '>'
+				if closed {
+					break
+				}
+			}
+			if !closed {
+				return nil, err("Unclosed option value")
+			}
+			if pos-start == 2 {
+				return nil, err("Was expecting an option value")
+			}
+			pos++
+			value := usage[start:pos]
+
+			tkp(utOptValue, value, start)
+
 		default:
 			switch {
 			case isUppercase(c):

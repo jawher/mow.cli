@@ -378,6 +378,17 @@ For example, if an app or a command declares 4 options a, b, c and d, `[OPTIONS]
 x.Spec = "[-a | -b | -c | -d]..."
 ```
 
+### Inline option values
+
+You can use the `=<some-text>` notation right after an option (long or short form) to give an inline description or value.
+
+An example:
+
+```go
+x.Spec = "[ -a=<absolute-path> | --timeout=<in seconds> ] ARG"
+```
+
+The inline values are ignored by the spec parser and are just there for the final user as a contextual hint.
 
 ### Operators
 
