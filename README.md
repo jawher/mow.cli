@@ -48,7 +48,7 @@ $ go get github.com/jawher/mow.cli
 You start by creating an application by passing a name and a description:
 
 ```go
-cp = cli.App("cp", "Copy files around")
+cp := cli.App("cp", "Copy files around")
 ```
 
 To attach the code to execute when the app is launched, assign a function to the Action field:
