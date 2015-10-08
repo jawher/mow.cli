@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 func Example_greet() {
@@ -111,4 +112,38 @@ func Example_docker() {
 	})
 
 	docker.Run(os.Args)
+}
+
+func Example_beforeAfter() {
+	app := App("app", "App")
+	bench := app.BoolOpt("b bench", false, "Measure execution time")
+
+	var t0 time.Time
+
+	app.Before = func() {
+		if *bench {
+			t0 = time.Now()
+		}
+	}
+
+	app.After = func() {
+		if *bench {
+			d := time.Since(t0)
+			fmt.Printf("Command execution took: %vs", d.Seconds())
+		}
+	}
+
+	app.Command("cmd1", "first command", func(cmd *Cmd) {
+		cmd.Action = func() {
+			fmt.Print("Running command 1")
+		}
+	})
+
+	app.Command("cmd2", "second command", func(cmd *Cmd) {
+		cmd.Action = func() {
+			fmt.Print("Running command 2")
+		}
+	})
+
+	app.Run(os.Args)
 }

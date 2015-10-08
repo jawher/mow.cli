@@ -21,7 +21,8 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	err := cmd.doInit()
 	require.Nil(t, err, "should parse")
 	t.Logf("testing spec %s with args: %v", spec, args)
-	err = cmd.parse(args)
+	inFlow := &step{}
+	err = cmd.parse(args, inFlow, inFlow, &step{})
 	require.Nil(t, err, "cmd parse should't fail")
 }
 
@@ -38,7 +39,8 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	err := cmd.doInit()
 	require.Nil(t, err, "should parse")
 	t.Logf("testing spec %s with args: %v", spec, args)
-	err = cmd.parse(args)
+	inFlow := &step{}
+	err = cmd.parse(args, inFlow, inFlow, &step{})
 	require.NotNil(t, err, "cmd parse should have failed")
 }
 
