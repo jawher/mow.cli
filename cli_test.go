@@ -54,7 +54,7 @@ func forkTest(testName string, fork func(), test func(err error)) {
 	if os.Getenv("MOW_DO_IT") == "1" {
 		fork()
 	} else {
-		cmd := exec.Command(os.Args[0], "-test.run="+testName)
+		cmd := exec.Command(os.Args[0], "-test.run=" + testName)
 		cmd.Stderr = ioutil.Discard
 		cmd.Stdout = ioutil.Discard
 
@@ -78,6 +78,21 @@ func TestHelpShortcut(t *testing.T) {
 				return
 			}
 			t.Fatalf("process ran with err %v, want exit status != 0", err)
+		})
+}
+
+func TestVersionShortcut(t *testing.T) {
+	forkTest("TestVersionShortcut",
+		func() {
+			app := App("cp", "")
+			app.Version("v version", "cp 1.2.3")
+			app.Run([]string{"cp", "--version"})
+		},
+		func(err error) {
+			if err == nil {
+				return
+			}
+			t.Fatalf("process ran with err %v, want exit status == 0", err)
 		})
 }
 

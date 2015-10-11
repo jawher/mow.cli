@@ -398,18 +398,24 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 
 }
 
-func (c *Cmd) helpRequested(args []string) bool {
+func (c *Cmd) isArgSet(args []string, searchArgs []string) bool {
 	for _, arg := range args {
 		for _, sub := range c.commands {
 			if arg == sub.name {
 				return false
 			}
 		}
-		if arg == "-h" || arg == "--help" {
-			return true
+		for _, searchArg := range searchArgs {
+			if arg == searchArg {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func (c *Cmd) helpRequested(args []string) bool {
+	return c.isArgSet(args, []string{"-h", "--help"})
 }
 
 func (c *Cmd) getOptsAndArgs(args []string) int {
