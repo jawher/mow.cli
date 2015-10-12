@@ -57,6 +57,12 @@ cp.Action = func() {
     fmt.Printf("Hello world\n")
 }
 ```
+
+If you want you can add support for printing the app version (invoked by ```-v, --version```) like so:
+```go
+cp.Version("v version", "cp 1.2.3")
+```
+
 Finally, in your main func, call Run on the app:
 
 ```go
@@ -152,7 +158,6 @@ EnvVar accepts a space separated list of environment variables names to be used 
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
-
 
 ## Operators
 

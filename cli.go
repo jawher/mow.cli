@@ -3,6 +3,7 @@ package cli
 import (
 	"flag"
 	"os"
+	"fmt"
 )
 
 /*
@@ -10,6 +11,12 @@ Cli represents the structure of a CLI app. It should be constructed using the Ap
 */
 type Cli struct {
 	*Cmd
+	version *cliVersion
+}
+
+type cliVersion struct {
+	version string
+	option  *opt
 }
 
 /*
@@ -24,7 +31,7 @@ name and description will be used to construct the help message for the app:
 */
 func App(name, desc string) *Cli {
 	return &Cli{
-		&Cmd{
+		Cmd:&Cmd{
 			name:          name,
 			desc:          desc,
 			optionsIdx:    map[string]*opt{},
@@ -32,6 +39,45 @@ func App(name, desc string) *Cli {
 			ErrorHandling: flag.ExitOnError,
 		},
 	}
+}
+
+/*
+Version sets the version string of the CLI app together with the options that can be used to trigger
+printing the version string via the CLI.
+
+	Usage: appName --$name
+	$version
+
+ */
+func (cli *Cli) Version(name, version string) {
+	cli.BoolOpt(name, false, "Show the version and exit")
+	names := mkOptStrs(name)
+	option := cli.optionsIdx[names[0]]
+	cli.version = &cliVersion{version, option}
+}
+
+func (cli *Cli) parse(args []string, entry, inFlow, outFlow *step) error {
+	// We overload Cmd.parse() and handle cases that only apply to the CLI command, like versioning
+	// After that, we just call Cmd.parse() for the default behavior
+	if cli.versionSetAndRequested(args) {
+		cli.PrintVersion()
+		exiter(0)
+		return nil
+	}
+	return cli.Cmd.parse(args, entry, inFlow, outFlow)
+}
+
+func (cli *Cli) versionSetAndRequested(args []string) bool {
+	return cli.version != nil && cli.isArgSet(args, cli.version.option.names)
+}
+
+/*
+PrintVersion prints the CLI app's version.
+In most cases the library users won't need to call this method, unless
+a more complex validation is needed.
+*/
+func (cli *Cli) PrintVersion() {
+	fmt.Fprintln(os.Stderr, cli.version.version)
 }
 
 /*
