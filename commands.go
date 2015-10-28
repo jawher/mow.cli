@@ -291,23 +291,17 @@ func (c *Cmd) PrintHelp() {
 }
 
 func (c *Cmd) formatArgValue(arg *arg) string {
-	var value string
 	if arg.hideValue {
-		value = " "
-	} else {
-		value = fmt.Sprintf("=%#v", arg.get())
+		return " "
 	}
-	return value
+	return "=" + arg.helpFormatter(arg.get())
 }
 
 func (c *Cmd) formatOptValue(opt *opt) string {
-	var value string
 	if opt.hideValue {
-		value = " "
-	} else {
-		value = fmt.Sprintf("=%#v", opt.get())
+		return " "
 	}
-	return value
+	return "=" + opt.helpFormatter(opt.get())
 }
 
 func (c *Cmd) formatDescription(desc, envVar string) string {
