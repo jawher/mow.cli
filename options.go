@@ -6,15 +6,6 @@ import (
 	"strings"
 )
 
-type opt struct {
-	name      string
-	desc      string
-	envVar    string
-	names     []string
-	value     reflect.Value
-	hideValue bool
-}
-
 // BoolOpt describes a boolean option
 type BoolOpt struct {
 	BoolParam
@@ -167,6 +158,16 @@ func (c *Cmd) IntsOpt(name string, value []int, desc string) *[]int {
 	return c.mkOpt(opt{name: name, desc: desc}, value).(*[]int)
 }
 
+type opt struct {
+	name          string
+	desc          string
+	envVar        string
+	names         []string
+	helpFormatter func(interface{}) string
+	value         reflect.Value
+	hideValue     bool
+}
+
 func (o *opt) isBool() bool {
 	return o.value.Elem().Kind() == reflect.Bool
 }
@@ -197,6 +198,8 @@ func mkOptStrs(optName string) []string {
 func (c *Cmd) mkOpt(opt opt, defaultValue interface{}) interface{} {
 	value := reflect.ValueOf(defaultValue)
 	res := reflect.New(value.Type())
+
+	opt.helpFormatter = formatterFor(value.Type())
 
 	vinit(res, opt.envVar, defaultValue)
 

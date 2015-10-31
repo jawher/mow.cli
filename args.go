@@ -5,15 +5,6 @@ import (
 	"reflect"
 )
 
-type arg struct {
-	name      string
-	desc      string
-	envVar    string
-	hideValue bool
-
-	value reflect.Value
-}
-
 // BoolArg describes a boolean argument
 type BoolArg struct {
 	BoolParam
@@ -141,6 +132,15 @@ func (c *Cmd) IntsArg(name string, value []int, desc string) *[]int {
 	return c.mkArg(arg{name: name, desc: desc}, value).(*[]int)
 }
 
+type arg struct {
+	name          string
+	desc          string
+	envVar        string
+	helpFormatter func(interface{}) string
+	value         reflect.Value
+	hideValue     bool
+}
+
 func (a *arg) String() string {
 	return fmt.Sprintf("ARG(%s)", a.name)
 }
@@ -156,6 +156,8 @@ func (a *arg) set(s string) error {
 func (c *Cmd) mkArg(arg arg, defaultvalue interface{}) interface{} {
 	value := reflect.ValueOf(defaultvalue)
 	res := reflect.New(value.Type())
+
+	arg.helpFormatter = formatterFor(value.Type())
 
 	vinit(res, arg.envVar, defaultvalue)
 
