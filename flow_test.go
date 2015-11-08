@@ -73,13 +73,7 @@ func TestStepCallsErrorIfDoPanics(t *testing.T) {
 
 func TestStepCallsOsExitIfAskedTo(t *testing.T) {
 	exitCalled := false
-	oldExiter := exiter
-
-	exiter = func(code int) {
-		require.Equal(t, 42, code)
-		exitCalled = true
-	}
-	defer func() { exiter = oldExiter }()
+	defer exitShouldBeCalledWith(t, 42, &exitCalled)()
 
 	step := &step{}
 
@@ -101,18 +95,12 @@ func TestStepRethrowsPanic(t *testing.T) {
 }
 
 func TestStepShouldNopIfNoSuccessNorPanic(t *testing.T) {
-	oldExiter := exiter
-
-	exiter = func(code int) {
-		t.Fatalf("Should not have called exit")
-	}
-	defer func() { exiter = oldExiter }()
+	defer exitShouldNotCalled(t)()
 
 	step := &step{}
 
 	step.run(nil)
 }
-
 
 func TestBeforeAndAfterFlowOrder(t *testing.T) {
 	counter := 0
@@ -134,7 +122,6 @@ func TestBeforeAndAfterFlowOrder(t *testing.T) {
 	app.Run([]string{"app", "c", "cc"})
 	require.Equal(t, 7, counter)
 }
-
 
 func TestBeforeAndAfterFlowOrderWhenOneBeforePanics(t *testing.T) {
 	defer func() {
