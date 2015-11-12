@@ -12,13 +12,13 @@ type BoolOpt struct {
 
 	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
 	// The one letter names will then be called with a single dash (short option), the others with two (long options).
-	Name      string
+	Name string
 	// The option description as will be shown in help messages
-	Desc      string
+	Desc string
 	// A space separated list of environment variables names to be used to initialize this option
-	EnvVar    string
+	EnvVar string
 	// The option's inital value
-	Value     bool
+	Value bool
 	// A boolean to display or not the current value of the option in the help message
 	HideValue bool
 }
@@ -29,13 +29,13 @@ type StringOpt struct {
 
 	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
 	// The one letter names will then be called with a single dash (short option), the others with two (long options).
-	Name      string
+	Name string
 	// The option description as will be shown in help messages
-	Desc      string
+	Desc string
 	// A space separated list of environment variables names to be used to initialize this option
-	EnvVar    string
+	EnvVar string
 	// The option's inital value
-	Value     string
+	Value string
 	// A boolean to display or not the current value of the option in the help message
 	HideValue bool
 }
@@ -46,13 +46,13 @@ type IntOpt struct {
 
 	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
 	// The one letter names will then be called with a single dash (short option), the others with two (long options).
-	Name      string
+	Name string
 	// The option description as will be shown in help messages
-	Desc      string
+	Desc string
 	// A space separated list of environment variables names to be used to initialize this option
-	EnvVar    string
+	EnvVar string
 	// The option's inital value
-	Value     int
+	Value int
 	// A boolean to display or not the current value of the option in the help message
 	HideValue bool
 }
@@ -63,14 +63,14 @@ type StringsOpt struct {
 
 	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
 	// The one letter names will then be called with a single dash (short option), the others with two (long options).
-	Name      string
+	Name string
 	// The option description as will be shown in help messages
-	Desc      string
+	Desc string
 	// A space separated list of environment variables names to be used to initialize this option.
 	// The env variable should contain a comma separated list of values
-	EnvVar    string
+	EnvVar string
 	// The option's inital value
-	Value     []string
+	Value []string
 	// A boolean to display or not the current value of the option in the help message
 	HideValue bool
 }
@@ -81,14 +81,14 @@ type IntsOpt struct {
 
 	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
 	// The one letter names will then be called with a single dash (short option), the others with two (long options).
-	Name      string
+	Name string
 	// The option description as will be shown in help messages
-	Desc      string
+	Desc string
 	// A space separated list of environment variables names to be used to initialize this option.
 	// The env variable should contain a comma separated list of values
-	EnvVar    string
+	EnvVar string
 	// The option's inital value
-	Value     []int
+	Value []int
 	// A boolean to display or not the current value of the option in the help message
 	HideValue bool
 }

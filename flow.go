@@ -13,7 +13,7 @@ type step struct {
 }
 
 func (s *step) run(p interface{}) {
-	s.callDo(p);
+	s.callDo(p)
 
 	switch {
 	case s.success != nil:
