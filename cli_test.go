@@ -67,6 +67,69 @@ func TestHelpShortcut(t *testing.T) {
 	require.True(t, exitCalled, "exit should have been called")
 }
 
+func TestHelpMessage(t *testing.T) {
+	var out, err string
+	defer captureAndRestoreOutput(&out, &err)()
+
+	exitCalled := false
+	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
+
+	app := App("app", "App Desc")
+	app.Spec = "[-o] ARG"
+
+	app.String(StringOpt{Name: "o opt", Value: "", Desc: "Option"})
+	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument"})
+
+	app.Action = func() {}
+	app.Run([]string{"app", "-h"})
+
+	help := `
+Usage: app [-o] ARG
+
+App Desc
+
+Arguments:
+  ARG=""       Argument
+
+Options:
+  -o, --opt=""   Option
+`
+
+	require.Equal(t, help, err)
+}
+
+func TestLongHelpMessage(t *testing.T) {
+	var out, err string
+	defer captureAndRestoreOutput(&out, &err)()
+
+	exitCalled := false
+	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
+
+	app := App("app", "App Desc")
+	app.LongDesc = "Longer App Desc"
+	app.Spec = "[-o] ARG"
+
+	app.String(StringOpt{Name: "o opt", Value: "", Desc: "Option"})
+	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument"})
+
+	app.Action = func() {}
+	app.Run([]string{"app", "-h"})
+
+	help := `
+Usage: app [-o] ARG
+
+Longer App Desc
+
+Arguments:
+  ARG=""       Argument
+
+Options:
+  -o, --opt=""   Option
+`
+
+	require.Equal(t, help, err)
+}
+
 func TestVersionShortcut(t *testing.T) {
 	defer suppressOutput()()
 	exitCalled := false
