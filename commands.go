@@ -22,6 +22,8 @@ type Cmd struct {
 	After func()
 	// The command options and arguments
 	Spec string
+	// The command long description to be shown when help is requested
+	LongDesc string
 	// The command error handling strategy
 	ErrorHandling flag.ErrorHandling
 
@@ -230,6 +232,19 @@ In most cases the library users won't need to call this method, unless
 a more complex validation is needed
 */
 func (c *Cmd) PrintHelp() {
+	c.printHelp(false)
+}
+
+/*
+PrintHelp prints the command's help message using the command long description if specified.
+In most cases the library users won't need to call this method, unless
+a more complex validation is needed
+*/
+func (c *Cmd) PrintLongHelp() {
+	c.printHelp(true)
+}
+
+func (c *Cmd) printHelp(longDesc bool) {
 	full := append(c.parents, c.name)
 	path := strings.Join(full, " ")
 	fmt.Fprintf(stdErr, "\nUsage: %s", path)
@@ -244,8 +259,12 @@ func (c *Cmd) PrintHelp() {
 	}
 	fmt.Fprint(stdErr, "\n\n")
 
-	if len(c.desc) > 0 {
-		fmt.Fprintf(stdErr, "%s\n", c.desc)
+	desc := c.desc
+	if longDesc && len(c.LongDesc) > 0 {
+		desc = c.LongDesc
+	}
+	if len(desc) > 0 {
+		fmt.Fprintf(stdErr, "%s\n", desc)
 	}
 
 	w := tabwriter.NewWriter(stdErr, 15, 1, 3, ' ', 0)
@@ -318,7 +337,7 @@ func (c *Cmd) formatDescription(desc, envVar string) string {
 
 func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 	if c.helpRequested(args) {
-		c.PrintHelp()
+		c.PrintLongHelp()
 		c.onError(nil)
 		return nil
 	}

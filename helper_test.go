@@ -40,7 +40,7 @@ func captureAndRestoreOutput(out, err *string) func() {
 	} else {
 		stdOut = trapWriter(out)
 	}
-	if out == nil {
+	if err == nil {
 		stdErr = ioutil.Discard
 	} else {
 		stdErr = trapWriter(err)
@@ -66,7 +66,7 @@ type writerTrap struct {
 
 func (w *writerTrap) Write(p []byte) (n int, err error) {
 	n, err = w.buffer.Write(p)
-	if err != nil {
+	if err == nil {
 		*(w.writeTo) = w.buffer.String()
 	}
 	return
