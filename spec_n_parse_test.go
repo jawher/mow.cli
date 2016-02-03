@@ -41,11 +41,11 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	init(cmd)
 
 	err := cmd.doInit()
-	require.Nil(t, err, "should parse")
+	require.NoError(t, err, "should parse")
 	t.Logf("testing spec %s with args: %v", spec, args)
 	inFlow := &step{}
 	err = cmd.parse(args, inFlow, inFlow, &step{})
-	require.NotNil(t, err, "cmd parse should have failed")
+	require.Error(t, err, "cmd parse should have failed")
 }
 
 func badSpec(t *testing.T, spec string, init CmdInitializer) {
@@ -1162,4 +1162,41 @@ func TestSpecOptInlineValue(t *testing.T) {
 	require.Equal(t, "a", *x)
 	require.Equal(t, "g", *g)
 	require.Equal(t, []string{"b"}, *y)
+}
+
+// https://github.com/jawher/mow.cli/issues/28
+func TestWardDoesntRunTooSlowly(t *testing.T) {
+	init := func(cmd *Cmd) {
+		_ = cmd.StringOpt("login", "", "Login for credential, e.g. username or email.")
+		_ = cmd.StringOpt("realm", "", "Realm for credential, e.g. website or WiFi AP name.")
+		_ = cmd.StringOpt("note", "", "Note for credential.")
+		_ = cmd.BoolOpt("no-copy", false, "Do not copy generated password to the clipboard.")
+		_ = cmd.BoolOpt("gen", false, "Generate a password.")
+		_ = cmd.IntOpt("length", 0, "Password length.")
+		_ = cmd.IntOpt("min-length", 30, "Minimum length password.")
+		_ = cmd.IntOpt("max-length", 40, "Maximum length password.")
+		_ = cmd.BoolOpt("no-upper", false, "Exclude uppercase characters in password.")
+		_ = cmd.BoolOpt("no-lower", false, "Exclude lowercase characters in password.")
+		_ = cmd.BoolOpt("no-digit", false, "Exclude digit characters in password.")
+		_ = cmd.BoolOpt("no-symbol", false, "Exclude symbol characters in password.")
+		_ = cmd.BoolOpt("no-similar", false, "Exclude similar characters in password.")
+		_ = cmd.IntOpt("min-upper", 0, "Minimum number of uppercase characters in password.")
+		_ = cmd.IntOpt("max-upper", -1, "Maximum number of uppercase characters in password.")
+		_ = cmd.IntOpt("min-lower", 0, "Minimum number of lowercase characters in password.")
+		_ = cmd.IntOpt("max-lower", -1, "Maximum number of lowercase characters in password.")
+		_ = cmd.IntOpt("min-digit", 0, "Minimum number of digit characters in password.")
+		_ = cmd.IntOpt("max-digit", -1, "Maximum number of digit characters in password.")
+		_ = cmd.IntOpt("min-symbol", 0, "Minimum number of symbol characters in password.")
+		_ = cmd.IntOpt("max-symbol", -1, "Maximum number of symbol characters in password.")
+		_ = cmd.StringOpt("exclude", "", "Exclude specific characters from password.")
+	}
+
+	spec := "[--login] [--realm] [--note] [--no-copy] [--gen [--length] [--min-length] [--max-length] [--no-upper] [--no-lower] [--no-digit] [--no-symbol] [--no-similar] [--min-upper] [--max-upper] [--min-lower] [--max-lower] [--min-digit] [--max-digit] [--min-symbol] [--max-symbol] [--exclude]]"
+
+	okCmd(t, spec, init, []string{})
+	okCmd(t, spec, init, []string{"--gen", "--length", "42"})
+	okCmd(t, spec, init, []string{"--length", "42", "--gen"})
+	okCmd(t, spec, init, []string{"--min-length", "10", "--length", "42", "--gen"})
+	okCmd(t, spec, init, []string{"--min-length", "10", "--no-symbol", "--no-lower", "--length", "42", "--gen"})
+
 }
