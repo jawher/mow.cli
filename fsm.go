@@ -58,6 +58,7 @@ func (s *state) has(tr *transition) bool {
 	}
 	return false
 }
+
 func incoming(s, into *state, visited map[*state]bool) []*transition {
 	res := []*transition{}
 	if visited[s] {
@@ -74,32 +75,11 @@ func incoming(s, into *state, visited map[*state]bool) []*transition {
 	return res
 }
 
-func removeItemAt(idx int, arr transitions) transitions {
+func removeTransitionAt(idx int, arr transitions) transitions {
 	res := make([]*transition, len(arr)-1)
 	copy(res, arr[:idx])
 	copy(res[idx:], arr[idx+1:])
 	return res
-}
-
-func fsmCopy(s, e *state) (*state, *state) {
-	cache := map[*state]*state{}
-	s.copy(cache)
-	return cache[s], cache[e]
-}
-
-func (s *state) copy(cache map[*state]*state) *state {
-	c := newState(s.cmd)
-	c.terminal = s.terminal
-	cache[s] = c
-	for _, tr := range s.transitions {
-		dest := tr.next
-		if destCopy, found := cache[dest]; found {
-			c.transitions = append(c.transitions, &transition{tr.matcher, destCopy})
-			continue
-		}
-		c.transitions = append(c.transitions, &transition{tr.matcher, dest.copy(cache)})
-	}
-	return c
 }
 
 func (s *state) simplify() {
@@ -122,7 +102,7 @@ func (s *state) simplifySelf(start *state) bool {
 	for idx, tr := range s.transitions {
 		if _, ok := tr.matcher.(upShortcut); ok {
 			next := tr.next
-			s.transitions = removeItemAt(idx, s.transitions)
+			s.transitions = removeTransitionAt(idx, s.transitions)
 			for _, tr := range next.transitions {
 				if !s.has(tr) {
 					s.transitions = append(s.transitions, tr)
@@ -135,29 +115,6 @@ func (s *state) simplifySelf(start *state) bool {
 		}
 	}
 	return false
-}
-
-func (s *state) onlyOpts() bool {
-	return onlyOpts(s, map[*state]bool{})
-}
-
-func onlyOpts(s *state, visited map[*state]bool) bool {
-	if visited[s] {
-		return true
-	}
-	visited[s] = true
-
-	for _, tr := range s.transitions {
-		switch tr.matcher.(type) {
-		case *arg:
-			return false
-		}
-		if !onlyOpts(tr.next, visited) {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (s *state) dot() string {

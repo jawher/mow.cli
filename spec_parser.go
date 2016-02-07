@@ -57,73 +57,20 @@ func (p *uParser) seq(required bool) (*state, *state) {
 	start := newState(p.cmd)
 	end := start
 
-	type pair struct {
-		s, e *state
+	appendComp := func(s, e *state) {
+		for _, tr := range s.transitions {
+			end.t(tr.matcher, tr.next)
+		}
+		end = e
 	}
-	comps := []pair{}
 
 	if required {
 		s, e := p.choice()
-		comps = append(comps, pair{s, e})
+		appendComp(s, e)
 	}
 	for p.canAtom() {
 		s, e := p.choice()
-		comps = append(comps, pair{s, e})
-	}
-	if len(comps) == 0 {
-		return start, end
-	}
-
-	appendComp := func(p pair) {
-		for _, tr := range p.s.transitions {
-			end.t(tr.matcher, tr.next)
-		}
-		end = p.e
-	}
-
-	copyPair := func(p pair) pair {
-		s, e := fsmCopy(p.s, p.e)
-		return pair{s, e}
-	}
-
-	var p0 *pair
-	for _, p1 := range comps {
-		if !p1.s.onlyOpts() {
-			if p0 != nil {
-				appendComp(*p0)
-				p0 = nil
-			}
-			appendComp(p1)
-			continue
-		}
-		if p0 == nil {
-			x := p1
-			p0 = &x
-			continue
-		}
-		//p is onlyOpts, and there is a previous p0 which is also onlyOpts
-		// generate order-less combination
-		np := &pair{
-			s: newState(p.cmd),
-			e: newState(p.cmd),
-		}
-
-		p0copy := copyPair(*p0)
-		p1copy := copyPair(p1)
-
-		np.s.t(shortcut, p0.s)
-		p0.e.t(shortcut, p1copy.s)
-
-		np.s.t(shortcut, p1.s)
-		p1.e.t(shortcut, p0copy.s)
-
-		p1copy.e.t(shortcut, np.e)
-		p0copy.e.t(shortcut, np.e)
-
-		p0 = np
-	}
-	if p0 != nil {
-		appendComp(*p0)
+		appendComp(s, e)
 	}
 
 	return start, end
@@ -164,7 +111,7 @@ func (p *uParser) atom() (*state, *state) {
 			panic("No options after --")
 		}
 		end = newState(p.cmd)
-		start.t(optsMatcher(p.cmd.options), end)
+		start.t(optsMatcher{options: p.cmd.options, optionsIndex: p.cmd.optionsIdx}, end)
 	case p.found(utShortOpt):
 		if p.rejectOptions {
 			p.back()
@@ -176,7 +123,10 @@ func (p *uParser) atom() (*state, *state) {
 			p.back()
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
-		end = start.t(opt, newState(p.cmd))
+		end = start.t(&optMatcher{
+			theOne:     opt,
+			optionsIdx: p.cmd.optionsIdx,
+		}, newState(p.cmd))
 		p.found(utOptValue)
 	case p.found(utLongOpt):
 		if p.rejectOptions {
@@ -189,7 +139,10 @@ func (p *uParser) atom() (*state, *state) {
 			p.back()
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
-		end = start.t(opt, newState(p.cmd))
+		end = start.t(&optMatcher{
+			theOne:     opt,
+			optionsIdx: p.cmd.optionsIdx,
+		}, newState(p.cmd))
 		p.found(utOptValue)
 	case p.found(utOptSeq):
 		if p.rejectOptions {
@@ -208,7 +161,7 @@ func (p *uParser) atom() (*state, *state) {
 			}
 			opts = append(opts, opt)
 		}
-		start.t(optsMatcher(opts), end)
+		start.t(optsMatcher{options: opts, optionsIndex: p.cmd.optionsIdx}, end)
 	case p.found(utOpenPar):
 		start, end = p.seq(true)
 		p.expect(utClosePar)
