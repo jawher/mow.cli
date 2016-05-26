@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"os"
 	"testing"
 )
 
@@ -224,4 +225,349 @@ func TestPanicOnError(t *testing.T) {
 	}()
 	app.Run([]string{"say"})
 	t.Fatalf("wanted panic")
+}
+
+func TestOptSetByUser(t *testing.T) {
+	cases := []struct {
+		desc     string
+		config   func(*Cli, *bool)
+		args     []string
+		expected bool
+	}{
+		// OPTS
+		// String
+		{
+			desc: "String Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.String(StringOpt{Name: "f", Value: "a", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "String Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "value")
+				c.String(StringOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "String Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.String(StringOpt{Name: "f", Value: "a", SetByUser: s})
+			},
+			args:     []string{"test", "-f=hello"},
+			expected: true,
+		},
+
+		// Bool
+		{
+			desc: "Bool Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Bool(BoolOpt{Name: "f", Value: true, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Bool Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "true")
+				c.Bool(BoolOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Bool Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Bool(BoolOpt{Name: "f", SetByUser: s})
+			},
+			args:     []string{"test", "-f"},
+			expected: true,
+		},
+
+		// Int
+		{
+			desc: "Int Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Int(IntOpt{Name: "f", Value: 42, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Int Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "33")
+				c.Int(IntOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Int Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Int(IntOpt{Name: "f", SetByUser: s})
+			},
+			args:     []string{"test", "-f=666"},
+			expected: true,
+		},
+
+		// Ints
+		{
+			desc: "Ints Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Ints(IntsOpt{Name: "f", Value: []int{42}, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Ints Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "11,22,33")
+				c.Ints(IntsOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Ints Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Ints(IntsOpt{Name: "f", SetByUser: s})
+			},
+			args:     []string{"test", "-f=666"},
+			expected: true,
+		},
+
+		// Strings
+		{
+			desc: "Strings Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Strings(StringsOpt{Name: "f", Value: []string{"aaa"}, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Strings Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "a,b,c")
+				c.Strings(StringsOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Strings Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Strings(StringsOpt{Name: "f", SetByUser: s})
+			},
+			args:     []string{"test", "-f=ccc"},
+			expected: true,
+		},
+	}
+
+	for _, cas := range cases {
+		t.Log(cas.desc)
+
+		setByUser := false
+		app := App("test", "")
+
+		cas.config(app, &setByUser)
+
+		called := false
+		app.Action = func() {
+			called = true
+		}
+
+		app.Run(cas.args)
+
+		require.True(t, called, "action should have been called")
+		require.Equal(t, cas.expected, setByUser)
+	}
+
+}
+
+func TestArgSetByUser(t *testing.T) {
+	cases := []struct {
+		desc     string
+		config   func(*Cli, *bool)
+		args     []string
+		expected bool
+	}{
+		// ARGS
+		// String
+		{
+			desc: "String Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.String(StringArg{Name: "ARG", Value: "a", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "String Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "value")
+				c.String(StringArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "String Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.String(StringArg{Name: "ARG", Value: "a", SetByUser: s})
+			},
+			args:     []string{"test", "aaa"},
+			expected: true,
+		},
+
+		// Bool
+		{
+			desc: "Bool Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Bool(BoolArg{Name: "ARG", Value: true, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Bool Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "true")
+				c.Bool(BoolArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Bool Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Bool(BoolArg{Name: "ARG", SetByUser: s})
+			},
+			args:     []string{"test", "true"},
+			expected: true,
+		},
+
+		// Int
+		{
+			desc: "Int Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Int(IntArg{Name: "ARG", Value: 42, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Int Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "33")
+				c.Int(IntArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Int Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Int(IntArg{Name: "ARG", SetByUser: s})
+			},
+			args:     []string{"test", "666"},
+			expected: true,
+		},
+
+		// Ints
+		{
+			desc: "Ints Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG...]"
+				c.Ints(IntsArg{Name: "ARG", Value: []int{42}, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Ints Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG...]"
+				os.Setenv("MOW_VALUE", "11,22,33")
+				c.Ints(IntsArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Ints Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG...]"
+				c.Ints(IntsArg{Name: "ARG", SetByUser: s})
+			},
+			args:     []string{"test", "333", "666"},
+			expected: true,
+		},
+
+		// Strings
+		{
+			desc: "Strings Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG...]"
+				c.Strings(StringsArg{Name: "ARG", Value: []string{"aaa"}, SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Strings Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG...]"
+				os.Setenv("MOW_VALUE", "a,b,c")
+				c.Strings(StringsArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Strings Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG...]"
+				c.Strings(StringsArg{Name: "ARG", SetByUser: s})
+			},
+			args:     []string{"test", "aaa", "ccc"},
+			expected: true,
+		},
+	}
+
+	for _, cas := range cases {
+		t.Log(cas.desc)
+
+		setByUser := false
+		app := App("test", "")
+
+		cas.config(app, &setByUser)
+
+		called := false
+		app.Action = func() {
+			called = true
+		}
+
+		app.Run(cas.args)
+
+		require.True(t, called, "action should have been called")
+		require.Equal(t, cas.expected, setByUser)
+	}
+
 }

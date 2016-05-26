@@ -170,18 +170,36 @@ func (s *state) parse(args []string) error {
 	}
 
 	for opt, vs := range pc.opts {
+		multiValued, ok := opt.value.(multiValued)
+		if ok && opt.valueSetFromEnv {
+			multiValued.Clear()
+			opt.valueSetFromEnv = false
+		}
 		for _, v := range vs {
-			if err := opt.set(v); err != nil {
+			if err := opt.value.Set(v); err != nil {
 				return err
 			}
+		}
+
+		if opt.valueSetByUser != nil {
+			*opt.valueSetByUser = true
 		}
 	}
 
 	for arg, vs := range pc.args {
+		multiValued, ok := arg.value.(multiValued)
+		if ok && arg.valueSetFromEnv {
+			multiValued.Clear()
+			arg.valueSetFromEnv = false
+		}
 		for _, v := range vs {
-			if err := arg.set(v); err != nil {
+			if err := arg.value.Set(v); err != nil {
 				return err
 			}
+		}
+
+		if arg.valueSetByUser != nil {
+			*arg.valueSetByUser = true
 		}
 	}
 

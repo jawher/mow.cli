@@ -103,11 +103,11 @@ func (cli *Cli) Run(args []string) error {
 }
 
 /*
-ActionCommand(func() { myFun() }) is syntactic sugar for
-func(cmd *cli.Cmd) { cmd.Action = func() { myFun() }
+ActionCommand(myFun) is syntactic sugar for
+func(cmd *cli.Cmd) { cmd.Action = myFun }
 
-cmd.CommandAction(_,_,func() { myFun() } is syntactic sugar for
-cmd.Command(_,_, func(cmd *cli.Cmd) { cmd.Action = func() { myFun() } }
+cmd.CommandAction(_, _, myFun } is syntactic sugar for
+cmd.Command(_, _, func(cmd *cli.Cmd) { cmd.Action = myFun })
 */
 func ActionCommand(action func()) CmdInitializer {
 	return func(cmd *Cmd) {

@@ -77,7 +77,6 @@ func (o *optMatcher) match(args []string, c *parseContext) (bool, []string) {
 
 		case strings.HasPrefix(arg, "-"):
 			matched, consumed, nargs := o.matchShortOpt(args, idx, c)
-
 			if matched {
 				return true, nargs
 			}

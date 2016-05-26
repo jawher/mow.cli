@@ -114,15 +114,19 @@ There is also a second set of methods Bool, String, Int, Strings and Ints, which
 
 ```go
 recursive = cp.Bool(BoolOpt{
-    Name:  "R rece",
+    Name:  "R recursive",
     Value: false,
     Desc:  "copy src files recursively",
-    EnvVar: "",
+    EnvVar: "VAR1 VAR2",
+    SetByUser: &srcSetByUser,
 })
 ```
 
 The field names are self-describing.
-There EnvVar field is a space separated list of environment variables names to be used to initialize the option.
+
+`EnvVar` accepts a space separated list of environment variables names to be used to initialize the option.
+
+If `SetByUser` is specified (by passing a pointer to a bool variable), it will be set to `true` if the user explicitly set the option.
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
@@ -176,18 +180,23 @@ There is also a second set of methods Bool, String, Int, Strings and Ints, which
 src = cp.Strings(StringsArg{
     Name:  "SRC",
     Desc:  "The source files to copy",
-    Value: "",
-    EnvVar: "",
+    Value: "default value",
+    EnvVar: "VAR1 VAR2",
+    SetByUser: &srcSetByUser,
 })
 ```
 
 The field names are self-describing.
 The Value field is where you can set the initial value for the argument.
 
-EnvVar accepts a space separated list of environment variables names to be used to initialize the argument.
+`EnvVar` accepts a space separated list of environment variables names to be used to initialize the argument.
+
+If `SetByUser` is specified (by passing a pointer to a bool variable), it will be set to `true` if the user explicitly set the argument.
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
+
+You can also
 
 ## Operators
 
@@ -281,6 +290,98 @@ Since you'll want to store these pointers in variables, and to avoid having doze
 mow.cli's API was specifically tailored to take a func parameter (called CmdInitializer) which accepts the command struct.
 
 This way, the command specific variables scope is limited to this function.
+
+## Custom types
+
+Out of the box, mow.cli supports the following types for options and arguments:
+
+* bool
+* string
+* int
+* strings (slice of strings)
+* ints (slice of ints)
+
+You can however extend mow.cli to handle other types, e.g. `time.Duration`, `float64`, or even your own struct types for example.
+
+To do so, you'll need to:
+
+* implement the `flag.Value` interface for the custom type
+* declare the option or the flag using `VarOpt`, `VarArg` for the short hands, and `Var` for the full form.
+
+Here's an example:
+
+```go
+// Declare your type
+type Duration time.Duration
+
+// Make it implement flag.Value
+func (d *Duration) Set(v string) error {
+	parsed, err := time.ParseDuration(v)
+	if err != nil {
+		return err
+	}
+	*d = Duration(parsed)
+	return nil
+}
+
+func (d *Duration) String() string {
+	duration := time.Duration(*d)
+	return duration.String()
+}
+
+func main() {
+    duration := Duration(0)
+
+	app := App("var", "")
+
+	app.VarArg("DURATION", &duration, "")
+
+	app.Run([]string{"cp", "1h31m42s"})
+}
+```
+
+### Boolean custom types
+
+To make your custom type behave as a boolean option, i.e. doesn't take a value, it has to implement a `IsBoolFlag` method that returns true:
+
+```go
+type BoolLike int
+
+
+func (d *BoolLike) IsBoolFlag() bool {
+	return true
+}
+```
+
+### Multi-valued custom type
+
+To make your custom type behave as a multi-valued option or argument, i.e. takes multiple values,
+it has to implement a `Clear` method which will be called whenever the value list needs to be cleared,
+e.g. when the value was initially populated from an environment variable, and then explicitly set from the CLI:
+
+```go
+type Durations []time.Duration
+
+// Make it implement flag.Value 
+func (d *Durations) Set(v string) error {
+	parsed, err := time.ParseDuration(v)
+	if err != nil {
+		return err
+	}
+	*d = append(*d, Duration(parsed))
+	return nil
+}
+
+func (d *Durations) String() string {
+	return fmt.Sprintf("%v", *d)
+}
+
+
+// Make it multi-valued
+func (d *Durations) Clear() {
+	*d = []Duration{}
+}
+```
 
 ## Interceptors
 
