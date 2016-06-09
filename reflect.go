@@ -60,7 +60,7 @@ func vset(into reflect.Value, s string) error {
 	return nil
 }
 
-func vinit(into reflect.Value, envVars string, defaultValue interface{}) {
+func vinit(into reflect.Value, envVars string, defaultValue interface{}) (envSet bool) {
 	if len(envVars) > 0 {
 		for _, rev := range strings.Split(envVars, " ") {
 			ev := strings.TrimSpace(rev)
@@ -70,7 +70,7 @@ func vinit(into reflect.Value, envVars string, defaultValue interface{}) {
 					conv, err := vconv(v, into.Elem().Type())
 					if err == nil {
 						into.Elem().Set(conv)
-						return
+						return true
 					}
 				}
 			}
@@ -78,4 +78,5 @@ func vinit(into reflect.Value, envVars string, defaultValue interface{}) {
 
 	}
 	into.Elem().Set(reflect.ValueOf(defaultValue))
+	return false
 }

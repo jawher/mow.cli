@@ -165,6 +165,7 @@ type opt struct {
 	names         []string
 	helpFormatter func(interface{}) string
 	value         reflect.Value
+	envSet        bool
 	hideValue     bool
 }
 
@@ -201,7 +202,7 @@ func (c *Cmd) mkOpt(opt opt, defaultValue interface{}) interface{} {
 
 	opt.helpFormatter = formatterFor(value.Type())
 
-	vinit(res, opt.envVar, defaultValue)
+	opt.envSet = vinit(res, opt.envVar, defaultValue)
 
 	opt.names = mkOptStrs(opt.name)
 	opt.value = res
