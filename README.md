@@ -257,6 +257,18 @@ bzk.Command("job", "actions on jobs", func(cmd *cli.Cmd) {
     cmd.Command("log", "show a job log", nil)
 })
 ```
+When you just want to set Action to cmd, you can use CommandAction for this
+```go
+app.CommandAction("list", "list all configs", func() { list() })
+```
+is the same as
+```go
+app.Command("list", "list all configs", func(cmd *cli.Cmd)) {
+    cmd.Action = func() {
+      list()
+    }
+}
+```
 
 This could go on to any depth if need be.
 
