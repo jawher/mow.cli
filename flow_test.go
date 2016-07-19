@@ -210,7 +210,7 @@ func TestCommandAction(t *testing.T) {
 
 	app := App("app", "")
 
-	app.CommandAction("a", "", func() { called = true })
+	app.Command("a", "", ActionCommand(func() { called = true }))
 
 	app.Run([]string{"app", "a"})
 

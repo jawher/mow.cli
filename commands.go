@@ -100,26 +100,6 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 }
 
 /*
-cmd.CommandAction(_,_,func() { myFun() } is syntactic sugar for
-cmd.Command(_,_, func(cmd *cli.Cmd) { cmd.Action = func() { myFun() } }
-*/
-func (c *Cmd) CommandAction(name, desc string, action func()) {
-	c.commands = append(c.commands, &Cmd{
-		ErrorHandling: c.ErrorHandling,
-		name:          name,
-		desc:          desc,
-		init: func(cmd *Cmd) {
-			cmd.Action = action
-		},
-		commands:   []*Cmd{},
-		options:    []*opt{},
-		optionsIdx: map[string]*opt{},
-		args:       []*arg{},
-		argsIdx:    map[string]*arg{},
-	})
-}
-
-/*
 Bool can be used to add a bool option or argument to a command.
 It accepts either a BoolOpt or a BoolArg struct.
 
