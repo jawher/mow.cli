@@ -204,6 +204,20 @@ func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
 	require.Equal(t, 7, counter)
 }
 
+func TestCommandAction(t *testing.T) {
+
+	called := false
+
+	app := App("app", "")
+
+	app.Command("a", "", ActionCommand(func() { called = true }))
+
+	app.Run([]string{"app", "a"})
+
+	require.True(t, called, "commandAction should be called")
+
+}
+
 func callChecker(t *testing.T, wanted int, counter *int) func() {
 	return func() {
 		t.Logf("checker: wanted: %d, got %d", wanted, *counter)
