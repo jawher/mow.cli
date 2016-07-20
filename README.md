@@ -259,7 +259,7 @@ bzk.Command("job", "actions on jobs", func(cmd *cli.Cmd) {
 ```
 When you just want to set Action to cmd, you can use ActionCommand function for this
 ```go
-app.Command("list", "list all configs", ActionCommand(func() { list() }))
+app.Command("list", "list all configs", cli.ActionCommand(func() { list() }))
 ```
 is the same as
 ```go
