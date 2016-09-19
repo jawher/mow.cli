@@ -115,6 +115,7 @@ func TestStringsArg(t *testing.T) {
 
 func TestIntsArg(t *testing.T) {
 	cmd := &Cmd{argsIdx: map[string]*arg{}}
+
 	vi := []int{42}
 	a := cmd.Ints(IntsArg{Name: "a", Value: vi, Desc: ""})
 	require.Equal(t, vi, *a)

@@ -82,7 +82,7 @@ func Example_docker() {
 		)
 
 		cmd.Action = func() {
-			how := ""
+			var how string
 			switch {
 			case *detached:
 				how = "detached"

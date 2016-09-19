@@ -1,14 +1,12 @@
 package cli
 
 import (
+	"flag"
 	"fmt"
-	"reflect"
 )
 
 // BoolArg describes a boolean argument
 type BoolArg struct {
-	BoolParam
-
 	// The argument name as will be shown in help messages
 	Name string
 	// The argument description as will be shown in help messages
@@ -19,44 +17,56 @@ type BoolArg struct {
 	Value bool
 	// A boolean to display or not the current value of the argument in the help message
 	HideValue bool
+	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (a BoolArg) value() bool {
+	return a.Value
 }
 
 // StringArg describes a string argument
 type StringArg struct {
-	StringParam
-
 	// The argument name as will be shown in help messages
 	Name string
 	// The argument description as will be shown in help messages
 	Desc string
 	// A space separated list of environment variables names to be used to initialize this argument
 	EnvVar string
-	// The argument's inital value
+	// The argument's initial value
 	Value string
 	// A boolean to display or not the current value of the argument in the help message
 	HideValue bool
+	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (a StringArg) value() string {
+	return a.Value
 }
 
 // IntArg describes an int argument
 type IntArg struct {
-	IntParam
-
 	// The argument name as will be shown in help messages
 	Name string
 	// The argument description as will be shown in help messages
 	Desc string
 	// A space separated list of environment variables names to be used to initialize this argument
 	EnvVar string
-	// The argument's inital value
+	// The argument's initial value
 	Value int
 	// A boolean to display or not the current value of the argument in the help message
 	HideValue bool
+	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (a IntArg) value() int {
+	return a.Value
 }
 
 // StringsArg describes a string slice argument
 type StringsArg struct {
-	StringsParam
-
 	// The argument name as will be shown in help messages
 	Name string
 	// The argument description as will be shown in help messages
@@ -64,16 +74,20 @@ type StringsArg struct {
 	// A space separated list of environment variables names to be used to initialize this argument.
 	// The env variable should contain a comma separated list of values
 	EnvVar string
-	// The argument's inital value
+	// The argument's initial value
 	Value []string
 	// A boolean to display or not the current value of the argument in the help message
 	HideValue bool
+	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (a StringsArg) value() []string {
+	return a.Value
 }
 
 // IntsArg describes an int slice argument
 type IntsArg struct {
-	IntsParam
-
 	// The argument name as will be shown in help messages
 	Name string
 	// The argument description as will be shown in help messages
@@ -81,10 +95,37 @@ type IntsArg struct {
 	// A space separated list of environment variables names to be used to initialize this argument.
 	// The env variable should contain a comma separated list of values
 	EnvVar string
-	// The argument's inital value
+	// The argument's initial value
 	Value []int
 	// A boolean to display or not the current value of the argument in the help message
 	HideValue bool
+	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (a IntsArg) value() []int {
+	return a.Value
+}
+
+// VarArg describes an argument where the type and format of the value is controlled by the developer
+type VarArg struct {
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
+	EnvVar string
+	// A value implementing the flag.Value type (will hold the final value)
+	Value flag.Value
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
+	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (a VarArg) value() flag.Value {
+	return a.Value
 }
 
 /*
@@ -93,7 +134,11 @@ BoolArg defines a boolean argument on the command c named `name`, with an initia
 The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) BoolArg(name string, value bool, desc string) *bool {
-	return c.mkArg(arg{name: name, desc: desc}, value).(*bool)
+	return c.Bool(BoolArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
 }
 
 /*
@@ -102,7 +147,11 @@ StringArg defines a string argument on the command c named `name`, with an initi
 The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) StringArg(name string, value string, desc string) *string {
-	return c.mkArg(arg{name: name, desc: desc}, value).(*string)
+	return c.String(StringArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
 }
 
 /*
@@ -111,7 +160,11 @@ IntArg defines an int argument on the command c named `name`, with an initial va
 The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) IntArg(name string, value int, desc string) *int {
-	return c.mkArg(arg{name: name, desc: desc}, value).(*int)
+	return c.Int(IntArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
 }
 
 /*
@@ -120,7 +173,11 @@ StringsArg defines a string slice argument on the command c named `name`, with a
 The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) StringsArg(name string, value []string, desc string) *[]string {
-	return c.mkArg(arg{name: name, desc: desc}, value).(*[]string)
+	return c.Strings(StringsArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
 }
 
 /*
@@ -129,42 +186,39 @@ IntsArg defines an int slice argument on the command c named `name`, with an ini
 The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) IntsArg(name string, value []int, desc string) *[]int {
-	return c.mkArg(arg{name: name, desc: desc}, value).(*[]int)
+	return c.Ints(IntsArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+VarArg defines an argument where the type and format is controlled by the developer on the command c named `name` and a description of `desc` which will be used in help messages.
+
+The result will be stored in the value parameter (a value implementing the flag.Value interface) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) VarArg(name string, value flag.Value, desc string) {
+	c.mkArg(arg{name: name, desc: desc, value: value})
 }
 
 type arg struct {
-	name          string
-	desc          string
-	envVar        string
-	helpFormatter func(interface{}) string
-	value         reflect.Value
-	hideValue     bool
+	name            string
+	desc            string
+	envVar          string
+	hideValue       bool
+	valueSetFromEnv bool
+	valueSetByUser  *bool
+	value           flag.Value
 }
 
 func (a *arg) String() string {
 	return fmt.Sprintf("ARG(%s)", a.name)
 }
 
-func (a *arg) get() interface{} {
-	return a.value.Elem().Interface()
-}
-
-func (a *arg) set(s string) error {
-	return vset(a.value, s)
-}
-
-func (c *Cmd) mkArg(arg arg, defaultvalue interface{}) interface{} {
-	value := reflect.ValueOf(defaultvalue)
-	res := reflect.New(value.Type())
-
-	arg.helpFormatter = formatterFor(value.Type())
-
-	vinit(res, arg.envVar, defaultvalue)
-
-	arg.value = res
+func (c *Cmd) mkArg(arg arg) {
+	arg.valueSetFromEnv = setFromEnv(arg.value, arg.envVar)
 
 	c.args = append(c.args, &arg)
 	c.argsIdx[arg.name] = &arg
-
-	return res.Interface()
 }

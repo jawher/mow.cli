@@ -45,27 +45,44 @@ type Cmd struct {
 /*
 BoolParam represents a Bool option or argument
 */
-type BoolParam interface{}
+type BoolParam interface {
+	value() bool
+}
 
 /*
 StringParam represents a String option or argument
 */
-type StringParam interface{}
+type StringParam interface {
+	value() string
+}
 
 /*
 IntParam represents an Int option or argument
 */
-type IntParam interface{}
+type IntParam interface {
+	value() int
+}
 
 /*
 StringsParam represents a string slice option or argument
 */
-type StringsParam interface{}
+type StringsParam interface {
+	value() []string
+}
 
 /*
 IntsParam represents an int slice option or argument
 */
-type IntsParam interface{}
+type IntsParam interface {
+	value() []int
+}
+
+/*
+VarParam represents an custom option or argument where the type and format are controlled by the developer
+*/
+type VarParam interface {
+	value() flag.Value
+}
 
 /*
 CmdInitializer is a function that configures a command by adding options, arguments, a spec, sub commands and the code
@@ -106,14 +123,19 @@ It accepts either a BoolOpt or a BoolArg struct.
 The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Bool(p BoolParam) *bool {
+	into := new(bool)
+	value := newBoolValue(into, p.value())
+
 	switch x := p.(type) {
 	case BoolOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*bool)
+		c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	case BoolArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*bool)
+		c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
+
+	return into
 }
 
 /*
@@ -123,14 +145,19 @@ It accepts either a StringOpt or a StringArg struct.
 The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) String(p StringParam) *string {
+	into := new(string)
+	value := newStringValue(into, p.value())
+
 	switch x := p.(type) {
 	case StringOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*string)
+		c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	case StringArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*string)
+		c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
+
+	return into
 }
 
 /*
@@ -140,14 +167,19 @@ It accepts either a IntOpt or a IntArg struct.
 The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Int(p IntParam) *int {
+	into := new(int)
+	value := newIntValue(into, p.value())
+
 	switch x := p.(type) {
 	case IntOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*int)
+		c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	case IntArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*int)
+		c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
+
+	return into
 }
 
 /*
@@ -157,14 +189,19 @@ It accepts either a StringsOpt or a StringsArg struct.
 The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Strings(p StringsParam) *[]string {
+	into := new([]string)
+	value := newStringsValue(into, p.value())
+
 	switch x := p.(type) {
 	case StringsOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]string)
+		c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	case StringsArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]string)
+		c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
+
+	return into
 }
 
 /*
@@ -174,11 +211,34 @@ It accepts either a IntsOpt or a IntsArg struct.
 The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Ints(p IntsParam) *[]int {
+	into := new([]int)
+	value := newIntsValue(into, p.value())
+
 	switch x := p.(type) {
 	case IntsOpt:
-		return c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]int)
+		c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
 	case IntsArg:
-		return c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue}, x.Value).(*[]int)
+		c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: value, valueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+
+	return into
+}
+
+/*
+Var can be used to add a custom option or argument to a command.
+It accepts either a VarOpt or a VarArg struct.
+
+As opposed to the other built-in types, this function does not return a pointer the the value.
+Instead, the VarOpt or VarOptArg structs hold the said value.
+*/
+func (c *Cmd) Var(p VarParam) {
+	switch x := p.(type) {
+	case VarOpt:
+		c.mkOpt(opt{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: p.value(), valueSetByUser: x.SetByUser})
+	case VarArg:
+		c.mkArg(arg{name: x.Name, desc: x.Desc, envVar: x.EnvVar, hideValue: x.HideValue, value: p.value(), valueSetByUser: x.SetByUser})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -236,7 +296,7 @@ func (c *Cmd) PrintHelp() {
 }
 
 /*
-PrintHelp prints the command's help message using the command long description if specified.
+PrintLongHelp prints the command's help message using the command long description if specified.
 In most cases the library users won't need to call this method, unless
 a more complex validation is needed
 */
@@ -310,14 +370,14 @@ func (c *Cmd) formatArgValue(arg *arg) string {
 	if arg.hideValue {
 		return " "
 	}
-	return "=" + arg.helpFormatter(arg.get())
+	return "=" + arg.value.String()
 }
 
 func (c *Cmd) formatOptValue(opt *opt) string {
 	if opt.hideValue {
 		return " "
 	}
-	return "=" + opt.helpFormatter(opt.get())
+	return "=" + opt.value.String()
 }
 
 func (c *Cmd) formatDescription(desc, envVar string) string {

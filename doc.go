@@ -179,6 +179,90 @@ mow.cli's API was specifically tailored to take a func parameter (called CmdInit
 
 This way, the command specific variables scope is limited to this function.
 
+Custom types
+
+Out of the box, mow.cli supports the following types for options and arguments: bool, string, int, strings (slice of strings) and ints (slice of ints)
+
+You can however extend mow.cli to handle other types, e.g. `time.Duration`, `float64`, or even your own struct types for example.
+
+To do so, you'll need to:
+
+* implement the `flag.Value` interface for the custom type
+
+* declare the option or the flag using `VarOpt`, `VarArg` for the short hands, and `Var` for the full form.
+
+Here's an example:
+
+
+	// Declare your type
+	type Duration time.Duration
+
+	// Make it implement flag.Value
+	func (d *Duration) Set(v string) error {
+		parsed, err := time.ParseDuration(v)
+		if err != nil {
+			return err
+		}
+		*d = Duration(parsed)
+		return nil
+	}
+
+	func (d *Duration) String() string {
+		duration := time.Duration(*d)
+		return duration.String()
+	}
+
+	func main() {
+		duration := Duration(0)
+
+		app := App("var", "")
+
+		app.VarArg("DURATION", &duration, "")
+
+		app.Run([]string{"cp", "1h31m42s"})
+	}
+
+Boolean custom types
+
+To make your custom type behave as a boolean option, i.e. doesn't take a value, it has to implement a IsBoolFlag method that returns true:
+
+
+	type BoolLike int
+
+
+	func (d *BoolLike) IsBoolFlag() bool {
+		return true
+	}
+
+
+Multi-valued custom type
+
+To make your custom type behave as a multi-valued option or argument, i.e. takes multiple values,
+it has to implement a `Clear` method which will be called whenever the values list needs to be cleared,
+e.g. when the value was initially populated from an environment variable, and then explicitly set from the CLI:
+
+	type Durations []time.Duration
+
+	// Make it implement flag.Value
+	func (d *Durations) Set(v string) error {
+		parsed, err := time.ParseDuration(v)
+		if err != nil {
+			return err
+		}
+		*d = append(*d, Duration(parsed))
+		return nil
+	}
+
+	func (d *Durations) String() string {
+		return fmt.Sprintf("%v", *d)
+	}
+
+
+	// Make it multi-valued
+	func (d *Durations) Clear() {
+		*d = []Duration{}
+	}
+
 Interceptors
 
 It is possible to define snippets of code to be executed before and after a command or any of its sub commands is executed.

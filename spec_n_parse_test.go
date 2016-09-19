@@ -858,12 +858,10 @@ func TestSpecOptionAfterOptionsEndInAChoice(t *testing.T) {
 }
 
 func TestSpecOptionAfterOptionalOptionsEnd(t *testing.T) {
-	var x *[]string
-	var f, d *bool
 	init := func(c *Cmd) {
-		x = c.StringsArg("X", nil, "")
-		f = c.BoolOpt("f", false, "")
-		d = c.BoolOpt("d", false, "")
+		c.StringsArg("X", nil, "")
+		c.BoolOpt("f", false, "")
+		c.BoolOpt("d", false, "")
 	}
 
 	spec := "-f [-- X] -d"
@@ -871,12 +869,10 @@ func TestSpecOptionAfterOptionalOptionsEnd(t *testing.T) {
 }
 
 func TestSpecOptionAfterOptionalOptionsEndInAChoice(t *testing.T) {
-	var x *[]string
-	var f, d *bool
 	init := func(c *Cmd) {
-		x = c.StringsArg("X", nil, "")
-		f = c.BoolOpt("f", false, "")
-		d = c.BoolOpt("d", false, "")
+		c.StringsArg("X", nil, "")
+		c.BoolOpt("f", false, "")
+		c.BoolOpt("d", false, "")
 	}
 
 	spec := "(-f | [-- X]) -d"
@@ -884,11 +880,9 @@ func TestSpecOptionAfterOptionalOptionsEndInAChoice(t *testing.T) {
 }
 
 func TestSpecOptionAfterOptionsEndIsParsedAsArg(t *testing.T) {
-	var cmd *string
-	var args *[]string
 	init := func(c *Cmd) {
-		cmd = c.StringArg("CMD", "", "")
-		args = c.StringsArg("ARG", nil, "")
+		c.StringArg("CMD", "", "")
+		c.StringsArg("ARG", nil, "")
 	}
 
 	spec := "-- CMD [ARG...]"

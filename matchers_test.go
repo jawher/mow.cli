@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -49,15 +48,15 @@ func TestArgMatcher(t *testing.T) {
 }
 
 func TestBoolOptMatcher(t *testing.T) {
-	forceOpt := &opt{names: []string{"-f", "--force"}, value: reflect.New(reflect.TypeOf(true))}
+	forceOpt := &opt{names: []string{"-f", "--force"}, value: newBoolValue(new(bool), false)}
 	optMatcher := &optMatcher{
 		theOne: forceOpt,
 		optionsIdx: map[string]*opt{
 			"-f":      forceOpt,
 			"--force": forceOpt,
-			"-g":      &opt{names: []string{"-g"}, value: reflect.New(reflect.TypeOf(true))},
-			"-x":      &opt{names: []string{"-x"}, value: reflect.New(reflect.TypeOf(true))},
-			"-y":      &opt{names: []string{"-y"}, value: reflect.New(reflect.TypeOf(true))},
+			"-g":      {names: []string{"-g"}, value: newBoolValue(new(bool), false)},
+			"-x":      {names: []string{"-x"}, value: newBoolValue(new(bool), false)},
+			"-y":      {names: []string{"-y"}, value: newBoolValue(new(bool), false)},
 		},
 	}
 	cases := []struct {
@@ -77,6 +76,7 @@ func TestBoolOptMatcher(t *testing.T) {
 		{[]string{"-gxyf", "x"}, []string{"-gxy", "x"}, []string{"true"}},
 	}
 	for _, cas := range cases {
+		t.Logf("Testing case: %#v", cas)
 		pc := newParseContext()
 		ok, nargs := optMatcher.match(cas.args, &pc)
 		require.True(t, ok, "opt should match")
@@ -93,10 +93,10 @@ func TestBoolOptMatcher(t *testing.T) {
 func TestOptMatcher(t *testing.T) {
 	names := []string{"-f", "--force"}
 	opts := []*opt{
-		{names: names, value: reflect.New(reflect.TypeOf(""))},
-		{names: names, value: reflect.New(reflect.TypeOf(1))},
-		{names: names, value: reflect.New(reflect.TypeOf([]string{}))},
-		{names: names, value: reflect.New(reflect.TypeOf([]int{}))},
+		{names: names, value: newStringValue(new(string), "")},
+		{names: names, value: newIntValue(new(int), 0)},
+		{names: names, value: newStringsValue(new([]string), nil)},
+		{names: names, value: newIntsValue(new([]int), nil)},
 	}
 
 	cases := []struct {
@@ -115,18 +115,19 @@ func TestOptMatcher(t *testing.T) {
 
 	for _, cas := range cases {
 		for _, forceOpt := range opts {
+			t.Logf("Testing case: %#v with opt: %#v", cas, forceOpt)
 			optMatcher := &optMatcher{
 				theOne: forceOpt,
 				optionsIdx: map[string]*opt{
 					"-f":      forceOpt,
 					"--force": forceOpt,
-					"-a":      &opt{names: []string{"-a"}, value: reflect.New(reflect.TypeOf(true))},
+					"-a":      {names: []string{"-a"}, value: newBoolValue(new(bool), false)},
 				},
 			}
 
 			pc := newParseContext()
 			ok, nargs := optMatcher.match(cas.args, &pc)
-			require.True(t, ok, "opt should match")
+			require.True(t, ok, "opt %#v should match args %v, %v", forceOpt, cas.args, forceOpt.isBool())
 			require.Equal(t, cas.nargs, nargs, "opt should consume the option name")
 			require.Equal(t, cas.val, pc.opts[forceOpt], "true should stored as the option's value")
 
@@ -141,8 +142,8 @@ func TestOptMatcher(t *testing.T) {
 func TestOptsMatcher(t *testing.T) {
 	opts := optsMatcher{
 		options: []*opt{
-			{names: []string{"-f", "--force"}, value: reflect.New(reflect.TypeOf(true))},
-			{names: []string{"-g", "--green"}, value: reflect.New(reflect.TypeOf(""))},
+			{names: []string{"-f", "--force"}, value: newBoolValue(new(bool), false)},
+			{names: []string{"-g", "--green"}, value: newStringValue(new(string), "")},
 		},
 		optionsIndex: map[string]*opt{},
 	}
