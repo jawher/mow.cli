@@ -571,3 +571,105 @@ func TestArgSetByUser(t *testing.T) {
 	}
 
 }
+
+func TestCommandAliases(t *testing.T) {
+	defer suppressOutput()()
+
+	cases := []struct {
+		args          []string
+		errorExpected bool
+	}{
+		{
+			args:          []string{"say", "hello"},
+			errorExpected: false,
+		},
+		{
+			args:          []string{"say", "hi"},
+			errorExpected: false,
+		},
+		{
+			args:          []string{"say", "hello hi"},
+			errorExpected: true,
+		},
+		{
+			args:          []string{"say", "hello", "hi"},
+			errorExpected: true,
+		},
+	}
+
+	for _, cas := range cases {
+		app := App("say", "")
+		app.ErrorHandling = flag.ContinueOnError
+
+		called := false
+
+		app.Command("hello hi", "", func(cmd *Cmd) {
+			cmd.Action = func() {
+				called = true
+			}
+		})
+
+		err := app.Run(cas.args)
+
+		if cas.errorExpected {
+			require.Error(t, err, "Run() should have returned with an error")
+			require.False(t, called, "action should not have been called")
+		} else {
+			require.NoError(t, err, "Run() should have returned without an error")
+			require.True(t, called, "action should have been called")
+		}
+	}
+}
+
+func TestSubcommandAliases(t *testing.T) {
+	cases := []struct {
+		args []string
+	}{
+		{
+			args: []string{"app", "foo", "bar", "baz"},
+		},
+		{
+			args: []string{"app", "foo", "bar", "z"},
+		},
+		{
+			args: []string{"app", "foo", "b", "baz"},
+		},
+		{
+			args: []string{"app", "f", "bar", "baz"},
+		},
+		{
+			args: []string{"app", "f", "b", "baz"},
+		},
+		{
+			args: []string{"app", "f", "b", "z"},
+		},
+		{
+			args: []string{"app", "foo", "b", "z"},
+		},
+		{
+			args: []string{"app", "f", "bar", "z"},
+		},
+	}
+
+	for _, cas := range cases {
+		app := App("app", "")
+		app.ErrorHandling = flag.ContinueOnError
+
+		called := false
+
+		app.Command("foo f", "", func(cmd *Cmd) {
+			cmd.Command("bar b", "", func(cmd *Cmd) {
+				cmd.Command("baz z", "", func(cmd *Cmd) {
+					cmd.Action = func() {
+						called = true
+					}
+				})
+			})
+		})
+
+		err := app.Run(cas.args)
+
+		require.NoError(t, err, "Run() should have returned without an error")
+		require.True(t, called, "action should have been called")
+	}
+}
