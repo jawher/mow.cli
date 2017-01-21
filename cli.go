@@ -67,14 +67,14 @@ func (cli *Cli) parse(args []string, entry, inFlow, outFlow *step) error {
 	// After that, we just call Cmd.parse() for the default behavior
 	if cli.versionSetAndRequested(args) {
 		cli.PrintVersion()
-		exiter(0)
+		cli.onError(errVersionRequested)
 		return nil
 	}
 	return cli.Cmd.parse(args, entry, inFlow, outFlow)
 }
 
 func (cli *Cli) versionSetAndRequested(args []string) bool {
-	return cli.version != nil && cli.isArgSet(args, cli.version.option.names)
+	return cli.version != nil && cli.isFlagSet(args, cli.version.option.names)
 }
 
 /*
