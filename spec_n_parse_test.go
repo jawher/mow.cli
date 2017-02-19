@@ -1198,37 +1198,32 @@ func TestWardDoesntRunTooSlowly(t *testing.T) {
 
 }
 
-func TestEnvOverride(t *testing.T) {
+func TestEnvOverrideOk(t *testing.T) {
 	defer os.Unsetenv("envopt")
 
 	cases := []struct {
 		setenv bool
 		spec   string
 		args   []string
-		ok     bool
 		envval string
 	}{
 		// pickup the value from the environment variable
-		{true, "--envopt --other", []string{"--other", "otheropt"}, true, "fromenv"},
-		{true, "[--envopt] --other", []string{"--other", "otheropt"}, true, "fromenv"},
-		{true, "--envopt", []string{}, true, "fromenv"},
-		{true, "--envopt", []string{"--"}, true, "fromenv"},
+		{true, "--envopt --other", []string{"--other", "otheropt"}, "fromenv"},
+		{true, "[--envopt] --other", []string{"--other", "otheropt"}, "fromenv"},
+		{true, "--envopt", []string{}, "fromenv"},
+		{true, "--envopt", []string{"--"}, "fromenv"},
 
 		// override on command line
-		{true, "--envopt", []string{"-e", "fromopt"}, true, "fromopt"},
-		{true, "--envopt", []string{"--envopt", "fromopt"}, true, "fromopt"},
+		{true, "--envopt", []string{"-e", "fromopt"}, "fromopt"},
+		{true, "--envopt", []string{"--envopt", "fromopt"}, "fromopt"},
 
 		// no env set
-		{false, "--envopt", []string{"--envopt", "fromopt"}, true, "fromopt"},
-		{false, "--envopt", []string{"-e", "fromopt"}, true, "fromopt"},
+		{false, "--envopt", []string{"--envopt", "fromopt"}, "fromopt"},
+		{false, "--envopt", []string{"-e", "fromopt"}, "fromopt"},
 
 		// no env var, fallback to default
-		{false, "[--envopt]", []string{}, true, "envdefault"},
-		{false, "[--envopt] --other", []string{"--other", "otheropt"}, true, "envdefault"},
-
-		// no env var, not optional; should fail
-		{false, "--envopt", []string{}, false, ""},
-		{false, "--envopt --other", []string{"--other", "otheropt"}, false, ""},
+		{false, "[--envopt]", []string{}, "envdefault"},
+		{false, "[--envopt] --other", []string{"--other", "otheropt"}, "envdefault"},
 	}
 
 	for _, cas := range cases {
@@ -1248,16 +1243,46 @@ func TestEnvOverride(t *testing.T) {
 			if strings.Contains(cas.spec, "other") {
 				otheropt = c.StringOpt("o other", "", "")
 			}
-			c.StringArg("ARG", "", "")
 		}
-		if cas.ok {
-			okCmd(t, cas.spec, init, cas.args)
+		okCmd(t, cas.spec, init, cas.args)
+		if strings.Contains(cas.spec, "other") {
+			// if the test spec defined --other, make sure it was actually set
+			assert.Equal(t, "otheropt", *otheropt)
+		}
+		// ensure --envopt was actually set to the test's expectations
+		assert.Equal(t, cas.envval, *envopt)
+	}
+}
+
+// Test that not setting an environment variable correctly causes
+// required options to fail if no value is supplied in args.
+func TestEnvOverrideFail(t *testing.T) {
+	os.Unsetenv("envopt")
+
+	cases := []struct {
+		spec   string
+		args   []string
+		envval string
+	}{
+		// no env var, not optional; should fail
+		{"--envopt", []string{}, ""},
+		{"--envopt --other", []string{"--other", "otheropt"}, ""},
+	}
+
+	for _, cas := range cases {
+		var envopt *string
+		var otheropt *string
+
+		init := func(c *Cmd) {
+			envopt = c.String(StringOpt{
+				Name:   "e envopt",
+				Value:  "envdefault",
+				EnvVar: "envopt",
+			})
 			if strings.Contains(cas.spec, "other") {
-				assert.Equal(t, "otheropt", *otheropt)
+				otheropt = c.StringOpt("o other", "", "")
 			}
-			assert.Equal(t, cas.envval, *envopt)
-		} else {
-			failCmd(t, cas.spec, init, cas.args)
 		}
+		failCmd(t, cas.spec, init, cas.args)
 	}
 }
