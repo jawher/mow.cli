@@ -2,7 +2,10 @@ package cli
 
 import (
 	"flag"
+	"os"
+	"strings"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"testing"
@@ -1193,4 +1196,93 @@ func TestWardDoesntRunTooSlowly(t *testing.T) {
 	okCmd(t, spec, init, []string{"--min-length", "10", "--length", "42", "--gen"})
 	okCmd(t, spec, init, []string{"--min-length", "10", "--no-symbol", "--no-lower", "--length", "42", "--gen"})
 
+}
+
+func TestEnvOverrideOk(t *testing.T) {
+	defer os.Unsetenv("envopt")
+
+	cases := []struct {
+		setenv bool
+		spec   string
+		args   []string
+		envval string
+	}{
+		// pickup the value from the environment variable
+		{true, "--envopt --other", []string{"--other", "otheropt"}, "fromenv"},
+		{true, "[--envopt] --other", []string{"--other", "otheropt"}, "fromenv"},
+		{true, "--envopt", []string{}, "fromenv"},
+		{true, "--envopt", []string{"--"}, "fromenv"},
+
+		// override on command line
+		{true, "--envopt", []string{"-e", "fromopt"}, "fromopt"},
+		{true, "--envopt", []string{"--envopt", "fromopt"}, "fromopt"},
+
+		// no env set
+		{false, "--envopt", []string{"--envopt", "fromopt"}, "fromopt"},
+		{false, "--envopt", []string{"-e", "fromopt"}, "fromopt"},
+
+		// no env var, fallback to default
+		{false, "[--envopt]", []string{}, "envdefault"},
+		{false, "[--envopt] --other", []string{"--other", "otheropt"}, "envdefault"},
+	}
+
+	for _, cas := range cases {
+		var envopt *string
+		var otheropt *string
+
+		init := func(c *Cmd) {
+			os.Unsetenv("envopt")
+			if cas.setenv {
+				os.Setenv("envopt", "fromenv")
+			}
+			envopt = c.String(StringOpt{
+				Name:   "e envopt",
+				Value:  "envdefault",
+				EnvVar: "envopt",
+			})
+			if strings.Contains(cas.spec, "other") {
+				otheropt = c.StringOpt("o other", "", "")
+			}
+		}
+		okCmd(t, cas.spec, init, cas.args)
+		if strings.Contains(cas.spec, "other") {
+			// if the test spec defined --other, make sure it was actually set
+			assert.Equal(t, "otheropt", *otheropt)
+		}
+		// ensure --envopt was actually set to the test's expectations
+		assert.Equal(t, cas.envval, *envopt)
+	}
+}
+
+// Test that not setting an environment variable correctly causes
+// required options to fail if no value is supplied in args.
+func TestEnvOverrideFail(t *testing.T) {
+	os.Unsetenv("envopt")
+
+	cases := []struct {
+		spec   string
+		args   []string
+		envval string
+	}{
+		// no env var, not optional; should fail
+		{"--envopt", []string{}, ""},
+		{"--envopt --other", []string{"--other", "otheropt"}, ""},
+	}
+
+	for _, cas := range cases {
+		var envopt *string
+		var otheropt *string
+
+		init := func(c *Cmd) {
+			envopt = c.String(StringOpt{
+				Name:   "e envopt",
+				Value:  "envdefault",
+				EnvVar: "envopt",
+			})
+			if strings.Contains(cas.spec, "other") {
+				otheropt = c.StringOpt("o other", "", "")
+			}
+		}
+		failCmd(t, cas.spec, init, cas.args)
+	}
 }
