@@ -123,9 +123,11 @@ func (p *uParser) atom() (*state, *state) {
 			p.back()
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
-		end = start.t(&optMatcher{
-			theOne:     opt,
-			optionsIdx: p.cmd.optionsIdx,
+		end = start.t(&optOrEnvMatcher{
+			optMatcher: optMatcher{
+				theOne:     opt,
+				optionsIdx: p.cmd.optionsIdx,
+			},
 		}, newState(p.cmd))
 		p.found(utOptValue)
 	case p.found(utLongOpt):
@@ -139,9 +141,11 @@ func (p *uParser) atom() (*state, *state) {
 			p.back()
 			panic(fmt.Sprintf("Undeclared option %s", name))
 		}
-		end = start.t(&optMatcher{
-			theOne:     opt,
-			optionsIdx: p.cmd.optionsIdx,
+		end = start.t(&optOrEnvMatcher{
+			optMatcher: optMatcher{
+				theOne:     opt,
+				optionsIdx: p.cmd.optionsIdx,
+			},
 		}, newState(p.cmd))
 		p.found(utOptValue)
 	case p.found(utOptSeq):
