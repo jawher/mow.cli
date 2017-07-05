@@ -142,11 +142,17 @@ func dot(s *state, visited map[*state]bool) []string {
 type parseContext struct {
 	args          map[*arg][]string
 	opts          map[*opt][]string
+	excludedOpts  map[*opt]struct{}
 	rejectOptions bool
 }
 
 func newParseContext() parseContext {
-	return parseContext{map[*arg][]string{}, map[*opt][]string{}, false}
+	return parseContext{
+		args:          map[*arg][]string{},
+		opts:          map[*opt][]string{},
+		excludedOpts:  map[*opt]struct{}{},
+		rejectOptions: false,
+	}
 }
 
 func (pc parseContext) merge(o parseContext) {

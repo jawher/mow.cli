@@ -1254,6 +1254,33 @@ func TestEnvOverrideOk(t *testing.T) {
 	}
 }
 
+// Anti-regression test for infinite loop case with envvar backed opts
+// https://github.com/jawher/mow.cli/pull/49
+func TestEnvOptSeq(t *testing.T) {
+	defer os.Unsetenv("envopt")
+
+	var envopt *string
+	var arg *string
+
+	init := func(c *Cmd) {
+		defer os.Unsetenv("envopt")
+
+		envopt = c.String(StringOpt{
+			Name:   "e envopt",
+			Value:  "envdefault",
+			EnvVar: "envopt",
+		})
+
+		arg = c.StringArg("ARG", "", "")
+	}
+
+	os.Setenv("envopt", "envval")
+	okCmd(t, "", init, []string{"argval"})
+
+	assert.Equal(t, "envval", *envopt)
+	assert.Equal(t, "argval", *arg)
+}
+
 // Test that not setting an environment variable correctly causes
 // required options to fail if no value is supplied in args.
 func TestEnvOverrideFail(t *testing.T) {
