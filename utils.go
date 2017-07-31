@@ -49,3 +49,16 @@ func setMultivalued(into multiValued, values []string) error {
 
 	return nil
 }
+
+func words(v string) []string {
+	parts := strings.Split(v, " ")
+	res := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		res = append(res, part)
+	}
+	return res
+}

@@ -104,7 +104,7 @@ the last argument, init, is a function that will be called by mow.cli to further
 (sub) command, e.g. to add options, arguments and the code to execute
 */
 func (c *Cmd) Command(name, desc string, init CmdInitializer) {
-	aliases := strings.Split(name, " ")
+	aliases := words(name)
 	c.commands = append(c.commands, &Cmd{
 		ErrorHandling: c.ErrorHandling,
 		name:          aliases[0],
@@ -389,7 +389,7 @@ func (c *Cmd) formatDescription(desc, envVar string) string {
 	if len(envVar) > 0 {
 		b.WriteString(" (")
 		sep := ""
-		for _, envVal := range strings.Split(envVar, " ") {
+		for _, envVal := range words(envVar) {
 			b.WriteString(fmt.Sprintf("%s$%s", sep, envVal))
 			sep = " "
 		}
