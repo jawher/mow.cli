@@ -3,6 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"strings"
 )
 
 // BoolOpt describes a boolean option
@@ -255,7 +256,7 @@ func (o *opt) String() string {
 }
 
 func mkOptStrs(optName string) []string {
-	res := words(optName)
+	res := strings.Fields(optName)
 	for i, name := range res {
 		prefix := "-"
 		if len(name) > 1 {
