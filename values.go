@@ -16,6 +16,10 @@ type multiValued interface {
 	Clear()
 }
 
+type defaultValued interface {
+	IsDefault() bool
+}
+
 /******************************************************************************/
 /* BOOL                                                                        */
 /******************************************************************************/
@@ -23,8 +27,9 @@ type multiValued interface {
 type boolValue bool
 
 var (
-	_ flag.Value = newBoolValue(new(bool), false)
-	_ boolValued = newBoolValue(new(bool), false)
+	_ flag.Value    = newBoolValue(new(bool), false)
+	_ boolValued    = newBoolValue(new(bool), false)
+	_ defaultValued = newBoolValue(new(bool), false)
 )
 
 func newBoolValue(into *bool, v bool) *boolValue {
@@ -49,6 +54,10 @@ func (bo *boolValue) String() string {
 	return fmt.Sprintf("%v", *bo)
 }
 
+func (bo *boolValue) IsDefault() bool {
+	return !bool(*bo)
+}
+
 /******************************************************************************/
 /* STRING                                                                        */
 /******************************************************************************/
@@ -56,7 +65,8 @@ func (bo *boolValue) String() string {
 type stringValue string
 
 var (
-	_ flag.Value = newStringValue(new(string), "")
+	_ flag.Value    = newStringValue(new(string), "")
+	_ defaultValued = newStringValue(new(string), "")
 )
 
 func newStringValue(into *string, v string) *stringValue {
@@ -73,6 +83,10 @@ func (sa *stringValue) String() string {
 	return fmt.Sprintf("%#v", *sa)
 }
 
+func (sa *stringValue) IsDefault() bool {
+	return string(*sa) == ""
+}
+
 /******************************************************************************/
 /* INT                                                                        */
 /******************************************************************************/
@@ -80,7 +94,8 @@ func (sa *stringValue) String() string {
 type intValue int
 
 var (
-	_ flag.Value = newIntValue(new(int), 0)
+	_ flag.Value    = newIntValue(new(int), 0)
+	_ defaultValued = newIntValue(new(int), 0)
 )
 
 func newIntValue(into *int, v int) *intValue {
@@ -101,6 +116,10 @@ func (ia *intValue) String() string {
 	return fmt.Sprintf("%v", *ia)
 }
 
+func (ia *intValue) IsDefault() bool {
+	return int(*ia) == 0
+}
+
 /******************************************************************************/
 /* STRINGS                                                                    */
 /******************************************************************************/
@@ -109,8 +128,9 @@ func (ia *intValue) String() string {
 type stringsValue []string
 
 var (
-	_ flag.Value  = newStringsValue(new([]string), nil)
-	_ multiValued = newStringsValue(new([]string), nil)
+	_ flag.Value    = newStringsValue(new([]string), nil)
+	_ multiValued   = newStringsValue(new([]string), nil)
+	_ defaultValued = newStringsValue(new([]string), nil)
 )
 
 func newStringsValue(into *[]string, v []string) *stringsValue {
@@ -138,6 +158,10 @@ func (sa *stringsValue) Clear() {
 	*sa = nil
 }
 
+func (sa *stringsValue) IsDefault() bool {
+	return len(*sa) == 0
+}
+
 /******************************************************************************/
 /* INTS                                                                       */
 /******************************************************************************/
@@ -145,8 +169,9 @@ func (sa *stringsValue) Clear() {
 type intsValue []int
 
 var (
-	_ flag.Value  = newIntsValue(new([]int), nil)
-	_ multiValued = newIntsValue(new([]int), nil)
+	_ flag.Value    = newIntsValue(new([]int), nil)
+	_ multiValued   = newIntsValue(new([]int), nil)
+	_ defaultValued = newIntsValue(new([]int), nil)
 )
 
 func newIntsValue(into *[]int, v []int) *intsValue {
@@ -176,4 +201,8 @@ func (ia *intsValue) String() string {
 
 func (ia *intsValue) Clear() {
 	*ia = nil
+}
+
+func (ia *intsValue) IsDefault() bool {
+	return len(*ia) == 0
 }

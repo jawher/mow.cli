@@ -49,3 +49,18 @@ func setMultivalued(into multiValued, values []string) error {
 
 	return nil
 }
+
+func joinStrings(parts ...string) string {
+	res := ""
+	for _, part := range parts {
+		s := strings.TrimSpace(part)
+		if s == "" {
+			continue
+		}
+		if res != "" {
+			res += " "
+		}
+		res += part
+	}
+	return res
+}

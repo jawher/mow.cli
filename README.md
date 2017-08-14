@@ -167,7 +167,7 @@ To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on 
 recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 ```
 
-* The first argument is a space separated list of names for the option without the dashes
+* The first argument is a space separated list of names (short and long) for the option without the dashes, e.g `"f force"`. While you can specify multiple short or long names, e.g. `"f x force force-push"`, only the first short name and the first long name will be displayed in the help messages
 * The second parameter is the default value for the option
 * The third and last parameter is the option description, as will be shown in the help messages
 
@@ -468,6 +468,24 @@ func (d *Durations) Clear() {
 }
 ```
 
+### Hide default value of custom type
+
+If your custom type implements a `IsDefault` method (returning a boolean), the help message generation will make use of it to decide whether or not to display the default value.
+
+```go
+type Action string
+
+// Make it implement flag.Value
+:
+:
+
+// Make it multi-valued
+func (a *Action) IsDefault() bool {
+	return (*a) == "nop"
+}
+```
+
+
 ## Interceptors
 
 It is possible to define snippets of code to be executed before and after a command or any of its sub commands is executed.
@@ -610,7 +628,7 @@ x.Spec = "-t | DST"
 
 You can use the `...` postfix operator to mark an element as repeatable:
 
-```go    
+```go
 x.Spec="SRC..."
 x.Spec="-e..."
 ```
@@ -629,7 +647,7 @@ all that is mutually exclusive to a choice between -x and -y options.
 ### Option group
 
 This is a shortcut to declare a choice between multiple options:
-```go    
+```go
 x.Spec = "-abcd"
 ```
 
@@ -645,13 +663,13 @@ I.e. any combination of the listed options in any order, with at least one optio
 
 Another shortcut:
 
-```go    
+```go
 x.Spec = "[OPTIONS]"
 ```
 
-This is a special syntax (the square brackets are not for marking an optional item, and the uppercased word is not for an argument).  
+This is a special syntax (the square brackets are not for marking an optional item, and the uppercased word is not for an argument).
 This is equivalent to a repeatable choice between all the available options.
-For example, if an app or a command declares 4 options a, b, c and d, `[OPTIONS]` is equivalent to
+For example, if an app or a command declares 4 options a, b, c and d, `[OPTIONS]` is equivalent to:
 
 ```go
 x.Spec = "[-a | -b | -c | -d]..."

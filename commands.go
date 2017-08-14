@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"strings"
@@ -335,69 +334,99 @@ func (c *Cmd) printHelp(longDesc bool) {
 	w := tabwriter.NewWriter(stdErr, 15, 1, 3, ' ', 0)
 
 	if len(c.args) > 0 {
-		fmt.Fprintf(stdErr, "\nArguments:\n")
+		fmt.Fprint(w, "\t\nArguments:\t\n")
 
 		for _, arg := range c.args {
-			desc := c.formatDescription(arg.desc, arg.envVar)
-			value := c.formatArgValue(arg)
-
-			fmt.Fprintf(w, "  %s%s\t%s\n", arg.name, value, desc)
+			var (
+				env   = formatEnvVarsForHelp(arg.envVar)
+				value = formatValueForHelp(arg.hideValue, arg.value)
+			)
+			fmt.Fprintf(w, "  %s\t%s\n", arg.name, joinStrings(arg.desc, env, value))
 		}
-		w.Flush()
 	}
 
 	if len(c.options) > 0 {
-		fmt.Fprintf(stdErr, "\nOptions:\n")
+		fmt.Fprint(w, "\t\nOptions:\t\n")
 
 		for _, opt := range c.options {
-			desc := c.formatDescription(opt.desc, opt.envVar)
-			value := c.formatOptValue(opt)
-			fmt.Fprintf(w, "  %s%s\t%s\n", strings.Join(opt.names, ", "), value, desc)
+			var (
+				optNames = formatOptNamesForHelp(opt)
+				env      = formatEnvVarsForHelp(opt.envVar)
+				value    = formatValueForHelp(opt.hideValue, opt.value)
+			)
+			fmt.Fprintf(w, "  %s\t%s\n", optNames, joinStrings(opt.desc, env, value))
 		}
-		w.Flush()
 	}
 
 	if len(c.commands) > 0 {
-		fmt.Fprintf(stdErr, "\nCommands:\n")
+		fmt.Fprint(w, "\t\nCommands:\t\n")
 
 		for _, c := range c.commands {
 			fmt.Fprintf(w, "  %s\t%s\n", strings.Join(c.aliases, ", "), c.desc)
 		}
-		w.Flush()
 	}
 
 	if len(c.commands) > 0 {
-		fmt.Fprintf(stdErr, "\nRun '%s COMMAND --help' for more information on a command.\n", path)
+		fmt.Fprintf(w, "\t\nRun '%s COMMAND --help' for more information on a command.\n", path)
 	}
+
+	w.Flush()
 }
 
-func (c *Cmd) formatArgValue(arg *arg) string {
-	if arg.hideValue {
-		return " "
-	}
-	return "=" + arg.value.String()
-}
+func formatOptNamesForHelp(o *opt) string {
+	short, long := "", ""
 
-func (c *Cmd) formatOptValue(opt *opt) string {
-	if opt.hideValue {
-		return " "
-	}
-	return "=" + opt.value.String()
-}
-
-func (c *Cmd) formatDescription(desc, envVar string) string {
-	var b bytes.Buffer
-	b.WriteString(desc)
-	if len(envVar) > 0 {
-		b.WriteString(" (")
-		sep := ""
-		for _, envVal := range strings.Fields(envVar) {
-			b.WriteString(fmt.Sprintf("%s$%s", sep, envVal))
-			sep = " "
+	for _, n := range o.names {
+		if len(n) == 2 && short == "" {
+			short = n
 		}
-		b.WriteString(")")
+
+		if len(n) > 2 && long == "" {
+			long = n
+		}
 	}
-	return strings.TrimSpace(b.String())
+
+	switch {
+	case short != "" && long != "":
+		return fmt.Sprintf("%s, %s", short, long)
+	case short != "":
+		return fmt.Sprintf("%s", short)
+	case long != "":
+		return fmt.Sprintf("    %s", long)
+	default:
+		return ""
+	}
+}
+
+func formatValueForHelp(hide bool, v flag.Value) string {
+	if hide {
+		return ""
+	}
+
+	if dv, ok := v.(defaultValued); ok {
+		if dv.IsDefault() {
+			return ""
+		}
+	}
+
+	return fmt.Sprintf("(default %s)", v.String())
+}
+
+func formatEnvVarsForHelp(envVars string) string {
+	if strings.TrimSpace(envVars) == "" {
+		return ""
+	}
+	vars := strings.Fields(envVars)
+	res := "(env"
+	sep := " "
+	for i, v := range vars {
+		if i > 0 {
+			sep = ", "
+		}
+		res += fmt.Sprintf("%s$%s", sep, v)
+	}
+	res += ")"
+	return res
 }
 
 func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
