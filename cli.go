@@ -103,11 +103,9 @@ func (cli *Cli) Run(args []string) error {
 }
 
 /*
-ActionCommand(myFun) is syntactic sugar for
-func(cmd *cli.Cmd) { cmd.Action = myFun }
+ActionCommand is a convenience function to configure a command with an action.
 
-cmd.CommandAction(_, _, myFun } is syntactic sugar for
-cmd.Command(_, _, func(cmd *cli.Cmd) { cmd.Action = myFun })
+cmd.ActionCommand(_, _, myFun } is equivalent to cmd.Command(_, _, func(cmd *cli.Cmd) { cmd.Action = myFun })
 */
 func ActionCommand(action func()) CmdInitializer {
 	return func(cmd *Cmd) {
