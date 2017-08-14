@@ -31,7 +31,7 @@ func TestBoolParam(t *testing.T) {
 		err := param.Set(cas.input)
 
 		if cas.err {
-			require.Error(t, err, "value %q should have returned an error", cas.input)
+			require.Errorf(t, err, "value %q should have returned an error", cas.input)
 			continue
 		}
 
@@ -89,7 +89,7 @@ func TestIntParam(t *testing.T) {
 		err := param.Set(cas.input)
 
 		if cas.err {
-			require.Error(t, err, "value %q should have returned an error", cas.input)
+			require.Errorf(t, err, "value %q should have returned an error", cas.input)
 			continue
 		}
 
