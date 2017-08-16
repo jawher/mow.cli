@@ -47,25 +47,36 @@ func TestImplicitSpec(t *testing.T) {
 	require.True(t, called, "Exec wasn't called")
 }
 
-func TestHelpShortcut(t *testing.T) {
+func testHelpAndVersionWithOptionsEnd(flag string, t *testing.T) {
+	t.Logf("Testing help/version with --: flag=%q", flag)
 	defer suppressOutput()()
 
 	exitCalled := false
-	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
+	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 	app := App("x", "")
-	app.Spec = "Y"
+	app.Version("v version", "1.0")
+	app.Spec = "CMD"
 
-	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
+	cmd := app.String(StringArg{Name: "CMD", Value: "", Desc: ""})
 
 	actionCalled := false
 	app.Action = func() {
 		actionCalled = true
+		require.Equal(t, flag, *cmd)
 	}
-	app.Run([]string{"x", "y", "-h", "z"})
 
-	require.False(t, actionCalled, "action should not have been called")
-	require.True(t, exitCalled, "exit should have been called")
+	app.Run([]string{"x", "--", flag})
+
+	require.True(t, actionCalled, "action should have been called")
+	require.False(t, exitCalled, "exit should not have been called")
+
+}
+
+func TestHelpAndVersionWithOptionsEnd(t *testing.T) {
+	for _, flag := range []string{"-h", "--help", "-v", "--version"} {
+		testHelpAndVersionWithOptionsEnd(flag, t)
+	}
 }
 
 func TestHelpMessage(t *testing.T) {
@@ -73,7 +84,7 @@ func TestHelpMessage(t *testing.T) {
 	defer captureAndRestoreOutput(&out, &err)()
 
 	exitCalled := false
-	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
+	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 	app := App("app", "App Desc")
 	app.Spec = "[-o] ARG"
@@ -104,7 +115,7 @@ func TestLongHelpMessage(t *testing.T) {
 	defer captureAndRestoreOutput(&out, &err)()
 
 	exitCalled := false
-	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
+	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 	app := App("app", "App Desc")
 	app.LongDesc = "Longer App Desc"
@@ -190,6 +201,34 @@ func TestContinueOnError(t *testing.T) {
 	require.False(t, called, "Exec should NOT have been called")
 }
 
+func TestContinueOnErrorWithHelpAndVersion(t *testing.T) {
+	defer exitShouldNotCalled(t)()
+	defer suppressOutput()()
+
+	app := App("say", "")
+	app.Version("v", "1.0")
+	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
+	app.Spec = "-f"
+	app.ErrorHandling = flag.ContinueOnError
+	called := false
+	app.Action = func() {
+		called = true
+	}
+
+	{
+		err := app.Run([]string{"say", "-h"})
+		require.Nil(t, err)
+		require.False(t, called, "Exec should NOT have been called")
+	}
+
+	{
+		err := app.Run([]string{"say", "-v"})
+		require.Nil(t, err)
+		require.False(t, called, "Exec should NOT have been called")
+	}
+
+}
+
 func TestExitOnError(t *testing.T) {
 	defer suppressOutput()()
 
@@ -197,10 +236,45 @@ func TestExitOnError(t *testing.T) {
 	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
 
 	app := App("x", "")
+	app.ErrorHandling = flag.ExitOnError
 	app.Spec = "Y"
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
+
 	app.Run([]string{"x", "y", "z"})
+	require.True(t, exitCalled, "exit should have been called")
+}
+
+func TestExitOnErrorWithHelp(t *testing.T) {
+	defer suppressOutput()()
+
+	exitCalled := false
+	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+
+	app := App("x", "")
+	app.Spec = "Y"
+	app.ErrorHandling = flag.ExitOnError
+
+	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
+
+	app.Run([]string{"x", "-h"})
+	require.True(t, exitCalled, "exit should have been called")
+}
+
+func TestExitOnErrorWithVersion(t *testing.T) {
+	defer suppressOutput()()
+
+	exitCalled := false
+	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+
+	app := App("x", "")
+	app.Version("v", "1.0")
+	app.Spec = "Y"
+	app.ErrorHandling = flag.ExitOnError
+
+	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
+
+	app.Run([]string{"x", "-v"})
 	require.True(t, exitCalled, "exit should have been called")
 }
 
