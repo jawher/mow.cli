@@ -413,7 +413,7 @@ func TestHelpMessage(t *testing.T) {
 	app.Spec = "[-bdsuikqs] BOOL1 [STR1] INT3..."
 
 	// Options
-	app.Bool(BoolOpt{Name: "b bool1", Value: false, EnvVar: "BOOL1", Desc: "Bool Option 1"})
+	app.Bool(BoolOpt{Name: "b bool1 u uuu", Value: false, EnvVar: "BOOL1", Desc: "Bool Option 1"})
 	app.Bool(BoolOpt{Name: "bool2", Value: true, EnvVar: " ", Desc: "Bool Option 2"})
 	app.Bool(BoolOpt{Name: "d", Value: true, EnvVar: "BOOL3", Desc: "Bool Option 3", HideValue: true})
 

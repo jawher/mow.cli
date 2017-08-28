@@ -94,8 +94,7 @@ func (sa *stringValue) IsDefault() bool {
 type intValue int
 
 var (
-	_ flag.Value    = newIntValue(new(int), 0)
-	_ defaultValued = newIntValue(new(int), 0)
+	_ flag.Value = newIntValue(new(int), 0)
 )
 
 func newIntValue(into *int, v int) *intValue {
@@ -114,10 +113,6 @@ func (ia *intValue) Set(s string) error {
 
 func (ia *intValue) String() string {
 	return fmt.Sprintf("%v", *ia)
-}
-
-func (ia *intValue) IsDefault() bool {
-	return int(*ia) == 0
 }
 
 /******************************************************************************/

@@ -485,7 +485,6 @@ func (a *Action) IsDefault() bool {
 }
 ```
 
-
 ## Interceptors
 
 It is possible to define snippets of code to be executed before and after a command or any of its sub commands is executed.
