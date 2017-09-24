@@ -3,6 +3,8 @@ package cli
 import (
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -191,4 +193,35 @@ func TestOptsMatcher(t *testing.T) {
 		nok, _ := opts.match(cas.args, &pc)
 		require.False(t, nok, "opts shouldn't match when rejectOptions flag is set")
 	}
+}
+
+// Issue 55
+func TestOptsMatcherInfiniteLoop(t *testing.T) {
+	opts := optsMatcher{
+		options: []*opt{
+			{names: []string{"-g"}, value: newStringValue(new(string), ""), valueSetFromEnv: true},
+		},
+		optionsIndex: map[string]*opt{},
+	}
+
+	for _, o := range opts.options {
+		for _, n := range o.names {
+			opts.optionsIndex[n] = o
+		}
+	}
+
+	done := make(chan struct{}, 1)
+	pc := newParseContext()
+	go func() {
+		opts.match([]string{"-x"}, &pc)
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-done:
+		// nop, everything is good
+	case <-time.After(5 * time.Second):
+		t.Fatalf("Timed out after 5 seconds. Infinite loop in optsMatcher.")
+	}
+
 }

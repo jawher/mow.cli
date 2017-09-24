@@ -86,10 +86,6 @@ func (o *optMatcher) match(args []string, c *parseContext) (bool, []string) {
 			idx += consumed
 
 		default:
-			if o.theOne.valueSetFromEnv {
-				//  exclude opt
-				c.excludedOpts[o.theOne] = struct{}{}
-			}
 			return o.theOne.valueSetFromEnv, args
 		}
 	}
@@ -235,7 +231,10 @@ func (om optsMatcher) try(args []string, c *parseContext) (bool, []string) {
 			continue
 		}
 		if ok, nargs := (&optMatcher{theOne: o, optionsIdx: om.optionsIndex}).match(args, c); ok {
-			return ok, nargs
+			if o.valueSetFromEnv {
+				c.excludedOpts[o] = struct{}{}
+			}
+			return true, nargs
 		}
 	}
 	return false, args
