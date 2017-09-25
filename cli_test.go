@@ -463,11 +463,11 @@ func TestHelpMessage(t *testing.T) {
 	app.Run([]string{"app", "-h"})
 
 	if *genGolden {
-		ioutil.WriteFile("fixtures/help-output.txt.golden", []byte(err), 0644)
+		ioutil.WriteFile("testdata/help-output.txt.golden", []byte(err), 0644)
 	}
 
-	expected, e := ioutil.ReadFile("fixtures/help-output.txt")
-	require.NoError(t, e, "Failed to read the expected help output from fixtures/help-output.txt")
+	expected, e := ioutil.ReadFile("testdata/help-output.txt")
+	require.NoError(t, e, "Failed to read the expected help output from testdata/help-output.txt")
 
 	require.Equal(t, expected, []byte(err))
 }
@@ -490,11 +490,11 @@ func TestLongHelpMessage(t *testing.T) {
 	app.Run([]string{"app", "-h"})
 
 	if *genGolden {
-		ioutil.WriteFile("fixtures/long-help-output.txt.golden", []byte(err), 0644)
+		ioutil.WriteFile("testdata/long-help-output.txt.golden", []byte(err), 0644)
 	}
 
-	expected, e := ioutil.ReadFile("fixtures/long-help-output.txt")
-	require.NoError(t, e, "Failed to read the expected help output from fixtures/long-help-output.txt")
+	expected, e := ioutil.ReadFile("testdata/long-help-output.txt")
+	require.NoError(t, e, "Failed to read the expected help output from testdata/long-help-output.txt")
 
 	require.Equal(t, expected, []byte(err))
 }

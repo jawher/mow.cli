@@ -1,2 +1,2 @@
-fixtures/*.golden
+testdata/*.golden
 coverage.out
