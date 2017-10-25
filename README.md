@@ -113,7 +113,7 @@ recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the option:
 
 ```go
-recursive = cp.Bool(BoolOpt{
+recursive = cp.Bool(cli.BoolOpt{
     Name:  "R recursive",
     Value: false,
     Desc:  "copy src files recursively",
@@ -177,7 +177,7 @@ dst := cp.StringArg("DST", "", "the destination")
 There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the argument:
 
 ```go
-src = cp.Strings(StringsArg{
+src = cp.Strings(cli.StringsArg{
     Name:  "SRC",
     Desc:  "The source files to copy",
     Value: "default value",
@@ -244,11 +244,12 @@ In this function, you can add options and arguments by calling the same methods 
 You would also assign a function to the Action field of the Cmd struct for it to be executed when the command is invoked.
 ```go
 docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
-    detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID")
-    memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)")
-
-    image := cmd.StringArg("IMAGE", "", "")
-
+    var (
+        detached = cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID")
+        memory   = cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)")
+        image    = cmd.StringArg("IMAGE", "", "")
+    )
+    
     cmd.Action = func() {
         if *detached {
             //do something
@@ -662,11 +663,12 @@ For example, given this command declaration:
 
 ```go
 docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
-    detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID", nil)
-    memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)", nil)
-
-    image := cmd.StringArg("IMAGE", "", "", nil)
-    args := cmd.StringsArg("ARG", "", "", nil)
+    var (
+        detached = cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID", nil)
+        memory   = cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)", nil)
+        image    = cmd.StringArg("IMAGE", "", "", nil)
+        args     = cmd.StringsArg("ARG", "", "", nil)
+    )
 })
 ```
 
