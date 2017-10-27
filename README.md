@@ -117,8 +117,8 @@ recursive = cp.Bool(cli.BoolOpt{
     Name:  "R recursive",
     Value: false,
     Desc:  "copy src files recursively",
-    EnvVar: "VAR1 VAR2",
-    SetByUser: &srcSetByUser,
+    EnvVar: "VAR_RECURSIVE",
+    SetByUser: &recursiveSetByUser,
 })
 ```
 
