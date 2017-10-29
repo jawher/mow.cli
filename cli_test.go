@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -399,6 +400,8 @@ func TestHelpAndVersionWithOptionsEnd(t *testing.T) {
 	}
 }
 
+var genGolden = flag.Bool("g", false, "Generate golden file(s)")
+
 func TestHelpMessage(t *testing.T) {
 	var out, err string
 	defer captureAndRestoreOutput(&out, &err)()
@@ -407,27 +410,66 @@ func TestHelpMessage(t *testing.T) {
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 	app := App("app", "App Desc")
-	app.Spec = "[-o] ARG"
+	app.Spec = "[-bdsuikqs] BOOL1 [STR1] INT3..."
 
-	app.String(StringOpt{Name: "o opt", Value: "", Desc: "Option"})
-	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument"})
+	// Options
+	app.Bool(BoolOpt{Name: "b bool1 u uuu", Value: false, EnvVar: "BOOL1", Desc: "Bool Option 1"})
+	app.Bool(BoolOpt{Name: "bool2", Value: true, EnvVar: " ", Desc: "Bool Option 2"})
+	app.Bool(BoolOpt{Name: "d", Value: true, EnvVar: "BOOL3", Desc: "Bool Option 3", HideValue: true})
+
+	app.String(StringOpt{Name: "s str1", Value: "", EnvVar: "STR1", Desc: "String Option 1"})
+	app.String(StringOpt{Name: "str2", Value: "a value", Desc: "String Option 2"})
+	app.String(StringOpt{Name: "u", Value: "another value", EnvVar: "STR3", Desc: "String Option 3", HideValue: true})
+
+	app.Int(IntOpt{Name: "i int1", Value: 0, EnvVar: "INT1 ALIAS_INT1"})
+	app.Int(IntOpt{Name: "int2", Value: 1, EnvVar: "INT2", Desc: "Int Option 2"})
+	app.Int(IntOpt{Name: "k", Value: 1, EnvVar: "INT3", Desc: "Int Option 3", HideValue: true})
+
+	app.Strings(StringsOpt{Name: "x strs1", Value: nil, EnvVar: "STRS1", Desc: "Strings Option 1"})
+	app.Strings(StringsOpt{Name: "strs2", Value: []string{"value1", "value2"}, EnvVar: "STRS2", Desc: "Strings Option 2"})
+	app.Strings(StringsOpt{Name: "z", Value: []string{"another value"}, EnvVar: "STRS3", Desc: "Strings Option 3", HideValue: true})
+
+	app.Ints(IntsOpt{Name: "q ints1", Value: nil, EnvVar: "INTS1", Desc: "Ints Option 1"})
+	app.Ints(IntsOpt{Name: "ints2", Value: []int{1, 2, 3}, EnvVar: "INTS2", Desc: "Ints Option 2"})
+	app.Ints(IntsOpt{Name: "s", Value: []int{1}, EnvVar: "INTS3", Desc: "Ints Option 3", HideValue: true})
+
+	// Args
+	app.Bool(BoolArg{Name: "BOOL1", Value: false, EnvVar: "BOOL1", Desc: "Bool Argument 1"})
+	app.Bool(BoolArg{Name: "BOOL2", Value: true, Desc: "Bool Argument 2"})
+	app.Bool(BoolArg{Name: "BOOL3", Value: true, EnvVar: "BOOL3", Desc: "Bool Argument 3", HideValue: true})
+
+	app.String(StringArg{Name: "STR1", Value: "", EnvVar: "STR1", Desc: "String Argument 1"})
+	app.String(StringArg{Name: "STR2", Value: "a value", EnvVar: "STR2", Desc: "String Argument 2"})
+	app.String(StringArg{Name: "STR3", Value: "another value", EnvVar: "STR3", Desc: "String Argument 3", HideValue: true})
+
+	app.Int(IntArg{Name: "INT1", Value: 0, EnvVar: "INT1", Desc: "Int Argument 1"})
+	app.Int(IntArg{Name: "INT2", Value: 1, EnvVar: "INT2", Desc: "Int Argument 2"})
+	app.Int(IntArg{Name: "INT3", Value: 1, EnvVar: "INT3", Desc: "Int Argument 3", HideValue: true})
+
+	app.Strings(StringsArg{Name: "STRS1", Value: nil, EnvVar: "STRS1", Desc: "Strings Argument 1"})
+	app.Strings(StringsArg{Name: "STRS2", Value: []string{"value1", "value2"}, EnvVar: "STRS2"})
+	app.Strings(StringsArg{Name: "STRS3", Value: []string{"another value"}, EnvVar: "STRS3", Desc: "Strings Argument 3", HideValue: true})
+
+	app.Ints(IntsArg{Name: "INTS1", Value: nil, EnvVar: "INTS1", Desc: "Ints Argument 1"})
+	app.Ints(IntsArg{Name: "INTS2", Value: []int{1, 2, 3}, EnvVar: "INTS2", Desc: "Ints Argument 2"})
+	app.Ints(IntsArg{Name: "INTS3", Value: []int{1}, EnvVar: "INTS3", Desc: "Ints Argument 3", HideValue: true})
 
 	app.Action = func() {}
+
+	app.Command("command1", "command1 description", func(cmd *Cmd) {})
+	app.Command("command2", "command2 description", func(cmd *Cmd) {})
+	app.Command("command3", "command3 description", func(cmd *Cmd) {})
+
 	app.Run([]string{"app", "-h"})
 
-	help := `
-Usage: app [-o] ARG
+	if *genGolden {
+		ioutil.WriteFile("testdata/help-output.txt.golden", []byte(err), 0644)
+	}
 
-App Desc
+	expected, e := ioutil.ReadFile("testdata/help-output.txt")
+	require.NoError(t, e, "Failed to read the expected help output from testdata/help-output.txt")
 
-Arguments:
-  ARG=""       Argument
-
-Options:
-  -o, --opt=""   Option
-`
-
-	require.Equal(t, help, err)
+	require.Equal(t, expected, []byte(err))
 }
 
 func TestLongHelpMessage(t *testing.T) {
@@ -447,19 +489,14 @@ func TestLongHelpMessage(t *testing.T) {
 	app.Action = func() {}
 	app.Run([]string{"app", "-h"})
 
-	help := `
-Usage: app [-o] ARG
+	if *genGolden {
+		ioutil.WriteFile("testdata/long-help-output.txt.golden", []byte(err), 0644)
+	}
 
-Longer App Desc
+	expected, e := ioutil.ReadFile("testdata/long-help-output.txt")
+	require.NoError(t, e, "Failed to read the expected help output from testdata/long-help-output.txt")
 
-Arguments:
-  ARG=""       Argument
-
-Options:
-  -o, --opt=""   Option
-`
-
-	require.Equal(t, help, err)
+	require.Equal(t, expected, []byte(err))
 }
 
 func TestVersionShortcut(t *testing.T) {
