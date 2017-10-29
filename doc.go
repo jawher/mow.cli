@@ -30,7 +30,7 @@ To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on 
 
 * The third parameter is the option description, as will be shown in the help messages
 
-There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the option:
+There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts a struct describing the option:
 
 	recursive = cp.Bool(BoolOpt{
 		Name:  "R",
@@ -39,10 +39,9 @@ There is also a second set of methods Bool, String, Int, Strings and Ints, which
 		EnvVar: "",
 	})
 
-The field names are self-describing.
 There EnvVar field is a space separated list of environment variables names to be used to initialize the option.
 
-The result is a pointer to a value that will be populated after parsing the command line arguments.
+The result is a pointer to a value which will be populated after parsing the command line arguments.
 You can access the values in the Action func.
 
 In the command line, mow.cli accepts the following syntaxes
@@ -86,12 +85,14 @@ There is also a second set of methods Bool, String, Int, Strings and Ints, which
 		Desc:  "The source files to copy",
 		Value: "",
 		EnvVar: "",
+    	SetByUser: &srcSetByUser,
 	})
 
-The field names are self-describing.
 The Value field is where you can set the initial value for the argument.
 
 EnvVar accepts a space separated list of environment variables names to be used to initialize the argument.
+
+If SetByUser is specified (by passing a pointer to a bool variable), it will be set to true only if the user explicitly sets the argument.
 
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.

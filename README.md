@@ -5,44 +5,9 @@
 
 A framework to build command line applications in Go with most of the burden of arguments parsing and validation placed on the framework instead of the developer.
 
-
-## Motivation
-
-|                                                                      | mow.cli | codegangsta/cli | flag |
-|----------------------------------------------------------------------|---------|-----------------|------|
-| Contextual help                                                      | ✓       | ✓               |      |
-| Commands                                                             | ✓       | ✓               |      |
-| Option folding  `-xyz`                                               | ✓       |                 |      |
-| Option Value folding  `-fValue`                                      | ✓       |                 |      |
-| Option exclusion: `--start ❘ --stop`                                 | ✓       |                 |      |
-| Option dependency : `[-a -b]` or `[-a [-b]]`                         | ✓       |                 |      |
-| Arguments validation : `SRC DST`                                     | ✓       |                 |      |
-| Argument optionality : `SRC [DST]`                                   | ✓       |                 |      |
-| Argument repetition : `SRC... DST`                                   | ✓       |                 |      |
-| Option/Argument dependency : `SRC [-f DST]`                          | ✓       |                 |      |
-| Any combination of the above: `[-d ❘ --rm] IMAGE [COMMAND [ARG...]]` | ✓        |                 |      |
-
-In the goland, docopt is another library with rich flags and arguments validation.
-However, it falls short for many use cases:
-
-|                             | mow.cli | docopt |
-|-----------------------------|---------|--------|
-| Contextual help             | ✓       |        |
-| Backtracking: `SRC... DST`  | ✓       |        |
-| Backtracking: `[SRC] DST`   | ✓       |        |
-| Branching: `(SRC ❘ -f DST)` | ✓        |        |
-
-## Installation
-
-To install this library, simply run:
-
-```
-$ go get github.com/jawher/mow.cli
-```
-
 ## First app
 
-Here's a sample showcasing many features of mow.cli: flags, arguments, and spec string:
+### A simple app
 
 ```go
 package main
@@ -73,6 +38,99 @@ func main() {
 }
 ```
 
+### An app with multiple commands:
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/jawher/mow.cli"
+)
+
+func main() {
+	app := cli.App("uman", "User Manager")
+
+	app.Spec = "[-v]"
+
+	var (
+		verbose = app.BoolOpt("v verbose", false, "Verbose debug mode")
+	)
+
+	app.Before = func() {
+		if *verbose {
+			// Here you can enable debug output in your logger for example
+			fmt.Println("Verbose mode enabled")
+		}
+	}
+
+	// Declare a first command, invocable with "uman list"
+	app.Command("list", "list the users", func(cmd *cli.Cmd) {
+		// These are the command specific options and args, nicely scoped inside a func
+		var (
+			all = cmd.BoolOpt("all", false, "Display all users, including disabled ones")
+		)
+
+		// What to run when this command is called
+		cmd.Action = func() {
+			// Inside the action, and only inside, you can safely access the values of the options and arguments
+			fmt.Printf("user list (including disabled ones: %v)\n", *all)
+		}
+	})
+
+	// The second command, invocable with "uman get"
+	app.Command("get", "get a user details", func(cmd *cli.Cmd) {
+		var (
+			detailed = cmd.BoolOpt("detailed", false, "Disaply detailed information")
+			id       = cmd.StringArg("ID", "", "The user id to display")
+		)
+
+		cmd.Action = func() {
+			fmt.Printf("user %q details (detailed mode: %v)\n", *id, *detailed)
+		}
+	})
+
+	// Now that the app is configured, execute it passing in the os.Args array
+	app.Run(os.Args)
+}
+```
+
+## Motivation
+
+|                                                                      | mow.cli | codegangsta/cli | flag |
+|----------------------------------------------------------------------|---------|-----------------|------|
+| Contextual help                                                      | ✓       | ✓               |      |
+| Commands                                                             | ✓       | ✓               |      |
+| Option folding  `-xyz`                                               | ✓       |                 |      |
+| Option Value folding  `-fValue`                                      | ✓       |                 |      |
+| Option exclusion: `--start ❘ --stop`                                 | ✓       |                 |      |
+| Option dependency : `[-a -b]` or `[-a [-b]]`                         | ✓       |                 |      |
+| Arguments validation : `SRC DST`                                     | ✓       |                 |      |
+| Argument optionality : `SRC [DST]`                                   | ✓       |                 |      |
+| Argument repetition : `SRC... DST`                                   | ✓       |                 |      |
+| Option/Argument dependency : `SRC [-f DST]`                          | ✓       |                 |      |
+| Any combination of the above: `[-d ❘ --rm] IMAGE [COMMAND [ARG...]]` | ✓       |                 |      |
+
+In the goland, docopt is another library with rich flags and arguments validation.
+However, it falls short for many use cases:
+
+|                             | mow.cli | docopt |
+|-----------------------------|---------|--------|
+| Contextual help             | ✓       |        |
+| Backtracking: `SRC... DST`  | ✓       |        |
+| Backtracking: `[SRC] DST`   | ✓       |        |
+| Branching: `(SRC ❘ -f DST)` | ✓       |        |
+
+## Installation
+
+To install this library, simply run:
+
+```
+$ go get github.com/jawher/mow.cli
+```
+
 ## Basics
 
 You start by creating an application by passing a name and a description:
@@ -82,6 +140,7 @@ cp := cli.App("cp", "Copy files around")
 ```
 
 To attach the code to execute when the app is launched, assign a function to the Action field:
+
 ```go
 cp.Action = func() {
     fmt.Printf("Hello world\n")
@@ -89,6 +148,7 @@ cp.Action = func() {
 ```
 
 If you want you can add support for printing the app version (invoked by ```-v, --version```) like so:
+
 ```go
 cp.Version("v version", "cp 1.2.3")
 ```
@@ -102,6 +162,7 @@ cp.Run(os.Args)
 ## Options
 
 To add a (global) option, call one of the (String[s]|Int[s]|Bool)Opt methods on the app:
+
 ```go
 recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 ```
@@ -110,7 +171,7 @@ recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 * The second parameter is the default value for the option
 * The third and last parameter is the option description, as will be shown in the help messages
 
-There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts structs describing the option:
+There is also a second set of methods Bool, String, Int, Strings and Ints, which accepts a struct describing the option:
 
 ```go
 recursive = cp.Bool(cli.BoolOpt{
@@ -122,13 +183,11 @@ recursive = cp.Bool(cli.BoolOpt{
 })
 ```
 
-The field names are self-describing.
-
 `EnvVar` accepts a space separated list of environment variables names to be used to initialize the option.
 
 If `SetByUser` is specified (by passing a pointer to a bool variable), it will be set to `true` if the user explicitly set the option.
 
-The result is a pointer to a value that will be populated after parsing the command line arguments.
+The result is a pointer to a value which will be populated after parsing the command line arguments.
 You can access the values in the Action func.
 
 In the command line, mow.cli accepts the following syntaxes
@@ -186,17 +245,15 @@ src = cp.Strings(cli.StringsArg{
 })
 ```
 
-The field names are self-describing.
 The Value field is where you can set the initial value for the argument.
 
 `EnvVar` accepts a space separated list of environment variables names to be used to initialize the argument.
 
-If `SetByUser` is specified (by passing a pointer to a bool variable), it will be set to `true` if the user explicitly set the argument.
+If `SetByUser` is specified (by passing a pointer to a bool variable), it will be set to `true` only if the user explicitly sets the argument.
 
 The result is a pointer to a value that will be populated after parsing the command line arguments.
 You can access the values in the Action func.
 
-You can also
 
 ## Operators
 
@@ -242,6 +299,7 @@ docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
 * The third argument is a CmdInitializer, a function that receives a pointer to a Cmd struct representing the command.
 In this function, you can add options and arguments by calling the same methods as you would with an app struct (BoolOpt, StringArg, ...).
 You would also assign a function to the Action field of the Cmd struct for it to be executed when the command is invoked.
+
 ```go
 docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
     var (
@@ -267,11 +325,15 @@ bzk.Command("job", "actions on jobs", func(cmd *cli.Cmd) {
     cmd.Command("log", "show a job log", nil)
 })
 ```
-When you just want to set Action to cmd, you can use ActionCommand function for this
+
+When you just want to set Action to cmd, you can use ActionCommand function for this:
+
 ```go
 app.Command("list", "list all configs", cli.ActionCommand(func() { list() }))
 ```
-is the same as
+
+is the same as:
+
 ```go
 app.Command("list", "list all configs", func(cmd *cli.Cmd)) {
     cmd.Action = func() {
