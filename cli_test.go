@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"bytes"
 	"flag"
 
 	"github.com/stretchr/testify/require"
 
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -20,11 +22,12 @@ func TestTheCpCase(t *testing.T) {
 	ex := false
 	app.Action = func() {
 		ex = true
-	}
-	app.Run([]string{"cp", "x", "y", "z"})
 
-	require.Equal(t, []string{"x", "y"}, *src)
-	require.Equal(t, "z", *dst)
+		require.Equal(t, []string{"x", "y"}, *src)
+		require.Equal(t, "z", *dst)
+	}
+
+	app.Run([]string{"cp", "x", "y", "z"})
 
 	require.True(t, ex, "Exec wasn't called")
 }
@@ -41,7 +44,7 @@ func TestImplicitSpec(t *testing.T) {
 
 	err := app.Run([]string{"test", "-x", "-y", "hello"})
 
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, *x)
 	require.Equal(t, "hello", *y)
 
@@ -820,7 +823,6 @@ func TestOptSetByUser(t *testing.T) {
 		require.True(t, called, "action should have been called")
 		require.Equal(t, cas.expected, setByUser)
 	}
-
 }
 
 func TestArgSetByUser(t *testing.T) {
@@ -1003,6 +1005,537 @@ func TestArgSetByUser(t *testing.T) {
 
 }
 
+func TestOptSetByEnv(t *testing.T) {
+	cases := []struct {
+		desc     string
+		config   func(*Cli) interface{}
+		args     []string
+		expected interface{}
+	}{
+		// OPTS
+		// String
+		{
+			desc: "String Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.String(StringOpt{Name: "f", Value: "default", EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: "default",
+		},
+		{
+			desc: "String Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "env")
+				return c.String(StringOpt{Name: "f", Value: "default", EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: "env",
+		},
+		{
+			desc: "String Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "env")
+				return c.String(StringOpt{Name: "f", Value: "default", EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "-f=user"},
+			expected: "user",
+		},
+
+		// Bool
+		{
+			desc: "Bool Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.Bool(BoolOpt{Name: "f", Value: true, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "true")
+				return c.Bool(BoolOpt{Name: "f", Value: false, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Opt, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE1", "xxx")
+				os.Setenv("MOW_VALUE2", "true")
+				return c.Bool(BoolOpt{Name: "f", Value: false, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Opt, env set bad value, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "xxx")
+				return c.Bool(BoolOpt{Name: "f", Value: true, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "false")
+				return c.Bool(BoolOpt{Name: "f", Value: false, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "-f"},
+			expected: true,
+		},
+
+		// Int
+		{
+			desc: "Int Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.Int(IntOpt{Name: "f", Value: 42, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "42")
+				return c.Int(IntOpt{Name: "f", Value: 17, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Opt, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE1", "xxx")
+				os.Setenv("MOW_VALUE2", "42")
+				return c.Int(IntOpt{Name: "f", Value: 17, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Opt, env set bad value, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "xxx")
+				return c.Int(IntOpt{Name: "f", Value: 42, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "42")
+				return c.Int(IntOpt{Name: "f", Value: 17, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "-f=72"},
+			expected: 72,
+		},
+
+		// Strings
+		{
+			desc: "Strings Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.Strings(StringsOpt{Name: "f", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []string{"oh", "ai"},
+		},
+		{
+			desc: "Strings Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "do, re, mi")
+				return c.Strings(StringsOpt{Name: "f", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []string{"do", "re", "mi"},
+		},
+		{
+			desc: "Strings Opt, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE1", "")
+				os.Setenv("MOW_VALUE2", "do, re, mi")
+				return c.Strings(StringsOpt{Name: "f", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: []string{"do", "re", "mi"},
+		},
+		{
+			desc: "Strings Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "do, re")
+				c.Spec = "-f..."
+				return c.Strings(StringsOpt{Name: "f", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "-f=mi", "-f=fa"},
+			expected: []string{"mi", "fa"},
+		},
+
+		// Ints
+		{
+			desc: "Ints Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.Ints(IntsOpt{Name: "f", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []int{1, 2},
+		},
+		{
+			desc: "Ints Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "11, 13, 17")
+				return c.Ints(IntsOpt{Name: "f", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []int{11, 13, 17},
+		},
+		{
+			desc: "Ints Opt, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE1", "10, 20, xxx")
+				os.Setenv("MOW_VALUE2", "11, 13, 17")
+				return c.Ints(IntsOpt{Name: "f", Value: []int{1, 2}, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: []int{11, 13, 17},
+		},
+		{
+			desc: "Ints Opt, env set bad value, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "xxx")
+				return c.Ints(IntsOpt{Name: "f", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []int(nil), //TODO: this is bad and you should feel bad
+		},
+		{
+			desc: "Ints Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "42")
+				c.Spec = "-f..."
+				return c.Ints(IntsOpt{Name: "f", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "-f=5", "-f=7"},
+			expected: []int{5, 7},
+		},
+	}
+
+	for _, cas := range cases {
+		t.Log(cas.desc)
+
+		app := App("test", "")
+
+		pointer := cas.config(app)
+
+		called := false
+		app.Action = func() {
+			called = true
+		}
+
+		app.Run(cas.args)
+
+		typ := reflect.TypeOf(pointer)
+		if typ.Kind() != reflect.Ptr {
+			t.Fatalf("config func did not return a pointer")
+		}
+		actualValue := reflect.ValueOf(pointer).Elem().Interface()
+
+		require.True(t, called, "action should have been called")
+		require.Equal(t, cas.expected, actualValue)
+	}
+}
+
+func TestArgSetByEnv(t *testing.T) {
+	cases := []struct {
+		desc     string
+		config   func(*Cli) interface{}
+		args     []string
+		expected interface{}
+	}{
+		// ARGs
+		// String
+		{
+			desc: "String Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.String(StringArg{Name: "ARG", Value: "default", EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: "default",
+		},
+		{
+			desc: "String Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "env")
+				return c.String(StringArg{Name: "ARG", Value: "default", EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: "env",
+		},
+		{
+			desc: "String Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "env")
+				return c.String(StringArg{Name: "ARG", Value: "default", EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "user"},
+			expected: "user",
+		},
+
+		// Bool
+		{
+			desc: "Bool Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.Bool(BoolArg{Name: "ARG", Value: true, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "true")
+				return c.Bool(BoolArg{Name: "ARG", Value: false, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Arg, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE1", "xxx")
+				os.Setenv("MOW_VALUE2", "true")
+				return c.Bool(BoolArg{Name: "ARG", Value: false, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Arg, env set bad value, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "xxx")
+				return c.Bool(BoolArg{Name: "ARG", Value: true, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: true,
+		},
+		{
+			desc: "Bool Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "false")
+				return c.Bool(BoolArg{Name: "ARG", Value: false, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "TRUE"},
+			expected: true,
+		},
+
+		// Int
+		{
+			desc: "Int Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.Int(IntArg{Name: "ARG", Value: 42, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "42")
+				return c.Int(IntArg{Name: "ARG", Value: 17, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Arg, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE1", "xxx")
+				os.Setenv("MOW_VALUE2", "42")
+				return c.Int(IntArg{Name: "ARG", Value: 17, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Arg, env set bad value, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "xxx")
+				return c.Int(IntArg{Name: "ARG", Value: 42, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: 42,
+		},
+		{
+			desc: "Int Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "42")
+				return c.Int(IntArg{Name: "ARG", Value: 17, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "72"},
+			expected: 72,
+		},
+
+		// Strings
+		{
+			desc: "Strings Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.Strings(StringsArg{Name: "ARG", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []string{"oh", "ai"},
+		},
+		{
+			desc: "Strings Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "do, re, mi")
+				return c.Strings(StringsArg{Name: "ARG", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []string{"do", "re", "mi"},
+		},
+		{
+			desc: "Strings Arg, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE1", "")
+				os.Setenv("MOW_VALUE2", "do, re, mi")
+				return c.Strings(StringsArg{Name: "ARG", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: []string{"do", "re", "mi"},
+		},
+		{
+			desc: "Strings Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "ARG..."
+				os.Setenv("MOW_VALUE", "do, re")
+				return c.Strings(StringsArg{Name: "ARG", Value: []string{"oh", "ai"}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "mi", "fa"},
+			expected: []string{"mi", "fa"},
+		},
+
+		// Ints
+		{
+			desc: "Ints Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.Ints(IntsArg{Name: "ARG", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []int{1, 2},
+		},
+		{
+			desc: "Ints Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "11, 13, 17")
+				return c.Ints(IntsArg{Name: "ARG", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []int{11, 13, 17},
+		},
+		{
+			desc: "Ints Arg, multi env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE1", "10, 20, xxx")
+				os.Setenv("MOW_VALUE2", "11, 13, 17")
+				return c.Ints(IntsArg{Name: "ARG", Value: []int{1, 2}, EnvVar: "MOW_VALUE1 MOW_VALUE2"})
+			},
+			args:     []string{"test"},
+			expected: []int{11, 13, 17},
+		},
+		{
+			desc: "Ints Arg, env set bad value, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "xxx")
+				return c.Ints(IntsArg{Name: "ARG", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test"},
+			expected: []int(nil), //TODO: this is bad and you should feel bad
+		},
+		{
+			desc: "Ints Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "ARG..."
+				os.Setenv("MOW_VALUE", "42")
+				return c.Ints(IntsArg{Name: "ARG", Value: []int{1, 2}, EnvVar: "MOW_VALUE"})
+			},
+			args:     []string{"test", "5", "7"},
+			expected: []int{5, 7},
+		},
+	}
+
+	for _, cas := range cases {
+		t.Log(cas.desc)
+
+		app := App("test", "")
+		app.ErrorHandling = flag.ContinueOnError
+
+		pointer := cas.config(app)
+
+		called := false
+		app.Action = func() {
+			called = true
+		}
+
+		app.Run(cas.args)
+
+		typ := reflect.TypeOf(pointer)
+		if typ.Kind() != reflect.Ptr {
+			t.Fatalf("config func did not return a pointer")
+		}
+		actualValue := reflect.ValueOf(pointer).Elem().Interface()
+
+		require.True(t, called, "action should have been called")
+		require.Equal(t, cas.expected, actualValue)
+	}
+}
+
+func TestCommandAction(t *testing.T) {
+
+	called := false
+
+	app := App("app", "")
+
+	app.Command("a", "", ActionCommand(func() { called = true }))
+
+	app.Run([]string{"app", "a"})
+
+	require.True(t, called, "commandAction should be called")
+
+}
+
 func TestCommandAliases(t *testing.T) {
 	defer suppressOutput()()
 
@@ -1102,5 +1635,186 @@ func TestSubcommandAliases(t *testing.T) {
 
 		require.NoError(t, err, "Run() should have returned without an error")
 		require.True(t, called, "action should have been called")
+	}
+}
+
+func TestBeforeAndAfterFlowOrder(t *testing.T) {
+	counter := 0
+
+	app := App("app", "")
+
+	app.Before = callChecker(t, 0, &counter)
+	app.Command("c", "", func(c *Cmd) {
+		c.Before = callChecker(t, 1, &counter)
+		c.Command("cc", "", func(cc *Cmd) {
+			cc.Before = callChecker(t, 2, &counter)
+			cc.Action = callChecker(t, 3, &counter)
+			cc.After = callChecker(t, 4, &counter)
+		})
+		c.After = callChecker(t, 5, &counter)
+	})
+	app.After = callChecker(t, 6, &counter)
+
+	app.Run([]string{"app", "c", "cc"})
+	require.Equal(t, 7, counter)
+}
+
+func TestBeforeAndAfterFlowOrderWhenOneBeforePanics(t *testing.T) {
+	defer func() {
+		recover()
+	}()
+
+	counter := 0
+
+	app := App("app", "")
+
+	app.Before = callChecker(t, 0, &counter)
+	app.Command("c", "", func(c *Cmd) {
+		c.Before = callChecker(t, 1, &counter)
+		c.Command("cc", "", func(cc *Cmd) {
+			cc.Before = callCheckerAndPanic(t, 42, 2, &counter)
+			cc.Action = func() {
+				t.Fatalf("should not have been called")
+			}
+			cc.After = func() {
+				t.Fatalf("should not have been called")
+			}
+		})
+		c.After = callChecker(t, 3, &counter)
+	})
+	app.After = callChecker(t, 4, &counter)
+
+	app.Run([]string{"app", "c", "cc"})
+	require.Equal(t, 5, counter)
+}
+
+func TestBeforeAndAfterFlowOrderWhenOneAfterPanics(t *testing.T) {
+	defer func() {
+		e := recover()
+		require.Equal(t, 42, e)
+	}()
+
+	counter := 0
+
+	app := App("app", "")
+
+	app.Before = callChecker(t, 0, &counter)
+	app.Command("c", "", func(c *Cmd) {
+		c.Before = callChecker(t, 1, &counter)
+		c.Command("cc", "", func(cc *Cmd) {
+			cc.Before = callChecker(t, 2, &counter)
+			cc.Action = callChecker(t, 3, &counter)
+			cc.After = callCheckerAndPanic(t, 42, 4, &counter)
+		})
+		c.After = callChecker(t, 5, &counter)
+	})
+	app.After = callChecker(t, 6, &counter)
+
+	app.Run([]string{"app", "c", "cc"})
+	require.Equal(t, 7, counter)
+}
+
+func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
+	defer func() {
+		e := recover()
+		require.Equal(t, 666, e)
+	}()
+
+	counter := 0
+
+	app := App("app", "")
+
+	app.Before = callChecker(t, 0, &counter)
+	app.Command("c", "", func(c *Cmd) {
+		c.Before = callChecker(t, 1, &counter)
+		c.Command("cc", "", func(cc *Cmd) {
+			cc.Before = callChecker(t, 2, &counter)
+			cc.Action = callChecker(t, 3, &counter)
+			cc.After = callCheckerAndPanic(t, 42, 4, &counter)
+		})
+		c.After = callChecker(t, 5, &counter)
+	})
+	app.After = callCheckerAndPanic(t, 666, 6, &counter)
+
+	app.Run([]string{"app", "c", "cc"})
+	require.Equal(t, 7, counter)
+}
+
+func exitShouldBeCalledWith(t *testing.T, wantedExitCode int, called *bool) func() {
+	oldExiter := exiter
+	exiter = func(code int) {
+		require.Equal(t, wantedExitCode, code, "unwanted exit code")
+		*called = true
+	}
+	return func() { exiter = oldExiter }
+}
+
+func exitShouldNotCalled(t *testing.T) func() {
+	oldExiter := exiter
+	exiter = func(code int) {
+		t.Errorf("exit should not have been called")
+	}
+	return func() { exiter = oldExiter }
+}
+
+func suppressOutput() func() {
+	return captureAndRestoreOutput(nil, nil)
+}
+
+func captureAndRestoreOutput(out, err *string) func() {
+	oldStdOut := stdOut
+	oldStdErr := stdErr
+
+	if out == nil {
+		stdOut = ioutil.Discard
+	} else {
+		stdOut = trapWriter(out)
+	}
+	if err == nil {
+		stdErr = ioutil.Discard
+	} else {
+		stdErr = trapWriter(err)
+	}
+
+	return func() {
+		stdOut = oldStdOut
+		stdErr = oldStdErr
+	}
+}
+
+func trapWriter(writeTo *string) *writerTrap {
+	return &writerTrap{
+		buffer:  bytes.NewBuffer(nil),
+		writeTo: writeTo,
+	}
+}
+
+type writerTrap struct {
+	buffer  *bytes.Buffer
+	writeTo *string
+}
+
+func (w *writerTrap) Write(p []byte) (n int, err error) {
+	n, err = w.buffer.Write(p)
+	if err == nil {
+		*(w.writeTo) = w.buffer.String()
+	}
+	return
+}
+
+func callChecker(t *testing.T, wanted int, counter *int) func() {
+	return func() {
+		t.Logf("checker: wanted: %d, got %d", wanted, *counter)
+		require.Equal(t, wanted, *counter)
+		*counter++
+	}
+}
+
+func callCheckerAndPanic(t *testing.T, panicValue interface{}, wanted int, counter *int) func() {
+	return func() {
+		t.Logf("checker: wanted: %d, got %d", wanted, *counter)
+		require.Equal(t, wanted, *counter)
+		*counter++
+		panic(panicValue)
 	}
 }

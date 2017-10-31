@@ -1,4 +1,4 @@
-package cli
+package lexer
 
 import (
 	"strings"
@@ -6,41 +6,41 @@ import (
 	"fmt"
 )
 
-type uTokenType string
+type TokenType string
 
 const (
-	utPos        uTokenType = "Pos"
-	utOpenPar    uTokenType = "OpenPar"
-	utClosePar   uTokenType = "ClosePar"
-	utOpenSq     uTokenType = "OpenSq"
-	utCloseSq    uTokenType = "CloseSq"
-	utChoice     uTokenType = "Choice"
-	utOptions    uTokenType = "Options"
-	utRep        uTokenType = "Rep"
-	utShortOpt   uTokenType = "ShortOpt"
-	utLongOpt    uTokenType = "LongOpt"
-	utOptSeq     uTokenType = "OptSeq"
-	utOptValue   uTokenType = "OptValue"
-	utDoubleDash uTokenType = "DblDash"
+	TTArg        TokenType = "Arg"
+	TTOpenPar    TokenType = "OpenPar"
+	TTClosePar   TokenType = "ClosePar"
+	TTOpenSq     TokenType = "OpenSq"
+	TTCloseSq    TokenType = "CloseSq"
+	TTChoice     TokenType = "Choice"
+	TTOptions    TokenType = "Options"
+	TTRep        TokenType = "Rep"
+	TTShortOpt   TokenType = "ShortOpt"
+	TTLongOpt    TokenType = "LongOpt"
+	TTOptSeq     TokenType = "OptSeq"
+	TTOptValue   TokenType = "OptValue"
+	TTDoubleDash TokenType = "DblDash"
 )
 
-type uToken struct {
-	typ uTokenType
-	val string
-	pos int
+type Token struct {
+	Typ TokenType
+	Val string
+	Pos int
 }
 
-func (t *uToken) String() string {
-	return fmt.Sprintf("%s('%s')@%d", t.typ, t.val, t.pos)
+func (t *Token) String() string {
+	return fmt.Sprintf("%s('%s')@%d", t.Typ, t.Val, t.Pos)
 }
 
-type parseError struct {
-	input string
-	msg   string
-	pos   int
+type ParseError struct {
+	Input string
+	Msg   string
+	Pos   int
 }
 
-func (t *parseError) ident() string {
+func (t *ParseError) ident() string {
 	return strings.Map(func(c rune) rune {
 		switch c {
 		case '\t':
@@ -48,27 +48,28 @@ func (t *parseError) ident() string {
 		default:
 			return ' '
 		}
-	}, t.input[:t.pos])
+	}, t.Input[:t.Pos])
 }
-func (t *parseError) Error() string {
+
+func (t *ParseError) Error() string {
 	return fmt.Sprintf("Parse error at position %d:\n%s\n%s^ %s",
-		t.pos, t.input, t.ident(), t.msg)
+		t.Pos, t.Input, t.ident(), t.Msg)
 }
 
-func uTokenize(usage string) ([]*uToken, *parseError) {
+func Tokenize(usage string) ([]*Token, error) {
 	pos := 0
-	res := []*uToken{}
+	res := []*Token{}
 	var (
-		tk = func(t uTokenType, v string) {
-			res = append(res, &uToken{t, v, pos})
+		tk = func(t TokenType, v string) {
+			res = append(res, &Token{t, v, pos})
 		}
 
-		tkp = func(t uTokenType, v string, p int) {
-			res = append(res, &uToken{t, v, p})
+		tkp = func(t TokenType, v string, p int) {
+			res = append(res, &Token{t, v, p})
 		}
 
-		err = func(msg string) *parseError {
-			return &parseError{usage, msg, pos}
+		err = func(msg string) *ParseError {
+			return &ParseError{usage, msg, pos}
 		}
 	)
 	eof := len(usage)
@@ -79,19 +80,19 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 		case '\t':
 			pos++
 		case '[':
-			tk(utOpenSq, "[")
+			tk(TTOpenSq, "[")
 			pos++
 		case ']':
-			tk(utCloseSq, "]")
+			tk(TTCloseSq, "]")
 			pos++
 		case '(':
-			tk(utOpenPar, "(")
+			tk(TTOpenPar, "(")
 			pos++
 		case ')':
-			tk(utClosePar, ")")
+			tk(TTClosePar, ")")
 			pos++
 		case '|':
-			tk(utChoice, "|")
+			tk(TTChoice, "|")
 			pos++
 		case '.':
 			start := pos
@@ -103,7 +104,7 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 			if pos >= eof || usage[pos] != '.' {
 				return nil, err("Unexpected end of usage, was expecting '.'")
 			}
-			tkp(utRep, "...", start)
+			tkp(TTRep, "...", start)
 			pos++
 		case '-':
 			start := pos
@@ -121,12 +122,12 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 						break
 					}
 				}
-				typ := utShortOpt
-				if pos-start > 2 {
-					typ = utOptSeq
-					start++
-				}
+				typ := TTShortOpt
 				opt := usage[start:pos]
+				if pos-start > 2 {
+					typ = TTOptSeq
+					opt = opt[1:]
+				}
 				tkp(typ, opt, start)
 				if pos < eof && usage[pos] == '-' {
 					return nil, err("Invalid syntax")
@@ -134,7 +135,7 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 			case o == '-':
 				pos++
 				if pos == eof || usage[pos] == ' ' {
-					tkp(utDoubleDash, "--", start)
+					tkp(TTDoubleDash, "--", start)
 					continue
 				}
 				for pos0 := pos; pos < eof; pos++ {
@@ -147,7 +148,7 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 				if len(opt) == 2 {
 					return nil, err("Was expecting a long option name")
 				}
-				tkp(utLongOpt, opt, start)
+				tkp(TTLongOpt, opt, start)
 			}
 
 		case '=':
@@ -172,21 +173,21 @@ func uTokenize(usage string) ([]*uToken, *parseError) {
 			pos++
 			value := usage[start:pos]
 
-			tkp(utOptValue, value, start)
+			tkp(TTOptValue, value, start)
 
 		default:
 			switch {
 			case isUppercase(c):
 				start := pos
 				for pos = pos + 1; pos < eof; pos++ {
-					if !isOkPos(usage[pos]) {
+					if !isOkInArg(usage[pos]) {
 						break
 					}
 				}
 				s := usage[start:pos]
-				typ := utPos
+				typ := TTArg
 				if s == "OPTIONS" {
-					typ = utOptions
+					typ = TTOptions
 				}
 				tkp(typ, s, start)
 			default:
@@ -207,7 +208,7 @@ func isUppercase(c uint8) bool {
 	return c >= 'A' && c <= 'Z'
 }
 
-func isOkPos(c uint8) bool {
+func isOkInArg(c uint8) bool {
 	return isUppercase(c) || isDigit(c) || c == '_'
 }
 

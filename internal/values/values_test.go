@@ -1,7 +1,9 @@
-package cli
+package values
 
 import (
 	"testing"
+
+	"flag"
 
 	"github.com/stretchr/testify/require"
 )
@@ -9,7 +11,7 @@ import (
 func TestBoolParam(t *testing.T) {
 	var into bool
 
-	param := newBoolValue(&into, false)
+	param := NewBool(&into, false)
 
 	require.True(t, param.IsBoolFlag())
 
@@ -26,7 +28,7 @@ func TestBoolParam(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("testing with %q", cas.input)
+		t.Logf("testing .Set() with %q", cas.input)
 
 		err := param.Set(cas.input)
 
@@ -38,12 +40,28 @@ func TestBoolParam(t *testing.T) {
 		require.Equal(t, cas.result, into)
 		require.Equal(t, cas.string, param.String())
 	}
+
+	defCases := []struct {
+		value     bool
+		isDefault bool
+	}{
+		{value: false, isDefault: true},
+		{value: true, isDefault: false},
+	}
+
+	for _, cas := range defCases {
+		t.Logf("testing .IsDefault() with %v", cas.value)
+
+		v := NewBool(&into, cas.value)
+
+		require.Equal(t, cas.isDefault, v.IsDefault())
+	}
 }
 
 func TestStringParam(t *testing.T) {
 	var into string
 
-	param := newStringValue(&into, "")
+	param := NewString(&into, "")
 
 	cases := []struct {
 		input  string
@@ -63,12 +81,28 @@ func TestStringParam(t *testing.T) {
 		require.Equal(t, cas.input, into)
 		require.Equal(t, cas.string, param.String())
 	}
+
+	defCases := []struct {
+		value     string
+		isDefault bool
+	}{
+		{value: "", isDefault: true},
+		{value: "a", isDefault: false},
+	}
+
+	for _, cas := range defCases {
+		t.Logf("testing .IsDefault() with %v", cas.value)
+
+		v := NewString(&into, cas.value)
+
+		require.Equal(t, cas.isDefault, v.IsDefault())
+	}
 }
 
 func TestIntParam(t *testing.T) {
 	var into int
 
-	param := newIntValue(&into, 0)
+	param := NewInt(&into, 0)
 
 	cases := []struct {
 		input  string
@@ -96,11 +130,16 @@ func TestIntParam(t *testing.T) {
 		require.Equal(t, cas.result, into)
 		require.Equal(t, cas.string, param.String())
 	}
+
+	var v flag.Value = NewInt(&into, 0)
+	_, ok := v.(DefaultValued)
+
+	require.False(t, ok, "*intValue should not implement DefaultValued")
 }
 
 func TestStringsParam(t *testing.T) {
-	into := []string{}
-	param := newStringsValue(&into, nil)
+	var into []string
+	param := NewStrings(&into, nil)
 
 	param.Set("a")
 	param.Set("b")
@@ -111,11 +150,31 @@ func TestStringsParam(t *testing.T) {
 	param.Clear()
 
 	require.Empty(t, into)
+	require.Equal(t, `[]`, param.String())
+
+	defCases := []struct {
+		value     []string
+		isDefault bool
+	}{
+		{value: nil, isDefault: true},
+		{value: []string{}, isDefault: true},
+		{value: []string{""}, isDefault: false},
+		{value: []string{"a"}, isDefault: false},
+		{value: []string{"a", "b"}, isDefault: false},
+	}
+
+	for _, cas := range defCases {
+		t.Logf("testing .IsDefault() with %v", cas.value)
+
+		v := NewStrings(&into, cas.value)
+
+		require.Equal(t, cas.isDefault, v.IsDefault())
+	}
 }
 
 func TestIntsParam(t *testing.T) {
-	into := []int{}
-	param := newIntsValue(&into, nil)
+	var into []int
+	param := NewInts(&into, nil)
 
 	err := param.Set("1")
 	require.NoError(t, err)
@@ -134,4 +193,24 @@ func TestIntsParam(t *testing.T) {
 	param.Clear()
 
 	require.Empty(t, into)
+	require.Equal(t, `[]`, param.String())
+
+	defCases := []struct {
+		value     []int
+		isDefault bool
+	}{
+		{value: nil, isDefault: true},
+		{value: []int{}, isDefault: true},
+		{value: []int{0}, isDefault: false},
+		{value: []int{1}, isDefault: false},
+		{value: []int{1, 2}, isDefault: false},
+	}
+
+	for _, cas := range defCases {
+		t.Logf("testing .IsDefault() with %v", cas.value)
+
+		v := NewInts(&into, cas.value)
+
+		require.Equal(t, cas.isDefault, v.IsDefault())
+	}
 }

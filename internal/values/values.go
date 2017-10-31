@@ -1,4 +1,4 @@
-package cli
+package values
 
 import (
 	"flag"
@@ -6,17 +6,17 @@ import (
 	"strconv"
 )
 
-type boolValued interface {
+type BoolValued interface {
 	flag.Value
 	IsBoolFlag() bool
 }
 
-type multiValued interface {
+type MultiValued interface {
 	flag.Value
 	Clear()
 }
 
-type defaultValued interface {
+type DefaultValued interface {
 	IsDefault() bool
 }
 
@@ -27,12 +27,12 @@ type defaultValued interface {
 type boolValue bool
 
 var (
-	_ flag.Value    = newBoolValue(new(bool), false)
-	_ boolValued    = newBoolValue(new(bool), false)
-	_ defaultValued = newBoolValue(new(bool), false)
+	_ flag.Value    = NewBool(new(bool), false)
+	_ BoolValued    = NewBool(new(bool), false)
+	_ DefaultValued = NewBool(new(bool), false)
 )
 
-func newBoolValue(into *bool, v bool) *boolValue {
+func NewBool(into *bool, v bool) *boolValue {
 	*into = v
 	return (*boolValue)(into)
 }
@@ -65,11 +65,11 @@ func (bo *boolValue) IsDefault() bool {
 type stringValue string
 
 var (
-	_ flag.Value    = newStringValue(new(string), "")
-	_ defaultValued = newStringValue(new(string), "")
+	_ flag.Value    = NewString(new(string), "")
+	_ DefaultValued = NewString(new(string), "")
 )
 
-func newStringValue(into *string, v string) *stringValue {
+func NewString(into *string, v string) *stringValue {
 	*into = v
 	return (*stringValue)(into)
 }
@@ -94,10 +94,10 @@ func (sa *stringValue) IsDefault() bool {
 type intValue int
 
 var (
-	_ flag.Value = newIntValue(new(int), 0)
+	_ flag.Value = NewInt(new(int), 0)
 )
 
-func newIntValue(into *int, v int) *intValue {
+func NewInt(into *int, v int) *intValue {
 	*into = v
 	return (*intValue)(into)
 }
@@ -123,12 +123,12 @@ func (ia *intValue) String() string {
 type stringsValue []string
 
 var (
-	_ flag.Value    = newStringsValue(new([]string), nil)
-	_ multiValued   = newStringsValue(new([]string), nil)
-	_ defaultValued = newStringsValue(new([]string), nil)
+	_ flag.Value    = NewStrings(new([]string), nil)
+	_ MultiValued   = NewStrings(new([]string), nil)
+	_ DefaultValued = NewStrings(new([]string), nil)
 )
 
-func newStringsValue(into *[]string, v []string) *stringsValue {
+func NewStrings(into *[]string, v []string) *stringsValue {
 	*into = v
 	return (*stringsValue)(into)
 }
@@ -164,12 +164,12 @@ func (sa *stringsValue) IsDefault() bool {
 type intsValue []int
 
 var (
-	_ flag.Value    = newIntsValue(new([]int), nil)
-	_ multiValued   = newIntsValue(new([]int), nil)
-	_ defaultValued = newIntsValue(new([]int), nil)
+	_ flag.Value    = NewInts(new([]int), nil)
+	_ MultiValued   = NewInts(new([]int), nil)
+	_ DefaultValued = NewInts(new([]int), nil)
 )
 
-func newIntsValue(into *[]int, v []int) *intsValue {
+func NewInts(into *[]int, v []int) *intsValue {
 	*into = v
 	return (*intsValue)(into)
 }

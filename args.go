@@ -2,7 +2,9 @@ package cli
 
 import (
 	"flag"
-	"fmt"
+
+	"github.com/jawher/mow.cli/internal/container"
+	"github.com/jawher/mow.cli/internal/values"
 )
 
 // BoolArg describes a boolean argument
@@ -199,26 +201,12 @@ VarArg defines an argument where the type and format is controlled by the develo
 The result will be stored in the value parameter (a value implementing the flag.Value interface) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) VarArg(name string, value flag.Value, desc string) {
-	c.mkArg(arg{name: name, desc: desc, value: value})
+	c.mkArg(container.Container{Name: name, Desc: desc, Value: value})
 }
 
-type arg struct {
-	name            string
-	desc            string
-	envVar          string
-	hideValue       bool
-	valueSetFromEnv bool
-	valueSetByUser  *bool
-	value           flag.Value
-}
-
-func (a *arg) String() string {
-	return fmt.Sprintf("ARG(%s)", a.name)
-}
-
-func (c *Cmd) mkArg(arg arg) {
-	arg.valueSetFromEnv = setFromEnv(arg.value, arg.envVar)
+func (c *Cmd) mkArg(arg container.Container) {
+	arg.ValueSetFromEnv = values.SetFromEnv(arg.Value, arg.EnvVar)
 
 	c.args = append(c.args, &arg)
-	c.argsIdx[arg.name] = &arg
+	c.argsIdx[arg.Name] = &arg
 }
