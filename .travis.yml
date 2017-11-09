@@ -5,10 +5,6 @@ go:
 - tip
 sudo: false
 
-env:
-- secure: "YCK6MdOicgWfaDClpoBNwXdG16zGz2QqN+bA2QNFDN3j4yN9Kd1EO+e0jq1pEwnDPsDEQm2x1ZRekWSXtxvp3WBQIiiUFQeoqNYf6CVvNyo7WLafovhXUfGhS3oGGuH6HjRnteUK0ZueDvvuhv2j5y4UOLi/GYwBtgZFNWgqoYk="
-
-
 install: make setup
 
 script: make check test-cover
