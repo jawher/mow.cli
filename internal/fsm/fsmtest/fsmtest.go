@@ -19,6 +19,10 @@ func (NopeMatcher) Priority() int {
 	return 666
 }
 
+func (NopeMatcher) String() string {
+	return "<nope>"
+}
+
 type YepMatcher struct{}
 
 func (YepMatcher) Match(args []string, c *matcher.ParseContext) (bool, []string) {
@@ -27,6 +31,10 @@ func (YepMatcher) Match(args []string, c *matcher.ParseContext) (bool, []string)
 
 func (YepMatcher) Priority() int {
 	return 666
+}
+
+func (YepMatcher) String() string {
+	return "<yep>"
 }
 
 type TestMatcher struct {
@@ -91,7 +99,6 @@ func NewFsm(spec string, matchers map[string]matcher.Matcher) *fsm.State {
 func TransitionStrs(trs fsm.StateTransitions) []string {
 	var res []string
 	for _, tr := range trs {
-		fmt.Printf("%#v\n", tr.Matcher)
 		res = append(res, fmt.Sprintf("%v", tr.Matcher))
 	}
 	return res
