@@ -1,2 +1,3 @@
 testdata/*.golden
 coverage.out
+*.coverprofile
