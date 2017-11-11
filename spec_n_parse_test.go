@@ -824,11 +824,9 @@ func TestSpecChoiceWithOptionsEndInLastPos(t *testing.T) {
 }
 
 func TestSpecChoiceWithOptionsEnd(t *testing.T) {
-	var x *[]string
-	var f *bool
 	init := func(c *Cmd) {
-		x = c.StringsArg("X", nil, "")
-		f = c.BoolOpt("f", false, "")
+		c.StringsArg("X", nil, "")
+		c.BoolOpt("f", false, "")
 	}
 	spec := "(-- X...)|-f"
 
@@ -836,11 +834,9 @@ func TestSpecChoiceWithOptionsEnd(t *testing.T) {
 }
 
 func TestSpecOptionAfterOptionsEnd(t *testing.T) {
-	var x *[]string
-	var f *bool
 	init := func(c *Cmd) {
-		x = c.StringsArg("X", nil, "")
-		f = c.BoolOpt("f", false, "")
+		c.StringsArg("X", nil, "")
+		c.BoolOpt("f", false, "")
 	}
 
 	spec := "-- X... -f"
@@ -848,12 +844,10 @@ func TestSpecOptionAfterOptionsEnd(t *testing.T) {
 }
 
 func TestSpecOptionAfterOptionsEndInAChoice(t *testing.T) {
-	var x *[]string
-	var f, d *bool
 	init := func(c *Cmd) {
-		x = c.StringsArg("X", nil, "")
-		f = c.BoolOpt("f", false, "")
-		d = c.BoolOpt("d", false, "")
+		c.StringsArg("X", nil, "")
+		c.BoolOpt("f", false, "")
+		c.BoolOpt("d", false, "")
 	}
 
 	spec := "-f | (-- X...) -d"
@@ -1297,17 +1291,14 @@ func TestEnvOverrideFail(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		var envopt *string
-		var otheropt *string
-
 		init := func(c *Cmd) {
-			envopt = c.String(StringOpt{
+			c.String(StringOpt{
 				Name:   "e envopt",
 				Value:  "envdefault",
 				EnvVar: "envopt",
 			})
 			if strings.Contains(cas.spec, "other") {
-				otheropt = c.StringOpt("o other", "", "")
+				c.StringOpt("o other", "", "")
 			}
 		}
 		failCmd(t, cas.spec, init, cas.args)

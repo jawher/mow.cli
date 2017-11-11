@@ -7,7 +7,7 @@ sudo: false
 
 install: make setup
 
-script: make check test
+script: make check test-cover
 
 deploy:
   provider: releases

@@ -1,6 +1,11 @@
 test:
 	go test -v ./...
 
+test-cover:
+	go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+	gover
+	goveralls -coverprofile=gover.coverprofile -service=travis-ci
+
 check: lint vet fmtcheck ineffassign
 
 lint:
@@ -20,6 +25,9 @@ ineffassign:
 setup:
 	go get github.com/gordonklaus/ineffassign
 	go get github.com/golang/lint/golint
+	go get golang.org/x/tools/cmd/cover
+	go get github.com/mattn/goveralls
+	go get github.com/modocache/gover
 	go get -t -u ./...
 
 .PHONY: test check lint vet fmtcheck ineffassign
