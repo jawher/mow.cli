@@ -12,4 +12,5 @@ func TestShortcut(t *testing.T) {
 	ok, nargs := theShortcut.Match(args, pc)
 	require.True(t, ok, "shortcut always matches")
 	require.Equal(t, args, nargs, "shortcut doesn't touch the passed args")
+	require.Equal(t, "*", theShortcut.String())
 }

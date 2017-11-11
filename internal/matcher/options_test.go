@@ -24,6 +24,8 @@ func TestOptsMatcher(t *testing.T) {
 		}
 	}
 
+	require.Equal(t, "-fg", opts.String())
+
 	cases := []struct {
 		args  []string
 		nargs []string
