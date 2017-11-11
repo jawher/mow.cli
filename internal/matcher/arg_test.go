@@ -11,6 +11,8 @@ func TestArgMatcher(t *testing.T) {
 	a := &container.Container{Name: "X"}
 	argMatcher := arg{arg: a}
 
+	require.Equal(t, "X", argMatcher.String())
+
 	{
 		pc := New()
 		args := []string(nil)

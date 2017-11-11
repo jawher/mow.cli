@@ -10,6 +10,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/jawher/mow.cli/internal/flow"
 )
 
 func TestTheCpCase(t *testing.T) {
@@ -49,6 +51,45 @@ func TestImplicitSpec(t *testing.T) {
 	require.Equal(t, "hello", *y)
 
 	require.True(t, called, "Exec wasn't called")
+}
+
+func TestExit(t *testing.T) {
+	defer func() {
+		if p := recover(); p != nil {
+			t.Logf("Panicked with %v", p)
+			require.Equal(t, flow.ExitCode(666), p)
+			return
+		}
+		t.Fatalf("Should have panicked")
+	}()
+
+	Exit(666)
+
+	t.Fatalf("Should have panicked")
+}
+
+func TestInvalidSpec(t *testing.T) {
+	app := App("test", "")
+	app.Spec = "X"
+
+	called := false
+	app.Action = func() {
+		called = true
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			t.Logf("Panicked with %v", p)
+			require.False(t, called, "action should not have been called")
+			return
+		}
+		t.Fatalf("Should have panicked")
+	}()
+
+	app.Run([]string{"test", "-x", "-y", "hello"})
+
+	t.Fatalf("Should have panicked")
+
 }
 
 func TestAppWithBoolOption(t *testing.T) {
