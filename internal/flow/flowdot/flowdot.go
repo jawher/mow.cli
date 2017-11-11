@@ -7,6 +7,9 @@ import (
 	"github.com/jawher/mow.cli/internal/flow"
 )
 
+/*
+Dot generates a graphviz dot string representing the a flow
+*/
 func Dot(s *flow.Step) string {
 	trs := flowDot(s, map[*flow.Step]bool{})
 	return fmt.Sprintf("digraph G {\n\trankdir=LR\n%s\n}\n", strings.Join(trs, "\n"))

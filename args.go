@@ -15,7 +15,7 @@ type BoolArg struct {
 	Desc string
 	// A space separated list of environment variables names to be used to initialize this argument
 	EnvVar string
-	// The argument's inital value
+	// The argument's initial value
 	Value bool
 	// A boolean to display or not the current value of the argument in the help message
 	HideValue bool

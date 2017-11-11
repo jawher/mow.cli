@@ -7,6 +7,7 @@ import (
 	"github.com/jawher/mow.cli/internal/fsm"
 )
 
+// Dot generates a graphviz dot representation of an FSM
 func Dot(s *fsm.State) string {
 	trs := dot(s, mkStateNames(), map[*fsm.State]struct{}{})
 	return fmt.Sprintf("digraph G {\n\trankdir=LR\n%s\n}\n", strings.Join(trs, "\n"))

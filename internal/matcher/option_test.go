@@ -42,13 +42,13 @@ func TestBoolOptMatcher(t *testing.T) {
 	}
 	for _, cas := range cases {
 		t.Logf("Testing case: %#v", cas)
-		pc := New()
+		pc := NewParseContext()
 		ok, nargs := optMatcher.Match(cas.args, &pc)
 		require.True(t, ok, "opt should match")
 		require.Equal(t, cas.nargs, nargs, "opt should consume the option name")
 		require.Equal(t, cas.val, pc.Opts[forceOpt], "true should stored as the option's value")
 
-		pc = New()
+		pc = NewParseContext()
 		pc.RejectOptions = true
 		nok, _ := optMatcher.Match(cas.args, &pc)
 		require.False(t, nok, "opt shouldn't match when rejectOptions flag is set")
@@ -92,13 +92,13 @@ func TestOptMatcher(t *testing.T) {
 
 			require.Equal(t, "-f", optMatcher.String())
 
-			pc := New()
+			pc := NewParseContext()
 			ok, nargs := optMatcher.Match(cas.args, &pc)
 			require.True(t, ok, "opt %#v should match args %v, %v", forceOpt, cas.args, values.IsBool(forceOpt.Value))
 			require.Equal(t, cas.nargs, nargs, "opt should consume the option name")
 			require.Equal(t, cas.val, pc.Opts[forceOpt], "true should stored as the option's value")
 
-			pc = New()
+			pc = NewParseContext()
 			pc.RejectOptions = true
 			nok, _ := optMatcher.Match(cas.args, &pc)
 			require.False(t, nok, "opt shouldn't match when rejectOptions flag is set")
@@ -144,7 +144,7 @@ func TestOptNegatives(t *testing.T) {
 				},
 			}
 
-			pc := New()
+			pc := NewParseContext()
 			ok, nargs := optMatcher.Match(cas.args, &pc)
 			require.False(t, ok, "opt %#v should not match args %v, %v", forceOpt, cas.args, values.IsBool(forceOpt.Value))
 			require.Equal(t, cas.args, nargs, "opt should not have consumed anything")

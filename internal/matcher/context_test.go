@@ -8,7 +8,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	c := New()
+	c := NewParseContext()
 
 	require.NotNil(t, c.Args)
 	require.Empty(t, c.Args)
@@ -31,7 +31,7 @@ func TestMerge(t *testing.T) {
 		o2 = &container.Container{}
 		o3 = &container.Container{}
 	)
-	c1, c2 := New(), New()
+	c1, c2 := NewParseContext(), NewParseContext()
 
 	c1.Args[a1] = []string{"a1"}
 	c1.Args[a3] = []string{"a3"}

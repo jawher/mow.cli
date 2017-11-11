@@ -134,7 +134,7 @@ func TestIntParam(t *testing.T) {
 	var v flag.Value = NewInt(&into, 0)
 	_, ok := v.(DefaultValued)
 
-	require.False(t, ok, "*intValue should not implement DefaultValued")
+	require.False(t, ok, "*IntValue should not implement DefaultValued")
 }
 
 func TestStringsParam(t *testing.T) {

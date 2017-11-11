@@ -50,7 +50,7 @@ func TestOptsMatcher(t *testing.T) {
 
 	for _, cas := range cases {
 		t.Logf("testing with args %#v", cas.args)
-		pc := New()
+		pc := NewParseContext()
 		ok, nargs := opts.Match(cas.args, &pc)
 		require.True(t, ok, "opts should match")
 		require.Equal(t, cas.nargs, nargs, "opts should consume the option name")
@@ -58,7 +58,7 @@ func TestOptsMatcher(t *testing.T) {
 			require.Equal(t, cas.val[i], pc.Opts[opt], "the option value for %v should be stored", opt)
 		}
 
-		pc = New()
+		pc = NewParseContext()
 		pc.RejectOptions = true
 		nok, _ := opts.Match(cas.args, &pc)
 		require.False(t, nok, "opts shouldn't match when rejectOptions flag is set")
@@ -81,7 +81,7 @@ func TestOptsMatcherInfiniteLoop(t *testing.T) {
 	}
 
 	done := make(chan struct{}, 1)
-	pc := New()
+	pc := NewParseContext()
 	go func() {
 		opts.Match([]string{"-x"}, &pc)
 		done <- struct{}{}

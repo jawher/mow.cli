@@ -6,6 +6,7 @@ import (
 	"github.com/jawher/mow.cli/internal/container"
 )
 
+// NewArg creates an (positional) argument matcher
 func NewArg(a *container.Container) Matcher {
 	return &arg{arg: a}
 }
@@ -29,6 +30,6 @@ func (*arg) Priority() int {
 	return 8
 }
 
-func (a *arg) String() string {
-	return a.arg.Name
+func (arg *arg) String() string {
+	return arg.arg.Name
 }

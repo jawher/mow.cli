@@ -7,6 +7,7 @@ import (
 	"github.com/jawher/mow.cli/internal/values"
 )
 
+// NewOpt create an option matcher that can consume short and long options
 func NewOpt(o *container.Container, index map[string]*container.Container) Matcher {
 	return &opt{
 		theOne: o,

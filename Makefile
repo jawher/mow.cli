@@ -9,7 +9,7 @@ test-cover:
 check: lint vet fmtcheck ineffassign
 
 lint:
-	golint -set_exit_status .
+	golint -set_exit_status ./...
 
 vet:
 	go vet

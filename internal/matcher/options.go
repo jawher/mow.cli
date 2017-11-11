@@ -6,6 +6,7 @@ import (
 	"github.com/jawher/mow.cli/internal/container"
 )
 
+// NewOptions create an Options matcher which can parse a group of options
 func NewOptions(opts []*container.Container, index map[string]*container.Container) Matcher {
 	return &options{
 		options: opts,

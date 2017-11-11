@@ -9,6 +9,7 @@ import (
 	"github.com/jawher/mow.cli/internal/matcher"
 )
 
+// Params are used to cofigure the parser
 type Params struct {
 	Spec       string
 	Options    []*container.Container
@@ -17,6 +18,7 @@ type Params struct {
 	ArgsIdx    map[string]*container.Container
 }
 
+// Parse transforms a slice of tokens into an FSM or returns an ParseError
 func Parse(tokens []*lexer.Token, params Params) (*fsm.State, error) {
 	p := &parser{
 		spec:       params.Spec,
@@ -26,7 +28,7 @@ func Parse(tokens []*lexer.Token, params Params) (*fsm.State, error) {
 		argsIdx:    params.ArgsIdx,
 		tokens:     tokens,
 	}
-	return p.Parse()
+	return p.parse()
 }
 
 type parser struct {
@@ -45,7 +47,7 @@ type parser struct {
 	rejectOptions bool
 }
 
-func (p *parser) Parse() (s *fsm.State, err error) {
+func (p *parser) parse() (s *fsm.State, err error) {
 	defer func() {
 		if v := recover(); v != nil {
 			pos := len(p.spec)

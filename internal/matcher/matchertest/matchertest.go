@@ -10,6 +10,7 @@ import (
 	"github.com/jawher/mow.cli/internal/values"
 )
 
+// NewArg creates a positional argument matcher given its name, e.g. SRC
 func NewArg(name string) matcher.Matcher {
 	var s string
 	con := &container.Container{
@@ -21,6 +22,7 @@ func NewArg(name string) matcher.Matcher {
 	return matcher.NewArg(con)
 }
 
+// NewOpt creates a short and long option matcher given its (space separated) names, e.g. -f --force
 func NewOpt(name string) matcher.Matcher {
 	s := ""
 	names := strings.Fields(name)
@@ -38,6 +40,7 @@ func NewOpt(name string) matcher.Matcher {
 	return matcher.NewOpt(con, index)
 }
 
+// NewOptions create an options matcher given their names, e.g. -abc
 func NewOptions(names string) matcher.Matcher {
 	names = strings.TrimPrefix(names, "-")
 

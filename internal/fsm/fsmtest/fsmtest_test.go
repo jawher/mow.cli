@@ -13,7 +13,7 @@ func TestNopeMatcher(t *testing.T) {
 
 	require.Equal(t, 666, m.Priority())
 
-	pc := matcher.New()
+	pc := matcher.NewParseContext()
 	args := []string{"a", "b"}
 	ok, rem := m.Match(args, &pc)
 
@@ -26,7 +26,7 @@ func TestYepMatcher(t *testing.T) {
 
 	require.Equal(t, 666, m.Priority())
 
-	pc := matcher.New()
+	pc := matcher.NewParseContext()
 	args := []string{"a", "b"}
 	ok, rem := m.Match(args, &pc)
 
@@ -48,7 +48,7 @@ func TestTestMatcher(t *testing.T) {
 	}
 
 	require.Equal(t, 7, m.Priority())
-	pc := matcher.New()
+	pc := matcher.NewParseContext()
 	ok, rem := m.Match(args, &pc)
 
 	require.True(t, called)

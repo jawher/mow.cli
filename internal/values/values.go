@@ -6,17 +6,23 @@ import (
 	"strconv"
 )
 
+// BoolValued is an interface values can implement to indicate that they are a bool option, i.e. can be set without providing a value with just -f for example
 type BoolValued interface {
 	flag.Value
+	// IsBoolFlag should return true to indicate that this value is a bool value
 	IsBoolFlag() bool
 }
 
+// MultiValued is an interface ti indicate that a value can hold multiple values
 type MultiValued interface {
 	flag.Value
+	// Clear should clear the list of values
 	Clear()
 }
 
+// DefaultValued in an interface to determine if the value stored is the default value, and thus does not need be shown in the help message
 type DefaultValued interface {
+	// IsDefault should return true if the value stored is the default value, and thus does not need be shown in the help message
 	IsDefault() bool
 }
 
@@ -24,7 +30,8 @@ type DefaultValued interface {
 /* BOOL                                                                        */
 /******************************************************************************/
 
-type boolValue bool
+// BoolValue is a flag.Value type holding boolean values
+type BoolValue bool
 
 var (
 	_ flag.Value    = NewBool(new(bool), false)
@@ -32,29 +39,33 @@ var (
 	_ DefaultValued = NewBool(new(bool), false)
 )
 
-func NewBool(into *bool, v bool) *boolValue {
+// NewBool creates a new bool value
+func NewBool(into *bool, v bool) *BoolValue {
 	*into = v
-	return (*boolValue)(into)
+	return (*BoolValue)(into)
 }
 
-func (bo *boolValue) Set(s string) error {
+// Set sets the value from a provided string
+func (bo *BoolValue) Set(s string) error {
 	b, err := strconv.ParseBool(s)
 	if err != nil {
 		return err
 	}
-	*bo = boolValue(b)
+	*bo = BoolValue(b)
 	return nil
 }
 
-func (bo *boolValue) IsBoolFlag() bool {
+// IsBoolFlag returns true
+func (bo *BoolValue) IsBoolFlag() bool {
 	return true
 }
 
-func (bo *boolValue) String() string {
+func (bo *BoolValue) String() string {
 	return fmt.Sprintf("%v", *bo)
 }
 
-func (bo *boolValue) IsDefault() bool {
+// IsDefault return true if the bool value is false
+func (bo *BoolValue) IsDefault() bool {
 	return !bool(*bo)
 }
 
@@ -62,28 +73,32 @@ func (bo *boolValue) IsDefault() bool {
 /* STRING                                                                        */
 /******************************************************************************/
 
-type stringValue string
+// StringValue is a flag.Value type holding string values
+type StringValue string
 
 var (
 	_ flag.Value    = NewString(new(string), "")
 	_ DefaultValued = NewString(new(string), "")
 )
 
-func NewString(into *string, v string) *stringValue {
+// NewString creates a new string value
+func NewString(into *string, v string) *StringValue {
 	*into = v
-	return (*stringValue)(into)
+	return (*StringValue)(into)
 }
 
-func (sa *stringValue) Set(s string) error {
-	*sa = stringValue(s)
+// Set sets the value from a provided string
+func (sa *StringValue) Set(s string) error {
+	*sa = StringValue(s)
 	return nil
 }
 
-func (sa *stringValue) String() string {
+func (sa *StringValue) String() string {
 	return fmt.Sprintf("%#v", *sa)
 }
 
-func (sa *stringValue) IsDefault() bool {
+// IsDefault return true if the string value is empty
+func (sa *StringValue) IsDefault() bool {
 	return string(*sa) == ""
 }
 
@@ -91,27 +106,30 @@ func (sa *stringValue) IsDefault() bool {
 /* INT                                                                        */
 /******************************************************************************/
 
-type intValue int
+// IntValue is a flag.Value type holding int values
+type IntValue int
 
 var (
 	_ flag.Value = NewInt(new(int), 0)
 )
 
-func NewInt(into *int, v int) *intValue {
+// NewInt creates a new int value
+func NewInt(into *int, v int) *IntValue {
 	*into = v
-	return (*intValue)(into)
+	return (*IntValue)(into)
 }
 
-func (ia *intValue) Set(s string) error {
+// Set sets the value from a provided string
+func (ia *IntValue) Set(s string) error {
 	i, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		return err
 	}
-	*ia = intValue(int(i))
+	*ia = IntValue(int(i))
 	return nil
 }
 
-func (ia *intValue) String() string {
+func (ia *IntValue) String() string {
 	return fmt.Sprintf("%v", *ia)
 }
 
@@ -119,8 +137,8 @@ func (ia *intValue) String() string {
 /* STRINGS                                                                    */
 /******************************************************************************/
 
-// Strings describes a string slice argument
-type stringsValue []string
+// StringsValue is a flag.Value type holding string slices values
+type StringsValue []string
 
 var (
 	_ flag.Value    = NewStrings(new([]string), nil)
@@ -128,17 +146,19 @@ var (
 	_ DefaultValued = NewStrings(new([]string), nil)
 )
 
-func NewStrings(into *[]string, v []string) *stringsValue {
+// NewStrings creates a new multi-string value
+func NewStrings(into *[]string, v []string) *StringsValue {
 	*into = v
-	return (*stringsValue)(into)
+	return (*StringsValue)(into)
 }
 
-func (sa *stringsValue) Set(s string) error {
+// Set sets the value from a provided string
+func (sa *StringsValue) Set(s string) error {
 	*sa = append(*sa, s)
 	return nil
 }
 
-func (sa *stringsValue) String() string {
+func (sa *StringsValue) String() string {
 	res := "["
 	for idx, s := range *sa {
 		if idx > 0 {
@@ -149,11 +169,13 @@ func (sa *stringsValue) String() string {
 	return res + "]"
 }
 
-func (sa *stringsValue) Clear() {
+// Clear clears the slice
+func (sa *StringsValue) Clear() {
 	*sa = nil
 }
 
-func (sa *stringsValue) IsDefault() bool {
+// IsDefault return true if the string slice is empty
+func (sa *StringsValue) IsDefault() bool {
 	return len(*sa) == 0
 }
 
@@ -161,7 +183,8 @@ func (sa *stringsValue) IsDefault() bool {
 /* INTS                                                                       */
 /******************************************************************************/
 
-type intsValue []int
+// IntsValue is a flag.Value type holding int values
+type IntsValue []int
 
 var (
 	_ flag.Value    = NewInts(new([]int), nil)
@@ -169,12 +192,14 @@ var (
 	_ DefaultValued = NewInts(new([]int), nil)
 )
 
-func NewInts(into *[]int, v []int) *intsValue {
+// NewInts creates a new multi-int value
+func NewInts(into *[]int, v []int) *IntsValue {
 	*into = v
-	return (*intsValue)(into)
+	return (*IntsValue)(into)
 }
 
-func (ia *intsValue) Set(s string) error {
+// Set sets the value from a provided string
+func (ia *IntsValue) Set(s string) error {
 	i, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		return err
@@ -183,7 +208,7 @@ func (ia *intsValue) Set(s string) error {
 	return nil
 }
 
-func (ia *intsValue) String() string {
+func (ia *IntsValue) String() string {
 	res := "["
 	for idx, s := range *ia {
 		if idx > 0 {
@@ -194,10 +219,12 @@ func (ia *intsValue) String() string {
 	return res + "]"
 }
 
-func (ia *intsValue) Clear() {
+// Clear clears the slice
+func (ia *IntsValue) Clear() {
 	*ia = nil
 }
 
-func (ia *intsValue) IsDefault() bool {
+// IsDefault return true if the int slice is empty
+func (ia *IntsValue) IsDefault() bool {
 	return len(*ia) == 0
 }

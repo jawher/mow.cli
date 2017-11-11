@@ -14,7 +14,7 @@ func TestArgMatcher(t *testing.T) {
 	require.Equal(t, "X", argMatcher.String())
 
 	{
-		pc := New()
+		pc := NewParseContext()
 		args := []string(nil)
 		ok, nargs := argMatcher.Match(args, &pc)
 		require.False(t, ok, "arg should not match")
@@ -22,7 +22,7 @@ func TestArgMatcher(t *testing.T) {
 		require.Nil(t, pc.Args[a], "arg should not store anything")
 	}
 	{
-		pc := New()
+		pc := NewParseContext()
 		args := []string{"a", "b"}
 		ok, nargs := argMatcher.Match(args, &pc)
 		require.True(t, ok, "arg should match")
@@ -30,12 +30,12 @@ func TestArgMatcher(t *testing.T) {
 		require.Equal(t, []string{"a"}, pc.Args[a], "arg should stored the matched value")
 	}
 	{
-		pc := New()
+		pc := NewParseContext()
 		ok, _ := argMatcher.Match([]string{"-v"}, &pc)
 		require.False(t, ok, "arg should not match options")
 	}
 	{
-		pc := New()
+		pc := NewParseContext()
 		pc.RejectOptions = true
 		ok, _ := argMatcher.Match([]string{"-v"}, &pc)
 		require.True(t, ok, "arg should match options when the reject flag is set")

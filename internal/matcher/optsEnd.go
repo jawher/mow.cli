@@ -1,7 +1,6 @@
 package matcher
 
-type optsEnd bool
-
+// NewOptsEnd returns the special matcher that matches the -- operator
 func NewOptsEnd() Matcher {
 	return theOptsEnd
 }
@@ -10,7 +9,9 @@ const (
 	theOptsEnd = optsEnd(true)
 )
 
-func (u optsEnd) Match(args []string, c *ParseContext) (bool, []string) {
+type optsEnd bool
+
+func (optsEnd) Match(args []string, c *ParseContext) (bool, []string) {
 	c.RejectOptions = true
 	return true, args
 }

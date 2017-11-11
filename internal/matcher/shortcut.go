@@ -6,6 +6,7 @@ const (
 	theShortcut = shortcut(true)
 )
 
+// NewShortcut create a special matcher that always matches and doesn't consume any input
 func NewShortcut() Matcher {
 	return theShortcut
 }

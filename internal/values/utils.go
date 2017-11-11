@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// IsBool checks if a given value is a bool value, i.e. implements the BoolValued interface
 func IsBool(v flag.Value) bool {
 	if bf, ok := v.(BoolValued); ok {
 		return bf.IsBoolFlag()
@@ -14,6 +15,7 @@ func IsBool(v flag.Value) bool {
 	return false
 }
 
+// SetFromEnv fills a value from a list of env vars
 func SetFromEnv(into flag.Value, envVars string) bool {
 	multiValued, isMulti := into.(MultiValued)
 
