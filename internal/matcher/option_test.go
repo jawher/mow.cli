@@ -10,6 +10,7 @@ import (
 
 func TestBoolOptMatcher(t *testing.T) {
 	forceOpt := &container.Container{Names: []string{"-f", "--force"}, Value: values.NewBool(new(bool), false)}
+
 	optMatcher := opt{
 		theOne: forceOpt,
 		index: map[string]*container.Container{
@@ -20,6 +21,9 @@ func TestBoolOptMatcher(t *testing.T) {
 			"-y":      {Names: []string{"-y"}, Value: values.NewBool(new(bool), false)},
 		},
 	}
+
+	require.Equal(t, "-f", optMatcher.String())
+
 	cases := []struct {
 		args  []string
 		nargs []string
@@ -86,6 +90,8 @@ func TestOptMatcher(t *testing.T) {
 				},
 			}
 
+			require.Equal(t, "-f", optMatcher.String())
+
 			pc := New()
 			ok, nargs := optMatcher.Match(cas.args, &pc)
 			require.True(t, ok, "opt %#v should match args %v, %v", forceOpt, cas.args, values.IsBool(forceOpt.Value))
@@ -112,6 +118,7 @@ func TestOptNegatives(t *testing.T) {
 	cases := []struct {
 		args []string
 	}{
+		{[]string{"-"}},
 		{[]string{"-", "x"}},
 		{[]string{"--", "y"}},
 		{[]string{"-c"}},
