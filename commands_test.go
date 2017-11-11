@@ -9,6 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"testing"
+
+	"github.com/jawher/mow.cli/internal/container"
+	"github.com/jawher/mow.cli/internal/flow"
 )
 
 func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
@@ -16,8 +19,8 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 
 	cmd := &Cmd{
 		name:       "test",
-		optionsIdx: map[string]*opt{},
-		argsIdx:    map[string]*arg{},
+		optionsIdx: map[string]*container.Container{},
+		argsIdx:    map[string]*container.Container{},
 	}
 	cmd.Spec = spec
 	cmd.ErrorHandling = flag.ContinueOnError
@@ -25,9 +28,9 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 
 	err := cmd.doInit()
 	require.Nil(t, err, "should parse")
-	t.Logf("testing spec %s with args: %v", spec, args)
-	inFlow := &step{}
-	err = cmd.parse(args, inFlow, inFlow, &step{})
+	t.Logf("testing spec %q with args: %#v", spec, args)
+	inFlow := &flow.Step{}
+	err = cmd.parse(args, inFlow, inFlow, &flow.Step{})
 	require.Nil(t, err, "cmd parse should't fail")
 }
 
@@ -36,8 +39,8 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 
 	cmd := &Cmd{
 		name:       "test",
-		optionsIdx: map[string]*opt{},
-		argsIdx:    map[string]*arg{},
+		optionsIdx: map[string]*container.Container{},
+		argsIdx:    map[string]*container.Container{},
 	}
 	cmd.Spec = spec
 	cmd.ErrorHandling = flag.ContinueOnError
@@ -45,17 +48,17 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 
 	err := cmd.doInit()
 	require.NoError(t, err, "should parse")
-	t.Logf("testing spec %s with args: %v", spec, args)
-	inFlow := &step{}
-	err = cmd.parse(args, inFlow, inFlow, &step{})
+	t.Logf("testing spec %q with args: %#v", spec, args)
+	inFlow := &flow.Step{}
+	err = cmd.parse(args, inFlow, inFlow, &flow.Step{})
 	require.Error(t, err, "cmd parse should have failed")
 }
 
 func badSpec(t *testing.T, spec string, init CmdInitializer) {
 	cmd := &Cmd{
 		name:       "test",
-		optionsIdx: map[string]*opt{},
-		argsIdx:    map[string]*arg{},
+		optionsIdx: map[string]*container.Container{},
+		argsIdx:    map[string]*container.Container{},
 	}
 	cmd.Spec = spec
 	cmd.ErrorHandling = flag.ContinueOnError
@@ -1302,5 +1305,28 @@ func TestEnvOverrideFail(t *testing.T) {
 			}
 		}
 		failCmd(t, cas.spec, init, cas.args)
+	}
+}
+
+func TestJoinStrings(t *testing.T) {
+	cases := []struct {
+		input    []string
+		expected string
+	}{
+		{nil, ""},
+		{[]string{""}, ""},
+		{[]string{" "}, ""},
+		{[]string{"\t"}, ""},
+		{[]string{"", " ", "\t"}, ""},
+		{[]string{"a"}, "a"},
+		{[]string{"a", "b c"}, "a b c"},
+		{[]string{"", "a", " ", "b", "\t"}, "a b"},
+	}
+
+	for _, cas := range cases {
+		t.Logf("Testing %#v", cas.input)
+		actual := joinStrings(cas.input...)
+
+		require.Equal(t, cas.expected, actual)
 	}
 }
