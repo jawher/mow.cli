@@ -3,6 +3,8 @@ package matcher
 import (
 	"testing"
 
+	"fmt"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,9 +56,11 @@ func TestPriority(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		ap := cas.a.Priority()
-		bp := cas.b.Priority()
-		require.Truef(t, ap < bp, "%#v (priority=%d) should be < then %#v (priority=%d)", cas.a, ap, cas.b, bp)
+		t.Run(fmt.Sprintf("%T < %T", cas.a, cas.b), func(t *testing.T) {
+			ap := cas.a.Priority()
+			bp := cas.b.Priority()
+			require.Truef(t, ap < bp, "%#v (priority=%d) should be < then %#v (priority=%d)", cas.a, ap, cas.b, bp)
+		})
 	}
 }
 

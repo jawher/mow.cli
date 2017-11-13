@@ -3,8 +3,6 @@ go:
 - "1.11"
 - "1.10"
 - "1.9"
-- "1.8"
-- tip
 
 sudo: false
 
@@ -19,4 +17,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    go: "1.10"
+    go: "1.11"

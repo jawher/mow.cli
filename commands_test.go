@@ -10,6 +10,8 @@ import (
 
 	"testing"
 
+	"fmt"
+
 	"github.com/jawher/mow.cli/internal/container"
 	"github.com/jawher/mow.cli/internal/flow"
 )
@@ -77,20 +79,23 @@ func TestSpecBoolOpt(t *testing.T) {
 	}
 	spec := "-f"
 
-	okCmd(t, spec, init, []string{"-f"})
-	require.True(t, *f)
+	okCases := []struct {
+		args     []string
+		expected bool
+	}{
+		{args: []string{"-f"}, expected: true},
+		{args: []string{"--force"}, expected: true},
+		{args: []string{"-f=true"}, expected: true},
+		{args: []string{"--force=true"}, expected: true},
+		{args: []string{"--force=false"}, expected: false},
+	}
 
-	okCmd(t, spec, init, []string{"--force"})
-	require.True(t, *f)
-
-	okCmd(t, spec, init, []string{"-f=true"})
-	require.True(t, *f)
-
-	okCmd(t, spec, init, []string{"--force=true"})
-	require.True(t, *f)
-
-	okCmd(t, spec, init, []string{"--force=false"})
-	require.False(t, *f)
+	for _, cas := range okCases {
+		t.Run(fmt.Sprintf("okCase: %+v", cas.args), func(t *testing.T) {
+			okCmd(t, spec, init, cas.args)
+			require.Equal(t, cas.expected, *f)
+		})
+	}
 
 	badCases := [][]string{
 		{},
@@ -102,7 +107,9 @@ func TestSpecBoolOpt(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %+v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -140,10 +147,12 @@ func TestDefaultSpec(t *testing.T) {
 
 	for _, cas := range cases {
 		for _, cl := range cas.calls {
-			okCmd(t, "", cas.init, cl.args)
-			require.Equal(t, cl.a, *a)
-			require.Equal(t, cl.b, *b)
-			require.Equal(t, cl.c, *c)
+			t.Run(fmt.Sprintf("%+v", cl.args), func(t *testing.T) {
+				okCmd(t, "", cas.init, cl.args)
+				require.Equal(t, cl.a, *a)
+				require.Equal(t, cl.b, *b)
+				require.Equal(t, cl.c, *c)
+			})
 		}
 	}
 
@@ -235,11 +244,13 @@ func TestSpecOptFolding(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		okCmd(t, cas.spec, init, cas.args)
-		require.Equal(t, cas.a, *a)
-		require.Equal(t, cas.b, *b)
-		require.Equal(t, cas.c, *c)
-		require.Equal(t, cas.d, *d)
+		t.Run(fmt.Sprintf("%s :: %+v", cas.spec, cas.args), func(t *testing.T) {
+			okCmd(t, cas.spec, init, cas.args)
+			require.Equal(t, cas.a, *a)
+			require.Equal(t, cas.b, *b)
+			require.Equal(t, cas.c, *c)
+			require.Equal(t, cas.d, *d)
+		})
 	}
 
 }
@@ -270,7 +281,9 @@ func TestSpecStrOpt(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("%+v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -301,7 +314,9 @@ func TestSpecIntOpt(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("%+v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -327,8 +342,10 @@ func TestSpecStrsOpt(t *testing.T) {
 		{"-f=A", "-fB"},
 	}
 	for _, args := range cases {
-		okCmd(t, spec, init, args)
-		require.Equal(t, []string{"A", "B"}, *f)
+		t.Run(fmt.Sprintf("okCase: %#v", args), func(t *testing.T) {
+			okCmd(t, spec, init, args)
+			require.Equal(t, []string{"A", "B"}, *f)
+		})
 	}
 
 	badCases := [][]string{
@@ -340,7 +357,9 @@ func TestSpecStrsOpt(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -366,8 +385,10 @@ func TestSpecIntsOpt(t *testing.T) {
 		{"-f=1", "-f2"},
 	}
 	for _, args := range cases {
-		okCmd(t, spec, init, args)
-		require.Equal(t, []int{1, 2}, *f)
+		t.Run(fmt.Sprintf("okCase: %#v", args), func(t *testing.T) {
+			okCmd(t, spec, init, args)
+			require.Equal(t, []int{1, 2}, *f)
+		})
 	}
 
 	badCases := [][]string{
@@ -381,7 +402,9 @@ func TestSpecIntsOpt(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -391,6 +414,7 @@ func TestSpecOptionalOpt(t *testing.T) {
 		f = c.BoolOpt("f", false, "")
 	}
 	spec := "[-f]"
+	//TODO: table driven
 	okCmd(t, "[-f]", init, []string{"-f"})
 	require.True(t, *f)
 
@@ -405,7 +429,9 @@ func TestSpecOptionalOpt(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -425,7 +451,9 @@ func TestSpecArg(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -449,7 +477,9 @@ func TestSpecOptionalArg(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 
 }
@@ -461,7 +491,7 @@ func TestSpecOptionChoice(t *testing.T) {
 		g = c.BoolOpt("g", false, "")
 	}
 	spec := "-f|-g"
-
+	//TODO: table driven
 	okCmd(t, spec, init, []string{"-f"})
 	require.True(t, *f)
 	require.False(t, *g)
@@ -479,7 +509,9 @@ func TestSpecOptionChoice(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -490,7 +522,7 @@ func TestSpecOptional2OptionChoice(t *testing.T) {
 		g = c.BoolOpt("g", false, "")
 	}
 	spec := "[-f|-g]"
-
+	//TODO:
 	okCmd(t, spec, init, []string{})
 	require.False(t, *f)
 	require.False(t, *g)
@@ -511,7 +543,9 @@ func TestSpecOptional2OptionChoice(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -522,7 +556,7 @@ func TestSpecRepeatable2OptionChoice(t *testing.T) {
 		g = c.BoolOpt("g", false, "")
 	}
 	spec := "(-f|-g)..."
-
+	//TODO:
 	okCmd(t, spec, init, []string{"-f"})
 	require.True(t, *f)
 	require.False(t, *g)
@@ -545,7 +579,9 @@ func TestSpecRepeatable2OptionChoice(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -556,7 +592,7 @@ func TestSpecRepeatableOptional2OptionChoice(t *testing.T) {
 		g = c.BoolOpt("g", false, "")
 	}
 	spec := "[-f|-g]..."
-
+	//TODO:
 	okCmd(t, spec, init, []string{})
 	require.False(t, *f)
 	require.False(t, *g)
@@ -583,7 +619,9 @@ func TestSpecRepeatableOptional2OptionChoice(t *testing.T) {
 		{"xxx", "-f"},
 	}
 	for _, args := range badCases {
-		failCmd(t, spec, init, args)
+		t.Run(fmt.Sprintf("badCase: %#v", args), func(t *testing.T) {
+			failCmd(t, spec, init, args)
+		})
 	}
 }
 
@@ -596,6 +634,7 @@ func TestSpecOption3Choice(t *testing.T) {
 	}
 	spec := "-f|-g|-x"
 
+	//TODO
 	okCmd(t, spec, init, []string{"-f"})
 	require.True(t, *f)
 	require.False(t, *g)
@@ -895,7 +934,9 @@ func TestSpecOptionAfterOptionsEndIsParsedAsArg(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		okCmd(t, spec, init, cas)
+		t.Run(fmt.Sprintf("%+v", cas), func(t *testing.T) {
+			okCmd(t, spec, init, cas)
+		})
 	}
 }
 
@@ -1117,13 +1158,15 @@ func TestSpecOptOrdering(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		okCmd(t, cas.spec, init, cas.args)
-		require.Equal(t, cas.a, *a)
-		require.Equal(t, cas.b, *b)
-		require.Equal(t, cas.c, *c)
-		require.Equal(t, cas.d, *d)
-		require.Equal(t, cas.e, *e)
-		require.Equal(t, cas.f, *f)
+		t.Run(fmt.Sprintf("%q :: %#v", cas.spec, cas.args), func(t *testing.T) {
+			okCmd(t, cas.spec, init, cas.args)
+			require.Equal(t, cas.a, *a)
+			require.Equal(t, cas.b, *b)
+			require.Equal(t, cas.c, *c)
+			require.Equal(t, cas.d, *d)
+			require.Equal(t, cas.e, *e)
+			require.Equal(t, cas.f, *f)
+		})
 	}
 
 }
@@ -1224,30 +1267,32 @@ func TestEnvOverrideOk(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		var envopt *string
-		var otheropt *string
+		t.Run(fmt.Sprintf("%q :: %#v", cas.spec, cas.args), func(t *testing.T) {
+			var envopt *string
+			var otheropt *string
 
-		init := func(c *Cmd) {
-			os.Unsetenv("envopt")
-			if cas.setenv {
-				os.Setenv("envopt", "fromenv")
+			init := func(c *Cmd) {
+				os.Unsetenv("envopt")
+				if cas.setenv {
+					os.Setenv("envopt", "fromenv")
+				}
+				envopt = c.String(StringOpt{
+					Name:   "e envopt",
+					Value:  "envdefault",
+					EnvVar: "envopt",
+				})
+				if strings.Contains(cas.spec, "other") {
+					otheropt = c.StringOpt("o other", "", "")
+				}
 			}
-			envopt = c.String(StringOpt{
-				Name:   "e envopt",
-				Value:  "envdefault",
-				EnvVar: "envopt",
-			})
+			okCmd(t, cas.spec, init, cas.args)
 			if strings.Contains(cas.spec, "other") {
-				otheropt = c.StringOpt("o other", "", "")
+				// if the test spec defined --other, make sure it was actually set
+				assert.Equal(t, "otheropt", *otheropt)
 			}
-		}
-		okCmd(t, cas.spec, init, cas.args)
-		if strings.Contains(cas.spec, "other") {
-			// if the test spec defined --other, make sure it was actually set
-			assert.Equal(t, "otheropt", *otheropt)
-		}
-		// ensure --envopt was actually set to the test's expectations
-		assert.Equal(t, cas.envval, *envopt)
+			// ensure --envopt was actually set to the test's expectations
+			assert.Equal(t, cas.envval, *envopt)
+		})
 	}
 }
 
@@ -1294,17 +1339,19 @@ func TestEnvOverrideFail(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		init := func(c *Cmd) {
-			c.String(StringOpt{
-				Name:   "e envopt",
-				Value:  "envdefault",
-				EnvVar: "envopt",
-			})
-			if strings.Contains(cas.spec, "other") {
-				c.StringOpt("o other", "", "")
+		t.Run(fmt.Sprintf("%q :: %#v", cas.spec, cas.args), func(t *testing.T) {
+			init := func(c *Cmd) {
+				c.String(StringOpt{
+					Name:   "e envopt",
+					Value:  "envdefault",
+					EnvVar: "envopt",
+				})
+				if strings.Contains(cas.spec, "other") {
+					c.StringOpt("o other", "", "")
+				}
 			}
-		}
-		failCmd(t, cas.spec, init, cas.args)
+			failCmd(t, cas.spec, init, cas.args)
+		})
 	}
 }
 
@@ -1324,9 +1371,11 @@ func TestJoinStrings(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.input)
-		actual := joinStrings(cas.input...)
+		t.Run(fmt.Sprintf("%+v", cas.input), func(t *testing.T) {
+			t.Logf("Testing %#v", cas.input)
+			actual := joinStrings(cas.input...)
 
-		require.Equal(t, cas.expected, actual)
+			require.Equal(t, cas.expected, actual)
+		})
 	}
 }

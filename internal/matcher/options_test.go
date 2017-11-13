@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/jawher/mow.cli/internal/container"
 	"github.com/jawher/mow.cli/internal/values"
 	"github.com/stretchr/testify/require"
@@ -54,19 +56,21 @@ func TestOptsMatcher(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("testing with args %#v", cas.args)
-		pc := NewParseContext()
-		ok, nargs := opts.Match(cas.args, &pc)
-		require.True(t, ok, "opts should match")
-		require.Equal(t, cas.nargs, nargs, "opts should consume the option name")
-		for i, opt := range opts.options {
-			require.Equal(t, cas.val[i], pc.Opts[opt], "the option value for %v should be stored", opt)
-		}
+		t.Run(fmt.Sprintf("args %#v ", cas.args), func(t *testing.T) {
+			t.Logf("testing with args %#v", cas.args)
+			pc := NewParseContext()
+			ok, nargs := opts.Match(cas.args, &pc)
+			require.True(t, ok, "opts should match")
+			require.Equal(t, cas.nargs, nargs, "opts should consume the option name")
+			for i, opt := range opts.options {
+				require.Equal(t, cas.val[i], pc.Opts[opt], "the option value for %v should be stored", opt)
+			}
 
-		pc = NewParseContext()
-		pc.RejectOptions = true
-		nok, _ := opts.Match(cas.args, &pc)
-		require.False(t, nok, "opts shouldn't match when rejectOptions flag is set")
+			pc = NewParseContext()
+			pc.RejectOptions = true
+			nok, _ := opts.Match(cas.args, &pc)
+			require.False(t, nok, "opts shouldn't match when rejectOptions flag is set")
+		})
 	}
 }
 

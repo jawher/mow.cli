@@ -149,7 +149,9 @@ func TestApplyRejectOptions(t *testing.T) {
 
 	s.Prepare()
 
-	s.Parse(testArgs)
+	err := s.Parse(testArgs)
+
+	require.NoError(t, err)
 
 	require.Equal(t, []string{"a", "b"}, calls)
 

@@ -194,21 +194,22 @@ func TestSetFromEnv(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Case: %s", cas.desc)
+		t.Run(cas.desc, func(t *testing.T) {
+			t.Logf("Case: %s", cas.desc)
 
-		val, into := cas.setup()
+			val, into := cas.setup()
 
-		actual := SetFromEnv(val, cas.envVars)
+			actual := SetFromEnv(val, cas.envVars)
 
-		require.Equal(t, cas.expected, actual)
+			require.Equal(t, cas.expected, actual)
 
-		typ := reflect.TypeOf(into)
-		if typ.Kind() != reflect.Ptr {
-			t.Fatalf("config func did not return a pointer")
-		}
-		actualValue := reflect.ValueOf(into).Elem().Interface()
+			typ := reflect.TypeOf(into)
+			if typ.Kind() != reflect.Ptr {
+				t.Fatalf("config func did not return a pointer")
+			}
+			actualValue := reflect.ValueOf(into).Elem().Interface()
 
-		require.Equal(t, cas.val, actualValue)
-
+			require.Equal(t, cas.val, actualValue)
+		})
 	}
 }

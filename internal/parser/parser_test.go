@@ -149,22 +149,25 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing spec %q", cas.spec)
 
-		tokens, lerr := lexer.Tokenize(cas.spec)
-		require.NoErrorf(t, lerr, "Lexing error %v", lerr)
+		t.Run(cas.spec, func(t *testing.T) {
+			t.Logf("Testing spec %q", cas.spec)
 
-		s, perr := Parse(tokens, Params{
-			Args:       []*container.Container{argCon},
-			ArgsIdx:    argsIndex,
-			Options:    []*container.Container{optACon, optBCon},
-			OptionsIdx: optsIndex,
-			Spec:       cas.spec,
+			tokens, lerr := lexer.Tokenize(cas.spec)
+			require.NoErrorf(t, lerr, "Lexing error %v", lerr)
+
+			s, perr := Parse(tokens, Params{
+				Args:       []*container.Container{argCon},
+				ArgsIdx:    argsIndex,
+				Options:    []*container.Container{optACon, optBCon},
+				OptionsIdx: optsIndex,
+				Spec:       cas.spec,
+			})
+			require.NoErrorf(t, perr, "Parsing error %v", perr)
+
+			actualFsm := fsmtest.FsmStr(s)
+			require.Equal(t, cleanFsmStr(cas.expectedFsm), actualFsm)
 		})
-		require.NoErrorf(t, perr, "Parsing error %v", perr)
-
-		actualFsm := fsmtest.FsmStr(s)
-		require.Equal(t, cleanFsmStr(cas.expectedFsm), actualFsm)
 	}
 }
 
@@ -242,27 +245,30 @@ func TestParseErrors(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing spec %q", cas.spec)
 
-		tokens, lerr := lexer.Tokenize(cas.spec)
-		require.NoErrorf(t, lerr, "Lexing error %v", lerr)
+		t.Run(cas.spec, func(t *testing.T) {
+			t.Logf("Testing spec %q", cas.spec)
 
-		_, err := Parse(tokens, Params{
-			Args:       []*container.Container{argCon},
-			ArgsIdx:    argsIndex,
-			Options:    []*container.Container{optACon, optBCon},
-			OptionsIdx: optsIndex,
-			Spec:       cas.spec,
+			tokens, lerr := lexer.Tokenize(cas.spec)
+			require.NoErrorf(t, lerr, "Lexing error %v", lerr)
+
+			_, err := Parse(tokens, Params{
+				Args:       []*container.Container{argCon},
+				ArgsIdx:    argsIndex,
+				Options:    []*container.Container{optACon, optBCon},
+				OptionsIdx: optsIndex,
+				Spec:       cas.spec,
+			})
+			require.Error(t, err, "Parsing should have failed")
+
+			perr, ok := err.(*lexer.ParseError)
+
+			require.Truef(t, ok, "the returned error should be of type ParseError, but instead was %T", err)
+
+			t.Logf("Got expected parse error %v", perr)
+			require.Contains(t, perr.Msg, cas.msg)
+			require.Equal(t, cas.pos, perr.Pos)
 		})
-		require.Error(t, err, "Parsing should have failed")
-
-		perr, ok := err.(*lexer.ParseError)
-
-		require.Truef(t, ok, "the returned error should be of type ParseError, but instead was %T", err)
-
-		t.Logf("Got expected parse error %v", perr)
-		require.Contains(t, perr.Msg, cas.msg)
-		require.Equal(t, cas.pos, perr.Pos)
 	}
 }
 
