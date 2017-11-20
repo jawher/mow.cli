@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"strconv"
+
+	"github.com/jawher/mow.cli/internal/container"
 )
 
 // BoolValued is an interface values can implement to indicate that they are a bool option, i.e. can be set without providing a value with just -f for example
@@ -11,6 +13,13 @@ type BoolValued interface {
 	flag.Value
 	// IsBoolFlag should return true to indicate that this value is a bool value
 	IsBoolFlag() bool
+}
+
+// EnumValued is an interface ti indicate that a value can hold an enum
+type EnumValued interface {
+	flag.Value
+	// Validate makes sure the value passed is valid
+	Validate(string, []container.Validator) (string, error)
 }
 
 // MultiValued is an interface ti indicate that a value can hold multiple values
@@ -67,6 +76,69 @@ func (bo *BoolValue) String() string {
 // IsDefault return true if the bool value is false
 func (bo *BoolValue) IsDefault() bool {
 	return !bool(*bo)
+}
+
+/******************************************************************************/
+/* ENUM                                                                        */
+/******************************************************************************/
+
+// EnumValue is a flag.Value type holding string values
+type EnumValue string
+
+var (
+	_ flag.Value    = NewEnum(new(string), "")
+	_ EnumValued    = NewEnum(new(string), "")
+	_ DefaultValued = NewEnum(new(string), "")
+)
+
+// NewEnum creates a new string value
+func NewEnum(into *string, v string) *EnumValue {
+	*into = v
+	return (*EnumValue)(into)
+}
+
+// Set sets the value from a provided string
+func (sa *EnumValue) Set(s string) error {
+	*sa = EnumValue(s)
+	return nil
+}
+
+func (sa *EnumValue) String() string {
+	return fmt.Sprintf("%#v", *sa)
+}
+
+// IsDefault return true if the string value is empty
+func (sa *EnumValue) IsDefault() bool {
+	return string(*sa) == ""
+}
+
+// Validate validates the specified enum value, returns the wanted value and
+// calls the relevant callback if defined.
+func (sa *EnumValue) Validate(v string, vv []container.Validator) (string, error) {
+	for _, x := range vv {
+		if x.User == v {
+			if x.Callback != nil {
+				err := x.Callback()
+				if err != nil {
+					return "", err
+				}
+			}
+			return x.Value, nil
+		}
+	}
+
+	// If we are here the value is invalid, let's give the user the list of
+	// valid values in our validation list.
+	help := ""
+	for i := 0; i < len(vv); i++ {
+		help += vv[i].User
+		if i == (len(vv) - 1) {
+			help += "."
+		} else {
+			help += ", "
+		}
+	}
+	return "", fmt.Errorf("Invalid value %s, valid values are %s", v, help)
 }
 
 /******************************************************************************/

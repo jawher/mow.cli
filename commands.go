@@ -57,6 +57,13 @@ type BoolParam interface {
 }
 
 /*
+EnumParam represents a Enum option or argument
+*/
+type EnumParam interface {
+	value() string
+}
+
+/*
 StringParam represents a String option or argument
 */
 type StringParam interface {
@@ -140,6 +147,38 @@ func (c *Cmd) Bool(p BoolParam) *bool {
 		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
 	case BoolArg:
 		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+
+	return into
+}
+
+/*
+Enum can be used to add an enum option or argument to a command.
+It accepts either a EnumOpt or a EnumArg struct.
+
+The result should be stored in a variable (a pointer to an enum) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Enum(p EnumParam) *string {
+	into := new(string)
+	value := values.NewEnum(into, p.value())
+
+	switch x := p.(type) {
+	case EnumOpt:
+		validation := make([]container.Validator, len(x.Validation))
+		for i, v := range x.Validation {
+			v.ToContainerValidator(&validation[i])
+		}
+
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser, Validation: validation})
+	case EnumArg:
+		validation := make([]container.Validator, len(x.Validation))
+		for i, v := range x.Validation {
+			v.ToContainerValidator(&validation[i])
+		}
+
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser, Validation: validation})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
 	}
@@ -358,10 +397,11 @@ func (c *Cmd) printHelp(longDesc bool) {
 
 		for _, arg := range c.args {
 			var (
-				env   = formatEnvVarsForHelp(arg.EnvVar)
-				value = formatValueForHelp(arg.HideValue, arg.Value)
+				env        = formatEnvVarsForHelp(arg.EnvVar)
+				value      = formatValueForHelp(arg.HideValue, arg.Value)
+				additional = formatExtraForHelp(arg.HideValue, arg)
 			)
-			fmt.Fprintf(w, "  %s\t%s\n", arg.Name, joinStrings(arg.Desc, env, value))
+			fmt.Fprintf(w, "  %s\t%s\n", arg.Name, joinStrings(arg.Desc, env, value, additional))
 		}
 	}
 
@@ -370,11 +410,12 @@ func (c *Cmd) printHelp(longDesc bool) {
 
 		for _, opt := range c.options {
 			var (
-				optNames = formatOptNamesForHelp(opt)
-				env      = formatEnvVarsForHelp(opt.EnvVar)
-				value    = formatValueForHelp(opt.HideValue, opt.Value)
+				optNames   = formatOptNamesForHelp(opt)
+				env        = formatEnvVarsForHelp(opt.EnvVar)
+				value      = formatValueForHelp(opt.HideValue, opt.Value)
+				additional = formatExtraForHelp(opt.HideValue, opt)
 			)
-			fmt.Fprintf(w, "  %s\t%s\n", optNames, joinStrings(opt.Desc, env, value))
+			fmt.Fprintf(w, "  %s\t%s\n", optNames, joinStrings(opt.Desc, env, value, additional))
 		}
 	}
 
@@ -417,6 +458,19 @@ func formatOptNamesForHelp(o *container.Container) string {
 	default:
 		return ""
 	}
+}
+
+func formatExtraForHelp(hide bool, c *container.Container) string {
+	if hide {
+		return ""
+	}
+
+	extra := ""
+	for _, v := range c.Validation {
+		extra += fmt.Sprintf("\n\t  %s: %s", v.User, v.Help)
+	}
+
+	return extra
 }
 
 func formatValueForHelp(hide bool, v flag.Value) string {

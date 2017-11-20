@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/jawher/mow.cli/internal/container"
 	"github.com/jawher/mow.cli/internal/values"
@@ -24,6 +25,29 @@ type BoolArg struct {
 }
 
 func (a BoolArg) value() bool {
+	return a.Value
+}
+
+// EnumArg describes a string option
+type EnumArg struct {
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
+	EnvVar string
+	// The option's initial value
+	Value string
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
+	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+	// Enums contains the enum values
+	Validation []EnumValidator
+}
+
+func (a EnumArg) value() string {
 	return a.Value
 }
 
@@ -140,6 +164,24 @@ func (c *Cmd) BoolArg(name string, value bool, desc string) *bool {
 		Name:  name,
 		Value: value,
 		Desc:  desc,
+	})
+}
+
+/*
+EnumArg defines an enum argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) EnumArg(name, value, desc string, validation []EnumValidator) *string {
+	if validation == nil || len(validation) == 0 {
+		panic(fmt.Sprintf("Enums require validation %s %s", name, value))
+	}
+
+	return c.Enum(EnumArg{
+		Name:       name,
+		Value:      value,
+		Desc:       desc,
+		Validation: validation,
 	})
 }
 

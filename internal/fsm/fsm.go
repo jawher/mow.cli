@@ -137,6 +137,20 @@ func fillContainers(containers map[*container.Container][]string) error {
 			multiValued.Clear()
 		}
 		for _, v := range vs {
+			// Should check for a valid value
+			if con.Validation != nil {
+				switch x := con.Value.(type) {
+				case values.EnumValued:
+					vc, err := x.Validate(v, con.Validation)
+					if err != nil {
+						return err
+					}
+					v = vc
+				default:
+					panic(fmt.Sprintf("Unhandled validator %v", x))
+				}
+			}
+
 			if err := con.Value.Set(v); err != nil {
 				return err
 			}
