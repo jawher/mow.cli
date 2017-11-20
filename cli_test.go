@@ -465,6 +465,24 @@ func TestHelpMessage(t *testing.T) {
 	app.String(StringOpt{Name: "str2", Value: "a value", Desc: "String Option 2"})
 	app.String(StringOpt{Name: "u", Value: "another value", EnvVar: "STR3", Desc: "String Option 3", HideValue: true})
 
+	app.Enum(EnumOpt{Name: "e enum1", Value: "", EnvVar: "ENUM1", Desc: "Enum Option 1", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Option 1 value 1"},
+		{User: "value2", Value: "v2", Help: "Option 1 value 2"},
+		{User: "value3", Value: "v3", Help: "Option 1 value 3"},
+	}})
+
+	app.Enum(EnumOpt{Name: "enum2", Value: "a value", Desc: "Enum Option 2", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Option 2 value 1"},
+		{User: "value2", Value: "v2", Help: "Option 2 value 2"},
+		{User: "value3", Value: "v3", Help: "Option 2 value 3"},
+	}})
+
+	app.Enum(EnumOpt{Name: "f", Value: "another value", EnvVar: "ENUM3", Desc: "Enum Option 3", HideValue: true, Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Option 3 value 1"},
+		{User: "value2", Value: "v2", Help: "Option 3 value 2"},
+		{User: "value3", Value: "v3", Help: "Option 3 value 3"},
+	}})
+
 	app.Int(IntOpt{Name: "i int1", Value: 0, EnvVar: "INT1 ALIAS_INT1"})
 	app.Int(IntOpt{Name: "int2", Value: 1, EnvVar: "INT2", Desc: "Int Option 2"})
 	app.Int(IntOpt{Name: "k", Value: 1, EnvVar: "INT3", Desc: "Int Option 3", HideValue: true})
@@ -485,6 +503,24 @@ func TestHelpMessage(t *testing.T) {
 	app.String(StringArg{Name: "STR1", Value: "", EnvVar: "STR1", Desc: "String Argument 1"})
 	app.String(StringArg{Name: "STR2", Value: "a value", EnvVar: "STR2", Desc: "String Argument 2"})
 	app.String(StringArg{Name: "STR3", Value: "another value", EnvVar: "STR3", Desc: "String Argument 3", HideValue: true})
+
+	app.Enum(EnumArg{Name: "ENUM1", Value: "", EnvVar: "ENUM1", Desc: "Enum Argument 1", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Argument 1 value 1"},
+		{User: "value2", Value: "v2", Help: "Argument 1 value 2"},
+		{User: "value3", Value: "v3", Help: "Argument 1 value 3"},
+	}})
+
+	app.Enum(EnumArg{Name: "ENUM1", Value: "a value", Desc: "Enum Argument 2", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Argument 2 value 1"},
+		{User: "value2", Value: "v2", Help: "Argument 2 value 2"},
+		{User: "value3", Value: "v3", Help: "Argument 2 value 3"},
+	}})
+
+	app.Enum(EnumArg{Name: "ENUM3", Value: "another value", EnvVar: "ENUM3", Desc: "Enum Argument 3", HideValue: true, Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Argument 3 value 1"},
+		{User: "value2", Value: "v2", Help: "Argument 3 value 2"},
+		{User: "value3", Value: "v3", Help: "Argument 3 value 3"},
+	}})
 
 	app.Int(IntArg{Name: "INT1", Value: 0, EnvVar: "INT1", Desc: "Int Argument 1"})
 	app.Int(IntArg{Name: "INT2", Value: 1, EnvVar: "INT2", Desc: "Int Argument 2"})

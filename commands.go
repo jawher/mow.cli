@@ -536,6 +536,32 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 		Exiter:  exiter,
 	}
 
+	// When an argument or option is set from the environment we haven't
+	// validated yet, we can't validate inside mkopt/mkarg because there is no
+	// way to return an error back to the user.
+	//
+	// Putting this validation here, rather than at the top of the function,
+	// means it is possible to override an invalid environmental variable with
+	// a valid commandline value
+	for _, curr := range []([]*container.Container){c.args, c.options} {
+		for _, op := range curr {
+			if op.ValueSetFromEnv && op.Validation != nil {
+				switch x := op.Value.(type) {
+				case values.EnumValued:
+					vc, err := x.Validate(x.RealString(), op.Validation)
+					if err != nil {
+						fmt.Fprintf(stdErr, "Error: %s\n", err.Error())
+						c.PrintHelp()
+						c.onError(err)
+					}
+					x.Set(vc)
+				default:
+					panic(fmt.Sprintf("Unhandled validator %v", x))
+				}
+			}
+		}
+	}
+
 	args = args[nargsLen:]
 	if len(args) == 0 {
 		if c.Action != nil {

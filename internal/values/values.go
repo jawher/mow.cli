@@ -20,6 +20,7 @@ type EnumValued interface {
 	flag.Value
 	// Validate makes sure the value passed is valid
 	Validate(string, []container.Validator) (string, error)
+	RealString() string
 }
 
 // MultiValued is an interface ti indicate that a value can hold multiple values
@@ -105,6 +106,11 @@ func (sa *EnumValue) Set(s string) error {
 
 func (sa *EnumValue) String() string {
 	return fmt.Sprintf("%#v", *sa)
+}
+
+// RealString returns the underlying string set in the enum value
+func (sa *EnumValue) RealString() string {
+	return string(*sa)
 }
 
 // IsDefault return true if the string value is empty
