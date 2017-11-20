@@ -398,7 +398,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 		for _, arg := range c.args {
 			var (
 				env        = formatEnvVarsForHelp(arg.EnvVar)
-				value      = formatValueForHelp(arg.HideValue, arg.Value)
+				value      = formatValueForHelp(arg.HideValue, arg.DefaultDisplay, arg.DefaultValue)
 				additional = formatExtraForHelp(arg.HideValue, arg)
 			)
 			fmt.Fprintf(w, "  %s\t%s\n", arg.Name, joinStrings(arg.Desc, env, value, additional))
@@ -412,7 +412,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 			var (
 				optNames   = formatOptNamesForHelp(opt)
 				env        = formatEnvVarsForHelp(opt.EnvVar)
-				value      = formatValueForHelp(opt.HideValue, opt.Value)
+				value      = formatValueForHelp(opt.HideValue, opt.DefaultDisplay, opt.DefaultValue)
 				additional = formatExtraForHelp(opt.HideValue, opt)
 			)
 			fmt.Fprintf(w, "  %s\t%s\n", optNames, joinStrings(opt.Desc, env, value, additional))
@@ -473,18 +473,16 @@ func formatExtraForHelp(hide bool, c *container.Container) string {
 	return extra
 }
 
-func formatValueForHelp(hide bool, v flag.Value) string {
+func formatValueForHelp(hide bool, dontDisplay bool, vp string) string {
 	if hide {
 		return ""
 	}
 
-	if dv, ok := v.(values.DefaultValued); ok {
-		if dv.IsDefault() {
-			return ""
-		}
+	if dontDisplay {
+		return ""
 	}
 
-	return fmt.Sprintf("(default %s)", v.String())
+	return fmt.Sprintf("(default %s)", vp)
 }
 
 func formatEnvVarsForHelp(envVars string) string {

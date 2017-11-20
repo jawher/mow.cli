@@ -247,6 +247,10 @@ func (c *Cmd) VarArg(name string, value flag.Value, desc string) {
 }
 
 func (c *Cmd) mkArg(arg container.Container) {
+	arg.DefaultValue = arg.Value.String()
+	if dv, ok := arg.Value.(values.DefaultValued); ok {
+		arg.DefaultDisplay = dv.IsDefault()
+	}
 	arg.ValueSetFromEnv = values.SetFromEnv(arg.Value, arg.EnvVar)
 
 	c.args = append(c.args, &arg)

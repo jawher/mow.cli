@@ -99,28 +99,28 @@ func NewEnum(into *string, v string) *EnumValue {
 }
 
 // Set sets the value from a provided string
-func (sa *EnumValue) Set(s string) error {
-	*sa = EnumValue(s)
+func (ea *EnumValue) Set(s string) error {
+	*ea = EnumValue(s)
 	return nil
 }
 
-func (sa *EnumValue) String() string {
-	return fmt.Sprintf("%#v", *sa)
+func (ea *EnumValue) String() string {
+	return fmt.Sprintf("%#v", *ea)
 }
 
 // RealString returns the underlying string set in the enum value
-func (sa *EnumValue) RealString() string {
-	return string(*sa)
+func (ea *EnumValue) RealString() string {
+	return string(*ea)
 }
 
 // IsDefault return true if the string value is empty
-func (sa *EnumValue) IsDefault() bool {
-	return string(*sa) == ""
+func (ea *EnumValue) IsDefault() bool {
+	return string(*ea) == ""
 }
 
 // Validate validates the specified enum value, returns the wanted value and
 // calls the relevant callback if defined.
-func (sa *EnumValue) Validate(v string, vv []container.Validator) (string, error) {
+func (ea *EnumValue) Validate(v string, vv []container.Validator) (string, error) {
 	for _, x := range vv {
 		if x.User == v {
 			if x.Callback != nil {
