@@ -545,7 +545,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	// a valid commandline value
 	for _, curr := range []([]*container.Container){c.args, c.options} {
 		for _, op := range curr {
-			if op.ValueSetFromEnv && op.Validation != nil {
+			if op.Validation != nil {
 				switch x := op.Value.(type) {
 				case values.EnumValued:
 					vc, err := x.Validate(x.RealString(), op.Validation)
