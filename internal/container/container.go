@@ -18,7 +18,7 @@ const (
 )
 
 /*
-Validation contains information needed to validate the value provided by the
+Validator contains information needed to validate the value provided by the
 user
 */
 type Validator struct {
