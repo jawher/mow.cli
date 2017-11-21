@@ -774,6 +774,45 @@ func TestOptSetByUser(t *testing.T) {
 			expected: true,
 		},
 
+		// Enum
+		{
+			desc: "Enum Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Enum(EnumOpt{Name: "f", Value: "v1", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "v2")
+				c.Enum(EnumOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Enum(EnumOpt{Name: "f", Value: "a", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test", "-f=v2"},
+			expected: true,
+		},
+
 		// Bool
 		{
 			desc: "Bool Opt, not set by user, default value",
@@ -938,6 +977,48 @@ func TestArgSetByUser(t *testing.T) {
 				c.String(StringArg{Name: "ARG", Value: "a", SetByUser: s})
 			},
 			args:     []string{"test", "aaa"},
+			expected: true,
+		},
+
+		// Enum
+		{
+			desc: "Enum Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Enum(EnumArg{Name: "ARG", Value: "v1", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "v2")
+				c.Enum(EnumArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Enum(EnumArg{Name: "ARG", Value: "a", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test", "v2"},
 			expected: true,
 		},
 
@@ -1118,6 +1199,48 @@ func TestOptSetByEnv(t *testing.T) {
 			},
 			args:     []string{"test", "-f=user"},
 			expected: "user",
+		},
+
+		// Enum
+		{
+			desc: "Enum Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.Enum(EnumOpt{Name: "f", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "1",
+		},
+		{
+			desc: "Enum Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumOpt{Name: "f", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "2",
+		},
+		{
+			desc: "Enum Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumOpt{Name: "f", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+						{User: "v3", Value: "3", Help: "v3"},
+					}})
+			},
+			args:     []string{"test", "-f=v3"},
+			expected: "3",
 		},
 
 		// Bool
@@ -1369,6 +1492,51 @@ func TestArgSetByEnv(t *testing.T) {
 			},
 			args:     []string{"test", "user"},
 			expected: "user",
+		},
+
+		// Enum
+		{
+			desc: "Enum Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.Enum(EnumArg{Name: "ARG", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "1",
+		},
+		{
+			desc: "Enum Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumArg{Name: "ARG", Value: "default", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "2",
+		},
+		{
+			desc: "Enum Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumArg{Name: "ARG", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+						{User: "v3", Value: "3", Help: "v3"},
+					}})
+			},
+			args:     []string{"test", "v3"},
+			expected: "3",
 		},
 
 		// Bool
