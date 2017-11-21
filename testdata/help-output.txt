@@ -1,5 +1,5 @@
 
-Usage: app [-bdsuikqs] BOOL1 [STR1] INT3... COMMAND [arg...]
+Usage: app [-bdesuikqs] BOOL1 [STR1] INT3... COMMAND [arg...]
 
 App Desc
                 
@@ -14,7 +14,7 @@ Arguments:
                   value1: Argument 1 value 1
                   value2: Argument 1 value 2
                   value3: Argument 1 value 3
-  ENUM1         Enum Argument 2 (default "a value") 
+  ENUM2         Enum Argument 2 (default "a value") 
                   value1: Argument 2 value 1
                   value2: Argument 2 value 2
                   value3: Argument 2 value 3

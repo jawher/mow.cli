@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"flag"
+	"strings"
 
 	"github.com/stretchr/testify/require"
 
@@ -454,7 +455,7 @@ func TestHelpMessage(t *testing.T) {
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 	app := App("app", "App Desc")
-	app.Spec = "[-bdsuikqs] BOOL1 [STR1] INT3..."
+	app.Spec = "[-bdesuikqs] BOOL1 [STR1] INT3..."
 
 	// Options
 	app.Bool(BoolOpt{Name: "b bool1 u uuu", Value: false, EnvVar: "BOOL1", Desc: "Bool Option 1"})
@@ -510,7 +511,7 @@ func TestHelpMessage(t *testing.T) {
 		{User: "value3", Value: "v3", Help: "Argument 1 value 3"},
 	}})
 
-	app.Enum(EnumArg{Name: "ENUM1", Value: "a value", Desc: "Enum Argument 2", Validation: []EnumValidator{
+	app.Enum(EnumArg{Name: "ENUM2", Value: "a value", Desc: "Enum Argument 2", Validation: []EnumValidator{
 		{User: "value1", Value: "v1", Help: "Argument 2 value 1"},
 		{User: "value2", Value: "v2", Help: "Argument 2 value 2"},
 		{User: "value3", Value: "v3", Help: "Argument 2 value 3"},
@@ -1815,6 +1816,40 @@ func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
 
 	app.Run([]string{"app", "c", "cc"})
 	require.Equal(t, 7, counter)
+}
+
+// In some cases depending on where the validation failure occurs, the
+// assignment to variables could have been done before the help is printed,
+// making the defaults wrong (would print the assigned value instead of the
+// actual default value).
+//
+// TODO: Also note in one case it would print 'Error: Incorrect usage' while
+// in the other it wouldn't, this should probably be fixed, the testcase below
+// ignores that by looking for the common portions.
+func TestDefaultValueShadowing(t *testing.T) {
+	var out, err string
+	defer captureAndRestoreOutput(&out, &err)()
+
+	app := App("test", "")
+	app.Spec = "[-t] ARG"
+	app.String(StringOpt{Name: "t tcomm", Value: "tdefault", Desc: "somedesc"})
+	app.String(StringArg{Name: "ARG", Value: "argdefault", Desc: "somedesc"})
+	app.Command("command1", "command1 description", func(cmd *Cmd) {})
+
+	app.ErrorHandling = flag.ContinueOnError
+
+	// First run, arg ok, bad command
+	app.Run([]string{"test", "-t", "tvalue", "somearg", "badcommand"})
+	startfirst := strings.Index(err, "Usage: test [-t]")
+	errfirst := err[startfirst:]
+
+	// Second run, missing arg, still bad command
+	app.Run([]string{"test", "-t", "tvalue", "badcommand"})
+	errsecond := err[startfirst+len(errfirst):]
+	errsecond = errsecond[strings.Index(errsecond, "Usage: test [-t]"):]
+
+	require.Equal(t, errfirst, errsecond)
+
 }
 
 func exitShouldBeCalledWith(t *testing.T, wantedExitCode int, called *bool) func() {
