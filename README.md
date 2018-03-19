@@ -154,17 +154,6 @@ If you want, you can add support for printing the app version (invoked by ```-v,
 cp.Version("v version", "cp 1.2.3")
 ```
 
-If you want, you can add a long description for printing via ```--help``` like so:
-
-```go
-cp.LongDesc = `Copy files around
-
-In the first synopsis form, the cp utility copies the contents of the source file to the
-target file.  In the second synopsis form, the contents of each named source file is
-copied to the destination target directory.  The names of the files themselves are not
-changed.  If cp detects an attempt to copy a file to itself, the copy will fail.`
-```
-
 Finally, in your main func, call Run on the app:
 
 ```go
