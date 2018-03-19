@@ -330,7 +330,7 @@ bzk.Command("job", "actions on jobs", func(cmd *cli.Cmd) {
 When you just want to set Action to cmd, you can use ActionCommand function for this:
 
 ```go
-app.Command("list", "list all configs", cli.ActionCommand(func() { list() }))
+app.Command("list", "list all configs", cli.ActionCommand(list))
 ```
 
 is the same as:
@@ -348,7 +348,7 @@ This could go on to any depth if need be.
 mow.cli also supports command aliases. For example:
 
 ```go
-app.Command("start run r", "start doing things", cli.ActionCommand(func() { start() }))
+app.Command("start run r", "start doing things", cli.ActionCommand(start))
 ```
 
 will alias `start`, `run`, and `r` to the same action. Aliases also work for
