@@ -148,7 +148,7 @@ cp.Action = func() {
 }
 ```
 
-If you want you can add support for printing the app version (invoked by ```-v, --version```) like so:
+If you want, you can add support for printing the app version (invoked by ```-v, --version```) like so:
 
 ```go
 cp.Version("v version", "cp 1.2.3")
@@ -317,6 +317,19 @@ docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
     }
 })
 ```
+
+If you want, you can add a long description for the command, which is printed via ```--help``` like so:
+
+```go
+cmd.LongDesc = `Run a command in a new container
+
+With the docker run command, an operator can add to or override the
+image defaults set by a developer. And, additionally, operators can
+override nearly all the defaults set by the Docker runtime itself.
+The operator’s ability to override image and Docker runtime defaults
+is why run has more options than any other docker command.`
+```
+
 You can also add sub commands by calling Command on the Cmd struct:
 
 ```go
