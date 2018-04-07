@@ -19,28 +19,28 @@ files followed by a destination.  An optional recursive flag may be provided.
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 
-    "github.com/jawher/mow.cli"
+	"github.com/jawher/mow.cli"
 )
 
 func main() {
-    app := cli.App("cp", "Copy files around")
+	app := cli.App("cp", "Copy files around")
 
-    app.Spec = "[-r] SRC... DST"
+	app.Spec = "[-r] SRC... DST"
 
-    var (
-        recursive = app.BoolOpt("r recursive", false, "Copy files recursively")
-        src       = app.StringsArg("SRC", nil, "Source files to copy")
-        dst       = app.StringArg("DST", "", "Destination where to copy files to")
-    )
+	var (
+		recursive = app.BoolOpt("r recursive", false, "Copy files recursively")
+		src       = app.StringsArg("SRC", nil, "Source files to copy")
+		dst       = app.StringArg("DST", "", "Destination where to copy files to")
+	)
 
-    app.Action = func() {
-        fmt.Printf("Copying %v to %s [recursively: %v]\n", *src, *dst, *recursive)
-    }
+	app.Action = func() {
+		fmt.Printf("Copying %v to %s [recursively: %v]\n", *src, *dst, *recursive)
+	}
 
-    app.Run(os.Args)
+	app.Run(os.Args)
 }
 ```
 
@@ -57,59 +57,60 @@ and takes an optional flag to specify a detailed listing.
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 
-    "github.com/jawher/mow.cli"
+	"github.com/jawher/mow.cli"
 )
 
 func main() {
-    app := cli.App("uman", "User Manager")
+	app := cli.App("uman", "User Manager")
 
-    app.Spec = "[-v]"
+	app.Spec = "[-v]"
 
-    var (
-        verbose = app.BoolOpt("v verbose", false, "Verbose debug mode")
-    )
+	var (
+		verbose = app.BoolOpt("v verbose", false, "Verbose debug mode")
+	)
 
-    app.Before = func() {
-        if *verbose {
-            // Here we can enable debug output in our logger for example
-            fmt.Println("Verbose mode enabled")
-        }
-    }
+	app.Before = func() {
+		if *verbose {
+			// Here we can enable debug output in our logger for example
+			fmt.Println("Verbose mode enabled")
+		}
+	}
 
-    // Declare our first command, which is invocable with "uman list"
-    app.Command("list", "list the users", func(cmd *cli.Cmd) {
-        // These are the command-specific options and args, nicely scoped
-        // inside a func so they don't pollute the namespace
-        var (
-            all = cmd.BoolOpt("all", false, "List all users, including disabled")
-        )
+	// Declare our first command, which is invocable with "uman list"
+	app.Command("list", "list the users", func(cmd *cli.Cmd) {
+		// These are the command-specific options and args, nicely scoped
+		// inside a func so they don't pollute the namespace
+		var (
+			all = cmd.BoolOpt("all", false, "List all users, including disabled")
+		)
 
-        // Run this function when the command is invoked
-        cmd.Action = func() {
-            // Inside the action, and only inside, we can safely access the 
-            // values of the options and arguments
-            fmt.Printf("user list (including disabled ones: %v)\n", *all)
-        }
-    })
+		// Run this function when the command is invoked
+		cmd.Action = func() {
+			// Inside the action, and only inside, we can safely access the
+			// values of the options and arguments
+			fmt.Printf("user list (including disabled ones: %v)\n", *all)
+		}
+	})
 
-    // Declare our second command, which is invocable with "uman get"
-    app.Command("get", "get a user details", func(cmd *cli.Cmd) {
-        var (
-            detailed = cmd.BoolOpt("detailed", false, "Disaply detailed info")
-            id       = cmd.StringArg("ID", "", "The user id to display")
-        )
+	// Declare our second command, which is invocable with "uman get"
+	app.Command("get", "get a user details", func(cmd *cli.Cmd) {
+		var (
+			detailed = cmd.BoolOpt("detailed", false, "Disaply detailed info")
+			id       = cmd.StringArg("ID", "", "The user id to display")
+		)
 
-        cmd.Action = func() {
-            fmt.Printf("user %q details (detailed mode: %v)\n", *id, *detailed)
-        }
-    })
+		cmd.Action = func() {
+			fmt.Printf("user %q details (detailed mode: %v)\n", *id, *detailed)
+		}
+	})
 
-    // With the app configured, execute it, passing in the os.Args array
-    app.Run(os.Args)
+	// With the app configured, execute it, passing in the os.Args array
+	app.Run(os.Args)
 }
+
 ```
 
 
@@ -143,7 +144,7 @@ func main() {
 	app.Command("list", "list accounts", cmdList)
 	app.Command("creds", "display account credentials", cmdCreds)
 	app.Command("config", "manage accounts", func(config *cli.Cmd) {
-        config.Command("list", "list accounts", cmdList)
+		config.Command("list", "list accounts", cmdList)
 		config.Command("add", "add an account", cmdAdd)
 		config.Command("remove", "remove an account(s)", cmdRemove)
 	})
@@ -153,30 +154,30 @@ func main() {
 
 // Sample use: vault list OR vault config list
 func cmdList(cmd *cli.Cmd) {
-    cmd.Action = func() {
-        fmt.Printf("list the contents of the safe here")
+	cmd.Action = func() {
+		fmt.Printf("list the contents of the safe here")
 	}
 }
 
 // Sample use: vault creds reddit.com
 func cmdCreds(cmd *cli.Cmd) {
-    cmd.Spec = "ACCOUNT"
+	cmd.Spec = "ACCOUNT"
 	account := cmd.StringArg("ACCOUNT", "", "Name of account")
 	cmd.Action = func() {
-        fmt.Printf("display account info for %s\n", *account)
+		fmt.Printf("display account info for %s\n", *account)
 	}
 }
 
 // Sample use: vault config add reddit.com -u username -p password
 func cmdAdd(cmd *cli.Cmd) {
-    cmd.Spec = "ACCOUNT [ -u=<username> ] [ -p=<password> ]"
+	cmd.Spec = "ACCOUNT [ -u=<username> ] [ -p=<password> ]"
 	var (
-        account  = cmd.StringArg("ACCOUNT", "", "Account name")
+		account  = cmd.StringArg("ACCOUNT", "", "Account name")
 		username = cmd.StringOpt("u username", "admin", "Account username")
 		password = cmd.StringOpt("p password", "admin", "Account password")
 	)
 	cmd.Action = func() {
-        fmt.Printf("Adding account %s:%s@%s", *username, *password, *account)
+		fmt.Printf("Adding account %s:%s@%s", *username, *password, *account)
 	}
 }
 
@@ -959,4 +960,4 @@ This work is published under the MIT license.
 Please see the `LICENSE` file for details.
 
 * * *
-Automatically generated by [autoreadme](https://github.com/jimmyfrasche/autoreadme) on 2018.04.01
+Automatically generated by [autoreadme](https://github.com/jimmyfrasche/autoreadme) on 2018.04.07
