@@ -14,6 +14,9 @@ lint:
 vet:
 	go vet
 
+doc:
+	autoreadme -f
+
 fmtcheck:
 	@ export output="$$(gofmt -s -d .)"; \
 		[ -n "$${output}" ] && echo "$${output}" && export status=1; \
@@ -28,6 +31,7 @@ setup:
 	go get golang.org/x/tools/cmd/cover
 	go get github.com/mattn/goveralls
 	go get github.com/modocache/gover
+	go get github.com/divan/autoreadme
 	go get -t -u ./...
 
 .PHONY: test check lint vet fmtcheck ineffassign
