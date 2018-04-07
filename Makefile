@@ -6,7 +6,7 @@ test-cover:
 	gover
 	goveralls -coverprofile=gover.coverprofile -service=travis-ci
 
-check: lint vet fmtcheck ineffassign
+check: lint vet fmtcheck ineffassign readmecheck
 
 lint:
 	golint -set_exit_status ./...
@@ -25,6 +25,11 @@ fmtcheck:
 ineffassign:
 	ineffassign .
 
+readmecheck:
+	cp README.md README.original.md
+	autoreadme -f
+	diff README.md README.original.md
+
 setup:
 	go get github.com/gordonklaus/ineffassign
 	go get github.com/golang/lint/golint
@@ -34,4 +39,4 @@ setup:
 	go get github.com/divan/autoreadme
 	go get -t -u ./...
 
-.PHONY: test check lint vet fmtcheck ineffassign
+.PHONY: test check lint vet fmtcheck ineffassign readmecheck
