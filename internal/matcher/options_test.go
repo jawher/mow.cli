@@ -37,13 +37,18 @@ func TestOptsMatcher(t *testing.T) {
 		{[]string{"--force=false", "y"}, []string{"y"}, [][]string{{"false"}, nil}},
 
 		{[]string{"-g", "x"}, []string{}, [][]string{nil, {"x"}}},
+		{[]string{"-g", "x="}, []string{}, [][]string{nil, {"x="}}},
 		{[]string{"-g=x", "y"}, []string{"y"}, [][]string{nil, {"x"}}},
+		{[]string{"-g=x=", "y"}, []string{"y"}, [][]string{nil, {"x="}}},
 		{[]string{"-gx", "y"}, []string{"y"}, [][]string{nil, {"x"}}},
 		{[]string{"--green", "x"}, []string{}, [][]string{nil, {"x"}}},
+		{[]string{"--green", "x="}, []string{}, [][]string{nil, {"x="}}},
 		{[]string{"--green=x", "y"}, []string{"y"}, [][]string{nil, {"x"}}},
+		{[]string{"--green=x=", "y"}, []string{"y"}, [][]string{nil, {"x="}}},
 
 		{[]string{"-f", "-g", "x", "y"}, []string{"y"}, [][]string{{"true"}, {"x"}}},
 		{[]string{"-g", "x", "-f", "y"}, []string{"y"}, [][]string{{"true"}, {"x"}}},
+		{[]string{"-g", "x=", "-f", "y"}, []string{"y"}, [][]string{{"true"}, {"x="}}},
 		{[]string{"-fg", "x", "y"}, []string{"y"}, [][]string{{"true"}, {"x"}}},
 		{[]string{"-fgxxx", "y"}, []string{"y"}, [][]string{{"true"}, {"xxx"}}},
 	}
