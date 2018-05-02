@@ -70,12 +70,17 @@ func TestOptMatcher(t *testing.T) {
 		val   []string
 	}{
 		{[]string{"-f", "x"}, []string{}, []string{"x"}},
+		{[]string{"-f", "x="}, []string{}, []string{"x="}},
 		{[]string{"-f=x", "y"}, []string{"y"}, []string{"x"}},
+		{[]string{"-f=x=", "y"}, []string{"y"}, []string{"x="}},
 		{[]string{"-fx", "y"}, []string{"y"}, []string{"x"}},
+		{[]string{"-fx=", "y"}, []string{"y"}, []string{"x="}},
 		{[]string{"-afx", "y"}, []string{"-a", "y"}, []string{"x"}},
 		{[]string{"-af", "x", "y"}, []string{"-a", "y"}, []string{"x"}},
 		{[]string{"--force", "x"}, []string{}, []string{"x"}},
+		{[]string{"--force", "x="}, []string{}, []string{"x="}},
 		{[]string{"--force=x", "y"}, []string{"y"}, []string{"x"}},
+		{[]string{"--force=x=", "y"}, []string{"y"}, []string{"x="}},
 	}
 
 	for _, cas := range cases {

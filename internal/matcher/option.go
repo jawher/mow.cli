@@ -71,7 +71,7 @@ func (o *opt) Match(args []string, c *ParseContext) (bool, []string) {
 
 func (o *opt) matchLongOpt(args []string, idx int, c *ParseContext) (bool, int, []string) {
 	arg := args[idx]
-	kv := strings.Split(arg, "=")
+	kv := strings.SplitN(arg, "=", 2)
 	name := kv[0]
 	opt, found := o.index[name]
 	if !found {
