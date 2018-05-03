@@ -26,9 +26,10 @@ ineffassign:
 	ineffassign .
 
 readmecheck:
-	cp README.md README.original.md
+	sed '$ d' README.md > README.original.md
 	autoreadme -f
-	diff README.md README.original.md
+	sed '$ d' README.md > README.generated.md
+	diff README.generated.md README.original.md
 
 setup:
 	go get github.com/gordonklaus/ineffassign
