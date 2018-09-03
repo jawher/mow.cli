@@ -1,5 +1,5 @@
 
-Usage: app [-bdsuikqs] BOOL1 [STR1] INT3... COMMAND [arg...]
+Usage: app [-bdesuikqs] BOOL1 [STR1] INT3... COMMAND [arg...]
 
 App Desc
                 
@@ -10,6 +10,15 @@ Arguments:
   STR1          String Argument 1 (env $STR1)
   STR2          String Argument 2 (env $STR2) (default "a value")
   STR3          String Argument 3 (env $STR3)
+  ENUM1         Enum Argument 1 (env $ENUM1) 
+                  value1: Argument 1 value 1
+                  value2: Argument 1 value 2
+                  value3: Argument 1 value 3
+  ENUM2         Enum Argument 2 (default "a value") 
+                  value1: Argument 2 value 1
+                  value2: Argument 2 value 2
+                  value3: Argument 2 value 3
+  ENUM3         Enum Argument 3 (env $ENUM3)
   INT1          Int Argument 1 (env $INT1) (default 0)
   INT2          Int Argument 2 (env $INT2) (default 1)
   INT3          Int Argument 3 (env $INT3)
@@ -27,6 +36,15 @@ Options:
   -s, --str1    String Option 1 (env $STR1)
       --str2    String Option 2 (default "a value")
   -u            String Option 3 (env $STR3)
+  -e, --enum1   Enum Option 1 (env $ENUM1) 
+                  value1: Option 1 value 1
+                  value2: Option 1 value 2
+                  value3: Option 1 value 3
+      --enum2   Enum Option 2 (default "a value") 
+                  value1: Option 2 value 1
+                  value2: Option 2 value 2
+                  value3: Option 2 value 3
+  -f            Enum Option 3 (env $ENUM3)
   -i, --int1    (env $INT1, $ALIAS_INT1) (default 0)
       --int2    Int Option 2 (env $INT2) (default 1)
   -k            Int Option 3 (env $INT3)

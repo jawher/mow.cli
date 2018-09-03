@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"flag"
+	"strings"
 
 	"github.com/stretchr/testify/require"
 
@@ -454,7 +455,7 @@ func TestHelpMessage(t *testing.T) {
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 	app := App("app", "App Desc")
-	app.Spec = "[-bdsuikqs] BOOL1 [STR1] INT3..."
+	app.Spec = "[-bdesuikqs] BOOL1 [STR1] INT3..."
 
 	// Options
 	app.Bool(BoolOpt{Name: "b bool1 u uuu", Value: false, EnvVar: "BOOL1", Desc: "Bool Option 1"})
@@ -464,6 +465,24 @@ func TestHelpMessage(t *testing.T) {
 	app.String(StringOpt{Name: "s str1", Value: "", EnvVar: "STR1", Desc: "String Option 1"})
 	app.String(StringOpt{Name: "str2", Value: "a value", Desc: "String Option 2"})
 	app.String(StringOpt{Name: "u", Value: "another value", EnvVar: "STR3", Desc: "String Option 3", HideValue: true})
+
+	app.Enum(EnumOpt{Name: "e enum1", Value: "", EnvVar: "ENUM1", Desc: "Enum Option 1", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Option 1 value 1"},
+		{User: "value2", Value: "v2", Help: "Option 1 value 2"},
+		{User: "value3", Value: "v3", Help: "Option 1 value 3"},
+	}})
+
+	app.Enum(EnumOpt{Name: "enum2", Value: "a value", Desc: "Enum Option 2", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Option 2 value 1"},
+		{User: "value2", Value: "v2", Help: "Option 2 value 2"},
+		{User: "value3", Value: "v3", Help: "Option 2 value 3"},
+	}})
+
+	app.Enum(EnumOpt{Name: "f", Value: "another value", EnvVar: "ENUM3", Desc: "Enum Option 3", HideValue: true, Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Option 3 value 1"},
+		{User: "value2", Value: "v2", Help: "Option 3 value 2"},
+		{User: "value3", Value: "v3", Help: "Option 3 value 3"},
+	}})
 
 	app.Int(IntOpt{Name: "i int1", Value: 0, EnvVar: "INT1 ALIAS_INT1"})
 	app.Int(IntOpt{Name: "int2", Value: 1, EnvVar: "INT2", Desc: "Int Option 2"})
@@ -485,6 +504,24 @@ func TestHelpMessage(t *testing.T) {
 	app.String(StringArg{Name: "STR1", Value: "", EnvVar: "STR1", Desc: "String Argument 1"})
 	app.String(StringArg{Name: "STR2", Value: "a value", EnvVar: "STR2", Desc: "String Argument 2"})
 	app.String(StringArg{Name: "STR3", Value: "another value", EnvVar: "STR3", Desc: "String Argument 3", HideValue: true})
+
+	app.Enum(EnumArg{Name: "ENUM1", Value: "", EnvVar: "ENUM1", Desc: "Enum Argument 1", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Argument 1 value 1"},
+		{User: "value2", Value: "v2", Help: "Argument 1 value 2"},
+		{User: "value3", Value: "v3", Help: "Argument 1 value 3"},
+	}})
+
+	app.Enum(EnumArg{Name: "ENUM2", Value: "a value", Desc: "Enum Argument 2", Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Argument 2 value 1"},
+		{User: "value2", Value: "v2", Help: "Argument 2 value 2"},
+		{User: "value3", Value: "v3", Help: "Argument 2 value 3"},
+	}})
+
+	app.Enum(EnumArg{Name: "ENUM3", Value: "another value", EnvVar: "ENUM3", Desc: "Enum Argument 3", HideValue: true, Validation: []EnumValidator{
+		{User: "value1", Value: "v1", Help: "Argument 3 value 1"},
+		{User: "value2", Value: "v2", Help: "Argument 3 value 2"},
+		{User: "value3", Value: "v3", Help: "Argument 3 value 3"},
+	}})
 
 	app.Int(IntArg{Name: "INT1", Value: 0, EnvVar: "INT1", Desc: "Int Argument 1"})
 	app.Int(IntArg{Name: "INT2", Value: 1, EnvVar: "INT2", Desc: "Int Argument 2"})
@@ -737,6 +774,45 @@ func TestOptSetByUser(t *testing.T) {
 			expected: true,
 		},
 
+		// Enum
+		{
+			desc: "Enum Opt, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Enum(EnumOpt{Name: "f", Value: "v1", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Opt, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				os.Setenv("MOW_VALUE", "v2")
+				c.Enum(EnumOpt{Name: "f", EnvVar: "MOW_VALUE", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Opt, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Enum(EnumOpt{Name: "f", Value: "a", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test", "-f=v2"},
+			expected: true,
+		},
+
 		// Bool
 		{
 			desc: "Bool Opt, not set by user, default value",
@@ -901,6 +977,48 @@ func TestArgSetByUser(t *testing.T) {
 				c.String(StringArg{Name: "ARG", Value: "a", SetByUser: s})
 			},
 			args:     []string{"test", "aaa"},
+			expected: true,
+		},
+
+		// Enum
+		{
+			desc: "Enum Arg, not set by user, default value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Enum(EnumArg{Name: "ARG", Value: "v1", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Arg, not set by user, env value",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "v2")
+				c.Enum(EnumArg{Name: "ARG", EnvVar: "MOW_VALUE", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: false,
+		},
+		{
+			desc: "Enum Arg, set by user",
+			config: func(c *Cli, s *bool) {
+				c.Spec = "[ARG]"
+				c.Enum(EnumArg{Name: "ARG", Value: "a", SetByUser: s,
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test", "v2"},
 			expected: true,
 		},
 
@@ -1081,6 +1199,48 @@ func TestOptSetByEnv(t *testing.T) {
 			},
 			args:     []string{"test", "-f=user"},
 			expected: "user",
+		},
+
+		// Enum
+		{
+			desc: "Enum Opt, empty env var",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "")
+				return c.Enum(EnumOpt{Name: "f", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "1",
+		},
+		{
+			desc: "Enum Opt, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumOpt{Name: "f", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "2",
+		},
+		{
+			desc: "Enum Opt, env set, set by user",
+			config: func(c *Cli) interface{} {
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumOpt{Name: "f", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+						{User: "v3", Value: "3", Help: "v3"},
+					}})
+			},
+			args:     []string{"test", "-f=v3"},
+			expected: "3",
 		},
 
 		// Bool
@@ -1332,6 +1492,51 @@ func TestArgSetByEnv(t *testing.T) {
 			},
 			args:     []string{"test", "user"},
 			expected: "user",
+		},
+
+		// Enum
+		{
+			desc: "Enum Arg, empty env var",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "")
+				return c.Enum(EnumArg{Name: "ARG", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "1",
+		},
+		{
+			desc: "Enum Arg, env set, not set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumArg{Name: "ARG", Value: "default", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+					}})
+			},
+			args:     []string{"test"},
+			expected: "2",
+		},
+		{
+			desc: "Enum Arg, env set, set by user",
+			config: func(c *Cli) interface{} {
+				c.Spec = "[ARG]"
+				os.Setenv("MOW_VALUE", "v2")
+				return c.Enum(EnumArg{Name: "ARG", Value: "v1", EnvVar: "MOW_VALUE",
+					Validation: []EnumValidator{
+						{User: "v1", Value: "1", Help: "v1"},
+						{User: "v2", Value: "2", Help: "v2"},
+						{User: "v3", Value: "3", Help: "v3"},
+					}})
+			},
+			args:     []string{"test", "v3"},
+			expected: "3",
 		},
 
 		// Bool
@@ -1779,6 +1984,40 @@ func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
 
 	app.Run([]string{"app", "c", "cc"})
 	require.Equal(t, 7, counter)
+}
+
+// In some cases depending on where the validation failure occurs, the
+// assignment to variables could have been done before the help is printed,
+// making the defaults wrong (would print the assigned value instead of the
+// actual default value).
+//
+// TODO: Also note in one case it would print 'Error: Incorrect usage' while
+// in the other it wouldn't, this should probably be fixed, the testcase below
+// ignores that by looking for the common portions.
+func TestDefaultValueShadowing(t *testing.T) {
+	var out, err string
+	defer captureAndRestoreOutput(&out, &err)()
+
+	app := App("test", "")
+	app.Spec = "[-t] ARG"
+	app.String(StringOpt{Name: "t tcomm", Value: "tdefault", Desc: "somedesc"})
+	app.String(StringArg{Name: "ARG", Value: "argdefault", Desc: "somedesc"})
+	app.Command("command1", "command1 description", func(cmd *Cmd) {})
+
+	app.ErrorHandling = flag.ContinueOnError
+
+	// First run, arg ok, bad command
+	app.Run([]string{"test", "-t", "tvalue", "somearg", "badcommand"})
+	startfirst := strings.Index(err, "Usage: test [-t]")
+	errfirst := err[startfirst:]
+
+	// Second run, missing arg, still bad command
+	app.Run([]string{"test", "-t", "tvalue", "badcommand"})
+	errsecond := err[startfirst+len(errfirst):]
+	errsecond = errsecond[strings.Index(errsecond, "Usage: test [-t]"):]
+
+	require.Equal(t, errfirst, errsecond)
+
 }
 
 func exitShouldBeCalledWith(t *testing.T, wantedExitCode int, called *bool) func() {

@@ -137,6 +137,8 @@ func fillContainers(containers map[*container.Container][]string) error {
 			multiValued.Clear()
 		}
 		for _, v := range vs {
+			// Validity will be checked in commands.parse, unconditionally set
+			// the value for now.
 			if err := con.Value.Set(v); err != nil {
 				return err
 			}

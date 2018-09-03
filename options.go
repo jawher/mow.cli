@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 
 	"github.com/jawher/mow.cli/internal/container"
@@ -26,6 +27,51 @@ type BoolOpt struct {
 }
 
 func (o BoolOpt) value() bool {
+	return o.Value
+}
+
+// EnumValidator allows users to validate enum values
+type EnumValidator struct {
+	// User is the value the user can pass
+	User string
+	// Value is the value assigned to the string for this user value
+	Value string
+	// Help is the help message for this value
+	Help string
+	// Callback is called if this value is set
+	Callback func() error
+}
+
+// ToContainerValidator creates a container validator (shared for all object
+// types) from an object-specific validator
+func (v *EnumValidator) ToContainerValidator(dest *container.Validator) {
+	dest.Type = container.Enum
+	dest.User = v.User
+	dest.Value = v.Value
+	dest.Help = v.Help
+	dest.Callback = v.Callback
+}
+
+// EnumOpt describes a string option
+type EnumOpt struct {
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
+	EnvVar string
+	// The option's initial value
+	Value string
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
+	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+	// Enums contains the enum values
+	Validation []EnumValidator
+}
+
+func (o EnumOpt) value() string {
 	return o.Value
 }
 
@@ -154,6 +200,28 @@ func (c *Cmd) BoolOpt(name string, value bool, desc string) *bool {
 }
 
 /*
+EnumOpt defines a enumean option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to a enum) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) EnumOpt(name string, value string, desc string, validation []EnumValidator) *string {
+	if validation == nil || len(validation) == 0 {
+		panic(fmt.Sprintf("Enums require validation %s %s", name, value))
+	}
+
+	return c.Enum(EnumOpt{
+		Name:       name,
+		Value:      value,
+		Desc:       desc,
+		Validation: validation,
+	})
+}
+
+/*
 StringOpt defines a string option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
@@ -247,6 +315,10 @@ func mkOptStrs(optName string) []string {
 }
 
 func (c *Cmd) mkOpt(opt container.Container) {
+	opt.DefaultValue = opt.Value.String()
+	if dv, ok := opt.Value.(values.DefaultValued); ok {
+		opt.DefaultDisplay = dv.IsDefault()
+	}
 	opt.ValueSetFromEnv = values.SetFromEnv(opt.Value, opt.EnvVar)
 
 	opt.Names = mkOptStrs(opt.Name)
