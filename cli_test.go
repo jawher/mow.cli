@@ -91,7 +91,53 @@ func TestInvalidSpec(t *testing.T) {
 	app.Run([]string{"test", "-x", "-y", "hello"})
 
 	t.Fatalf("Should have panicked")
+}
 
+func TestDuplicateOptionName(t *testing.T) {
+	defer func() {
+		if p := recover(); p != nil {
+			t.Logf("Panicked with %v", p)
+			return
+		}
+		t.Fatalf("Should have panicked")
+	}()
+
+	app := App("test", "")
+	app.BoolOpt("f force", false, "")
+	app.StringOpt("f file", "", "")
+
+	t.Fatalf("Should have panicked")
+}
+
+func TestDuplicateArgName(t *testing.T) {
+	defer func() {
+		if p := recover(); p != nil {
+			t.Logf("Panicked with %v", p)
+			return
+		}
+		t.Fatalf("Should have panicked")
+	}()
+
+	app := App("test", "")
+	app.StringArg("ARG", "", "")
+	app.StringArg("ARG", "", "")
+
+	t.Fatalf("Should have panicked")
+}
+
+func TestInvalidArgName(t *testing.T) {
+	defer func() {
+		if p := recover(); p != nil {
+			t.Logf("Panicked with %v", p)
+			return
+		}
+		t.Fatalf("Should have panicked")
+	}()
+
+	app := App("test", "")
+	app.StringArg("arg", "", "")
+
+	t.Fatalf("Should have panicked")
 }
 
 func TestAppWithBoolOption(t *testing.T) {
@@ -485,7 +531,7 @@ func TestHelpMessage(t *testing.T) {
 
 	app.String(StringOpt{Name: "s str1", Value: "", EnvVar: "STR1", Desc: "String Option 1"})
 	app.String(StringOpt{Name: "str2", Value: "a value", Desc: "String Option 2"})
-	app.String(StringOpt{Name: "u", Value: "another value", EnvVar: "STR3", Desc: "String Option 3", HideValue: true})
+	app.String(StringOpt{Name: "v", Value: "another value", EnvVar: "STR3", Desc: "String Option 3", HideValue: true})
 
 	app.Int(IntOpt{Name: "i int1", Value: 0, EnvVar: "INT1 ALIAS_INT1"})
 	app.Int(IntOpt{Name: "int2", Value: 1, EnvVar: "INT2", Desc: "Int Option 2"})
@@ -497,7 +543,7 @@ func TestHelpMessage(t *testing.T) {
 
 	app.Ints(IntsOpt{Name: "q ints1", Value: nil, EnvVar: "INTS1", Desc: "Ints Option 1"})
 	app.Ints(IntsOpt{Name: "ints2", Value: []int{1, 2, 3}, EnvVar: "INTS2", Desc: "Ints Option 2"})
-	app.Ints(IntsOpt{Name: "s", Value: []int{1}, EnvVar: "INTS3", Desc: "Ints Option 3", HideValue: true})
+	app.Ints(IntsOpt{Name: "j", Value: []int{1}, EnvVar: "INTS3", Desc: "Ints Option 3", HideValue: true})
 
 	// Args
 	app.Bool(BoolArg{Name: "BOOL1", Value: false, EnvVar: "BOOL1", Desc: "Bool Argument 1"})
