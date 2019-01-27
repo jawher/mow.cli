@@ -11,6 +11,8 @@ import (
 	"reflect"
 	"testing"
 
+	"fmt"
+
 	"github.com/jawher/mow.cli/internal/flow"
 )
 
@@ -109,21 +111,23 @@ func TestAppWithBoolOption(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.BoolOpt("o option", false, "")
+			app := App("app", "")
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.BoolOpt("o option", false, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -142,21 +146,23 @@ func TestAppWithStringOption(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.StringOpt("o option", "default", "")
+			app := App("app", "")
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.StringOpt("o option", "default", "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -175,21 +181,23 @@ func TestAppWithIntOption(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.IntOpt("o option", 3, "")
+			app := App("app", "")
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.IntOpt("o option", 3, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -208,21 +216,23 @@ func TestAppWithStringsOption(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.StringsOpt("o option", []string{"a", "b"}, "")
+			app := App("app", "")
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.StringsOpt("o option", []string{"a", "b"}, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -241,21 +251,23 @@ func TestAppWithIntsOption(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.IntsOpt("o option", []int{1, 2}, "")
+			app := App("app", "")
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.IntsOpt("o option", []int{1, 2}, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -271,22 +283,24 @@ func TestAppWithBoolArg(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.Spec = "[ARG]"
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.BoolArg("ARG", false, "")
+			app := App("app", "")
+			app.Spec = "[ARG]"
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.BoolArg("ARG", false, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -301,22 +315,24 @@ func TestAppWithStringArg(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.Spec = "[ARG]"
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.StringArg("ARG", "default", "")
+			app := App("app", "")
+			app.Spec = "[ARG]"
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.StringArg("ARG", "default", "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -331,22 +347,24 @@ func TestAppWithIntArg(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.Spec = "[ARG]"
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.IntArg("ARG", 3, "")
+			app := App("app", "")
+			app.Spec = "[ARG]"
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.IntArg("ARG", 3, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -362,22 +380,24 @@ func TestAppWithStringsArg(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.Spec = "[ARG...]"
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.StringsArg("ARG", []string{"a", "b"}, "")
+			app := App("app", "")
+			app.Spec = "[ARG...]"
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.StringsArg("ARG", []string{"a", "b"}, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -393,22 +413,24 @@ func TestAppWithIntsArg(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("Testing %#v", cas.args)
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			t.Logf("Testing %+v", cas.args)
 
-		app := App("app", "")
-		app.Spec = "[ARG...]"
-		app.ErrorHandling = flag.ContinueOnError
-		opt := app.IntsArg("ARG", []int{1, 2}, "")
+			app := App("app", "")
+			app.Spec = "[ARG...]"
+			app.ErrorHandling = flag.ContinueOnError
+			opt := app.IntsArg("ARG", []int{1, 2}, "")
 
-		ex := false
-		app.Action = func() {
-			ex = true
-			require.Equal(t, cas.expectedOptValue, *opt)
-		}
-		err := app.Run(cas.args)
+			ex := false
+			app.Action = func() {
+				ex = true
+				require.Equal(t, cas.expectedOptValue, *opt)
+			}
+			err := app.Run(cas.args)
 
-		require.NoError(t, err)
-		require.True(t, ex, "Exec wasn't called")
+			require.NoError(t, err)
+			require.True(t, ex, "Exec wasn't called")
+		})
 	}
 }
 
@@ -847,22 +869,24 @@ func TestOptSetByUser(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Log(cas.desc)
+		t.Run(cas.desc, func(t *testing.T) {
+			t.Log(cas.desc)
 
-		setByUser := false
-		app := App("test", "")
+			setByUser := false
+			app := App("test", "")
 
-		cas.config(app, &setByUser)
+			cas.config(app, &setByUser)
 
-		called := false
-		app.Action = func() {
-			called = true
-		}
+			called := false
+			app.Action = func() {
+				called = true
+			}
 
-		app.Run(cas.args)
+			app.Run(cas.args)
 
-		require.True(t, called, "action should have been called")
-		require.Equal(t, cas.expected, setByUser)
+			require.True(t, called, "action should have been called")
+			require.Equal(t, cas.expected, setByUser)
+		})
 	}
 }
 
@@ -1026,22 +1050,24 @@ func TestArgSetByUser(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Log(cas.desc)
+		t.Run(cas.desc, func(t *testing.T) {
+			t.Log(cas.desc)
 
-		setByUser := false
-		app := App("test", "")
+			setByUser := false
+			app := App("test", "")
 
-		cas.config(app, &setByUser)
+			cas.config(app, &setByUser)
 
-		called := false
-		app.Action = func() {
-			called = true
-		}
+			called := false
+			app.Action = func() {
+				called = true
+			}
 
-		app.Run(cas.args)
+			app.Run(cas.args)
 
-		require.True(t, called, "action should have been called")
-		require.Equal(t, cas.expected, setByUser)
+			require.True(t, called, "action should have been called")
+			require.Equal(t, cas.expected, setByUser)
+		})
 	}
 
 }
@@ -1270,27 +1296,29 @@ func TestOptSetByEnv(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Log(cas.desc)
+		t.Run(cas.desc, func(t *testing.T) {
+			t.Log(cas.desc)
 
-		app := App("test", "")
+			app := App("test", "")
 
-		pointer := cas.config(app)
+			pointer := cas.config(app)
 
-		called := false
-		app.Action = func() {
-			called = true
-		}
+			called := false
+			app.Action = func() {
+				called = true
+			}
 
-		app.Run(cas.args)
+			app.Run(cas.args)
 
-		typ := reflect.TypeOf(pointer)
-		if typ.Kind() != reflect.Ptr {
-			t.Fatalf("config func did not return a pointer")
-		}
-		actualValue := reflect.ValueOf(pointer).Elem().Interface()
+			typ := reflect.TypeOf(pointer)
+			if typ.Kind() != reflect.Ptr {
+				t.Fatalf("config func did not return a pointer")
+			}
+			actualValue := reflect.ValueOf(pointer).Elem().Interface()
 
-		require.True(t, called, "action should have been called")
-		require.Equal(t, cas.expected, actualValue)
+			require.True(t, called, "action should have been called")
+			require.Equal(t, cas.expected, actualValue)
+		})
 	}
 }
 
@@ -1538,28 +1566,30 @@ func TestArgSetByEnv(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Log(cas.desc)
+		t.Run(cas.desc, func(t *testing.T) {
+			t.Log(cas.desc)
 
-		app := App("test", "")
-		app.ErrorHandling = flag.ContinueOnError
+			app := App("test", "")
+			app.ErrorHandling = flag.ContinueOnError
 
-		pointer := cas.config(app)
+			pointer := cas.config(app)
 
-		called := false
-		app.Action = func() {
-			called = true
-		}
+			called := false
+			app.Action = func() {
+				called = true
+			}
 
-		app.Run(cas.args)
+			app.Run(cas.args)
 
-		typ := reflect.TypeOf(pointer)
-		if typ.Kind() != reflect.Ptr {
-			t.Fatalf("config func did not return a pointer")
-		}
-		actualValue := reflect.ValueOf(pointer).Elem().Interface()
+			typ := reflect.TypeOf(pointer)
+			if typ.Kind() != reflect.Ptr {
+				t.Fatalf("config func did not return a pointer")
+			}
+			actualValue := reflect.ValueOf(pointer).Elem().Interface()
 
-		require.True(t, called, "action should have been called")
-		require.Equal(t, cas.expected, actualValue)
+			require.True(t, called, "action should have been called")
+			require.Equal(t, cas.expected, actualValue)
+		})
 	}
 }
 
@@ -1603,26 +1633,28 @@ func TestCommandAliases(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		app := App("say", "")
-		app.ErrorHandling = flag.ContinueOnError
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			app := App("say", "")
+			app.ErrorHandling = flag.ContinueOnError
 
-		called := false
+			called := false
 
-		app.Command("hello hi", "", func(cmd *Cmd) {
-			cmd.Action = func() {
-				called = true
+			app.Command("hello hi", "", func(cmd *Cmd) {
+				cmd.Action = func() {
+					called = true
+				}
+			})
+
+			err := app.Run(cas.args)
+
+			if cas.errorExpected {
+				require.Error(t, err, "Run() should have returned with an error")
+				require.False(t, called, "action should not have been called")
+			} else {
+				require.NoError(t, err, "Run() should have returned without an error")
+				require.True(t, called, "action should have been called")
 			}
 		})
-
-		err := app.Run(cas.args)
-
-		if cas.errorExpected {
-			require.Error(t, err, "Run() should have returned with an error")
-			require.False(t, called, "action should not have been called")
-		} else {
-			require.NoError(t, err, "Run() should have returned without an error")
-			require.True(t, called, "action should have been called")
-		}
 	}
 }
 
@@ -1657,25 +1689,27 @@ func TestSubcommandAliases(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		app := App("app", "")
-		app.ErrorHandling = flag.ContinueOnError
+		t.Run(fmt.Sprintf("%+v", cas.args), func(t *testing.T) {
+			app := App("app", "")
+			app.ErrorHandling = flag.ContinueOnError
 
-		called := false
+			called := false
 
-		app.Command("foo f", "", func(cmd *Cmd) {
-			cmd.Command("bar b", "", func(cmd *Cmd) {
-				cmd.Command("baz z", "", func(cmd *Cmd) {
-					cmd.Action = func() {
-						called = true
-					}
+			app.Command("foo f", "", func(cmd *Cmd) {
+				cmd.Command("bar b", "", func(cmd *Cmd) {
+					cmd.Command("baz z", "", func(cmd *Cmd) {
+						cmd.Action = func() {
+							called = true
+						}
+					})
 				})
 			})
+
+			err := app.Run(cas.args)
+
+			require.NoError(t, err, "Run() should have returned without an error")
+			require.True(t, called, "action should have been called")
 		})
-
-		err := app.Run(cas.args)
-
-		require.NoError(t, err, "Run() should have returned without an error")
-		require.True(t, called, "action should have been called")
 	}
 }
 

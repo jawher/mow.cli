@@ -5,6 +5,8 @@ import (
 
 	"flag"
 
+	"fmt"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,11 +52,14 @@ func TestBoolParam(t *testing.T) {
 	}
 
 	for _, cas := range defCases {
-		t.Logf("testing .IsDefault() with %v", cas.value)
+		t.Run(fmt.Sprintf("%v", cas.value), func(t *testing.T) {
 
-		v := NewBool(&into, cas.value)
+			t.Logf("testing .IsDefault() with %v", cas.value)
 
-		require.Equal(t, cas.isDefault, v.IsDefault())
+			v := NewBool(&into, cas.value)
+
+			require.Equal(t, cas.isDefault, v.IsDefault())
+		})
 	}
 }
 
@@ -72,14 +77,17 @@ func TestStringParam(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("testing with %q", cas.input)
+		t.Run(cas.input, func(t *testing.T) {
 
-		err := param.Set(cas.input)
+			t.Logf("testing with %q", cas.input)
 
-		require.NoError(t, err)
+			err := param.Set(cas.input)
 
-		require.Equal(t, cas.input, into)
-		require.Equal(t, cas.string, param.String())
+			require.NoError(t, err)
+
+			require.Equal(t, cas.input, into)
+			require.Equal(t, cas.string, param.String())
+		})
 	}
 
 	defCases := []struct {
@@ -91,11 +99,14 @@ func TestStringParam(t *testing.T) {
 	}
 
 	for _, cas := range defCases {
-		t.Logf("testing .IsDefault() with %v", cas.value)
+		t.Run(cas.value, func(t *testing.T) {
 
-		v := NewString(&into, cas.value)
+			t.Logf("testing .IsDefault() with %v", cas.value)
 
-		require.Equal(t, cas.isDefault, v.IsDefault())
+			v := NewString(&into, cas.value)
+
+			require.Equal(t, cas.isDefault, v.IsDefault())
+		})
 	}
 }
 
@@ -118,17 +129,19 @@ func TestIntParam(t *testing.T) {
 	}
 
 	for _, cas := range cases {
-		t.Logf("testing with %q", cas.input)
+		t.Run(cas.input, func(t *testing.T) {
+			t.Logf("testing with %q", cas.input)
 
-		err := param.Set(cas.input)
+			err := param.Set(cas.input)
 
-		if cas.err {
-			require.Errorf(t, err, "value %q should have returned an error", cas.input)
-			continue
-		}
+			if cas.err {
+				require.Errorf(t, err, "value %q should have returned an error", cas.input)
+				return
+			}
 
-		require.Equal(t, cas.result, into)
-		require.Equal(t, cas.string, param.String())
+			require.Equal(t, cas.result, into)
+			require.Equal(t, cas.string, param.String())
+		})
 	}
 
 	var v flag.Value = NewInt(&into, 0)
@@ -164,11 +177,13 @@ func TestStringsParam(t *testing.T) {
 	}
 
 	for _, cas := range defCases {
-		t.Logf("testing .IsDefault() with %v", cas.value)
+		t.Run(fmt.Sprintf("%#v", cas.value), func(t *testing.T) {
+			t.Logf("testing .IsDefault() with %v", cas.value)
 
-		v := NewStrings(&into, cas.value)
+			v := NewStrings(&into, cas.value)
 
-		require.Equal(t, cas.isDefault, v.IsDefault())
+			require.Equal(t, cas.isDefault, v.IsDefault())
+		})
 	}
 }
 
@@ -207,10 +222,12 @@ func TestIntsParam(t *testing.T) {
 	}
 
 	for _, cas := range defCases {
-		t.Logf("testing .IsDefault() with %v", cas.value)
+		t.Run(fmt.Sprintf("%#v", cas.value), func(t *testing.T) {
+			t.Logf("testing .IsDefault() with %v", cas.value)
 
-		v := NewInts(&into, cas.value)
+			v := NewInts(&into, cas.value)
 
-		require.Equal(t, cas.isDefault, v.IsDefault())
+			require.Equal(t, cas.isDefault, v.IsDefault())
+		})
 	}
 }

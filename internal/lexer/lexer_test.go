@@ -60,31 +60,32 @@ func TestTokenize(t *testing.T) {
 		{"--path=<absolute-path>", []*Token{{TTLongOpt, "--path", 0}, {TTOptValue, "=<absolute-path>", 6}}},
 	}
 	for _, c := range cases {
-		t.Logf("test %s", c.usage)
-		tks, err := Tokenize(c.usage)
-		if err != nil {
-			t.Errorf("[Tokenize '%s']: Unexpected error: %v", c.usage, err)
-			continue
-		}
-
-		t.Logf("actual: %v\n", tks)
-		if len(tks) != len(c.expected) {
-			t.Errorf("[Tokenize '%s']: token count mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, c.expected, tks)
-			continue
-		}
-
-		for i, actual := range tks {
-			expected := c.expected[i]
-			switch {
-			case actual.Typ != expected.Typ:
-				t.Errorf("[Tokenize '%s']: token type mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, expected, actual)
-			case actual.Val != expected.Val:
-				t.Errorf("[Tokenize '%s']: token text mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, expected, actual)
-			case actual.Pos != expected.Pos:
-				t.Errorf("[Tokenize '%s']: token pos mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, expected, actual)
+		t.Run(c.usage, func(t *testing.T) {
+			t.Logf("test %s", c.usage)
+			tks, err := Tokenize(c.usage)
+			if err != nil {
+				t.Errorf("[Tokenize '%s']: Unexpected error: %v", c.usage, err)
+				return
 			}
-		}
 
+			t.Logf("actual: %v\n", tks)
+			if len(tks) != len(c.expected) {
+				t.Errorf("[Tokenize '%s']: token count mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, c.expected, tks)
+				return
+			}
+
+			for i, actual := range tks {
+				expected := c.expected[i]
+				switch {
+				case actual.Typ != expected.Typ:
+					t.Errorf("[Tokenize '%s']: token type mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, expected, actual)
+				case actual.Val != expected.Val:
+					t.Errorf("[Tokenize '%s']: token text mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, expected, actual)
+				case actual.Pos != expected.Pos:
+					t.Errorf("[Tokenize '%s']: token pos mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, expected, actual)
+				}
+			}
+		})
 	}
 }
 
@@ -113,19 +114,21 @@ func TestTokenizeErrors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Logf("test case %q", c.usage)
-		tks, err := Tokenize(c.usage)
+		t.Run(c.usage, func(t *testing.T) {
+			t.Logf("test case %q", c.usage)
+			tks, err := Tokenize(c.usage)
 
-		require.Errorf(t, err, "Tokenize('%s') should have failed, instead got %v", c.usage, tks)
+			require.Errorf(t, err, "Tokenize('%s') should have failed, instead got %v", c.usage, tks)
 
-		perr, ok := err.(*ParseError)
+			perr, ok := err.(*ParseError)
 
-		require.True(t, ok, "The returned error should be a *ParseError but instead got %#v", err)
+			require.True(t, ok, "The returned error should be a *ParseError but instead got %#v", err)
 
-		t.Logf("Got expected error %v", err)
-		if perr.Pos != c.pos {
-			t.Errorf("[Tokenize '%s']: error pos mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, c.pos, perr.Pos)
+			t.Logf("Got expected error %v", err)
+			if perr.Pos != c.pos {
+				t.Errorf("[Tokenize '%s']: error pos mismatch:\n\tExpected: %v\n\tActual  : %v", c.usage, c.pos, perr.Pos)
 
-		}
+			}
+		})
 	}
 }
