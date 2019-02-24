@@ -54,6 +54,53 @@ func main() {
 }
 ```
 
+### Pointers to existing variables
+
+This variant of the cp command uses the Ptr variants, where you can pass pointers to existing variables
+instead of declaring new ones for the options/arguments:
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	cli "github.com/jawher/mow.cli"
+)
+
+type Config struct {
+	Recursive bool
+	Src       []string
+	Dst       string
+}
+
+func main() {
+	var (
+		app = cli.App("cp", "Copy files around")
+		cfg Config
+	)
+	// Here's what differentiates mow.cli from other CLI libraries:
+	// This line is not just for help message generation.
+	// It also validates the call to reject calls with less than 2 arguments
+	// and split the arguments between SRC or DST
+	app.Spec = "[-r] SRC... DST"
+
+	// declare the -r flag as a boolean flag
+	app.BoolOptPtr(&cfg.Recursive, "r recursive", false, "Copy files recursively")
+	// declare the SRC argument as a multi-string argument
+	app.StringsArgPtr(&cfg.Src, "SRC", nil, "Source files to copy")
+	// declare the DST argument as a single string (string slice) arguments
+	app.StringArgPtr(&cfg.Dst, "DST", "", "Destination where to copy files to")
+
+	// Specify the action to execute when the app is invoked correctly
+	app.Action = func() {
+		fmt.Printf("Copying using config: %+v\n", cfg)
+	}
+	// Invoke the app passing in os.Args
+	app.Run(os.Args)
+}
+```
 
 ### Multi-Command Application
 In the next example, we create a multi-command application in the same style as

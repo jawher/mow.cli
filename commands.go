@@ -53,35 +53,35 @@ type Cmd struct {
 BoolParam represents a Bool option or argument
 */
 type BoolParam interface {
-	value() bool
+	value(into *bool) (flag.Value, *bool)
 }
 
 /*
 StringParam represents a String option or argument
 */
 type StringParam interface {
-	value() string
+	value(into *string) (flag.Value, *string)
 }
 
 /*
 IntParam represents an Int option or argument
 */
 type IntParam interface {
-	value() int
+	value(into *int) (flag.Value, *int)
 }
 
 /*
 StringsParam represents a string slice option or argument
 */
 type StringsParam interface {
-	value() []string
+	value(into *[]string) (flag.Value, *[]string)
 }
 
 /*
 IntsParam represents an int slice option or argument
 */
 type IntsParam interface {
-	value() []int
+	value(into *[]int) (flag.Value, *[]int)
 }
 
 /*
@@ -132,8 +132,7 @@ It accepts either a BoolOpt or a BoolArg struct.
 The result should be stored in a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Bool(p BoolParam) *bool {
-	into := new(bool)
-	value := values.NewBool(into, p.value())
+	value, into := p.value(nil)
 
 	switch x := p.(type) {
 	case BoolOpt:
@@ -148,14 +147,32 @@ func (c *Cmd) Bool(p BoolParam) *bool {
 }
 
 /*
+BoolPtr can be used to add a bool option or argument to a command.
+It accepts either a pointer to a bool var and a BoolOpt or a BoolArg struct.
+
+The into parameter points to a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) BoolPtr(into *bool, p BoolParam) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case BoolOpt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case BoolArg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
 String can be used to add a string option or argument to a command.
 It accepts either a StringOpt or a StringArg struct.
 
 The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) String(p StringParam) *string {
-	into := new(string)
-	value := values.NewString(into, p.value())
+	value, into := p.value(nil)
 
 	switch x := p.(type) {
 	case StringOpt:
@@ -170,14 +187,32 @@ func (c *Cmd) String(p StringParam) *string {
 }
 
 /*
+StringPtr can be used to add a string option or argument to a command.
+It accepts either a pointer to a string var and a StringOpt or a StringArg struct.
+
+The into parameter points to a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringPtr(into *string, p StringParam) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case StringOpt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case StringArg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
 Int can be used to add an int option or argument to a command.
 It accepts either a IntOpt or a IntArg struct.
 
 The result should be stored in a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Int(p IntParam) *int {
-	into := new(int)
-	value := values.NewInt(into, p.value())
+	value, into := p.value(nil)
 
 	switch x := p.(type) {
 	case IntOpt:
@@ -192,14 +227,32 @@ func (c *Cmd) Int(p IntParam) *int {
 }
 
 /*
+IntPtr can be used to add a int option or argument to a command.
+It accepts either a pointer to a int var and a IntOpt or a IntArg struct.
+
+The into parameter points to a variable (a pointer to a int) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntPtr(into *int, p IntParam) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case IntOpt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case IntArg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
 Strings can be used to add a string slice option or argument to a command.
 It accepts either a StringsOpt or a StringsArg struct.
 
 The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Strings(p StringsParam) *[]string {
-	into := new([]string)
-	value := values.NewStrings(into, p.value())
+	value, into := p.value(nil)
 
 	switch x := p.(type) {
 	case StringsOpt:
@@ -214,14 +267,32 @@ func (c *Cmd) Strings(p StringsParam) *[]string {
 }
 
 /*
+StringsPtr can be used to add a string slice option or argument to a command.
+It accepts either a pointer to a string slice var and a StringsOpt or a StringsArg struct.
+
+The into parameter points to a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringsPtr(into *[]string, p StringsParam) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case StringsOpt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case StringsArg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
 Ints can be used to add an int slice option or argument to a command.
 It accepts either a IntsOpt or a IntsArg struct.
 
 The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) Ints(p IntsParam) *[]int {
-	into := new([]int)
-	value := values.NewInts(into, p.value())
+	value, into := p.value(nil)
 
 	switch x := p.(type) {
 	case IntsOpt:
@@ -233,6 +304,25 @@ func (c *Cmd) Ints(p IntsParam) *[]int {
 	}
 
 	return into
+}
+
+/*
+IntsPtr can be used to add a int slice option or argument to a command.
+It accepts either a pointer to a int slice var and a IntsOpt or a IntsArg struct.
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntsPtr(into *[]int, p IntsParam) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case IntsOpt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case IntsArg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
 }
 
 /*
