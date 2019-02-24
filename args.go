@@ -26,8 +26,11 @@ type BoolArg struct {
 	SetByUser *bool
 }
 
-func (a BoolArg) value() bool {
-	return a.Value
+func (a BoolArg) value(into *bool) (flag.Value, *bool) {
+	if into == nil {
+		into = new(bool)
+	}
+	return values.NewBool(into, a.Value), into
 }
 
 // StringArg describes a string argument
@@ -46,8 +49,11 @@ type StringArg struct {
 	SetByUser *bool
 }
 
-func (a StringArg) value() string {
-	return a.Value
+func (a StringArg) value(into *string) (flag.Value, *string) {
+	if into == nil {
+		into = new(string)
+	}
+	return values.NewString(into, a.Value), into
 }
 
 // IntArg describes an int argument
@@ -66,8 +72,11 @@ type IntArg struct {
 	SetByUser *bool
 }
 
-func (a IntArg) value() int {
-	return a.Value
+func (a IntArg) value(into *int) (flag.Value, *int) {
+	if into == nil {
+		into = new(int)
+	}
+	return values.NewInt(into, a.Value), into
 }
 
 // StringsArg describes a string slice argument
@@ -87,8 +96,11 @@ type StringsArg struct {
 	SetByUser *bool
 }
 
-func (a StringsArg) value() []string {
-	return a.Value
+func (a StringsArg) value(into *[]string) (flag.Value, *[]string) {
+	if into == nil {
+		into = new([]string)
+	}
+	return values.NewStrings(into, a.Value), into
 }
 
 // IntsArg describes an int slice argument
@@ -108,8 +120,11 @@ type IntsArg struct {
 	SetByUser *bool
 }
 
-func (a IntsArg) value() []int {
-	return a.Value
+func (a IntsArg) value(into *[]int) (flag.Value, *[]int) {
+	if into == nil {
+		into = new([]int)
+	}
+	return values.NewInts(into, a.Value), into
 }
 
 // VarArg describes an argument where the type and format of the value is controlled by the developer
@@ -147,12 +162,38 @@ func (c *Cmd) BoolArg(name string, value bool, desc string) *bool {
 }
 
 /*
+BoolArgPtr defines a boolean argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The into parameter points to a variable (a pointer to a bool) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) BoolArgPtr(into *bool, name string, value bool, desc string) {
+	c.BoolPtr(into, BoolArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 StringArg defines a string argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The result should be stored in a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) StringArg(name string, value string, desc string) *string {
 	return c.String(StringArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+StringArgPtr defines a string argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The into parameter points to a variable (a pointer to a string) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringArgPtr(into *string, name string, value string, desc string) {
+	c.StringPtr(into, StringArg{
 		Name:  name,
 		Value: value,
 		Desc:  desc,
@@ -173,6 +214,19 @@ func (c *Cmd) IntArg(name string, value int, desc string) *int {
 }
 
 /*
+IntArgPtr defines an int argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The into parameter points to a variable (a pointer to a int) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntArgPtr(into *int, name string, value int, desc string) {
+	c.IntPtr(into, IntArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 StringsArg defines a string slice argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The result should be stored in a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
@@ -186,12 +240,38 @@ func (c *Cmd) StringsArg(name string, value []string, desc string) *[]string {
 }
 
 /*
+StringsArgPtr defines a string slice argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The into parameter points to a variable (a pointer to a string slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringsArgPtr(into *[]string, name string, value []string, desc string) {
+	c.StringsPtr(into, StringsArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 IntsArg defines an int slice argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The result should be stored in a variable (a pointer to an int slice) which will be populated when the app is run and the call arguments get parsed
 */
 func (c *Cmd) IntsArg(name string, value []int, desc string) *[]int {
 	return c.Ints(IntsArg{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+IntsArgPtr defines a int slice argument on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntsArgPtr(into *[]int, name string, value []int, desc string) {
+	c.IntsPtr(into, IntsArg{
 		Name:  name,
 		Value: value,
 		Desc:  desc,

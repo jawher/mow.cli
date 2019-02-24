@@ -114,6 +114,41 @@ func Example_docker() {
 	docker.Run(os.Args)
 }
 
+func Example_dockerPtr() {
+	docker := cli.App("docker", "A self-sufficient runtime for linux containers")
+
+	docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
+		cmd.Spec = "[-d|--rm] IMAGE [COMMAND [ARG...]]"
+
+		type RunConfig struct {
+			Detached bool
+			RM       bool
+			Memory   string
+			Image    string
+			Command  string
+			Args     []string
+		}
+
+		var cfg RunConfig
+
+		// options
+		cmd.BoolOptPtr(&cfg.Detached, "d detach", false, "Detached mode: run the container in the background and print the new container ID")
+		cmd.BoolOptPtr(&cfg.RM, "rm", false, "Automatically remove the container when it exits (incompatible with -d)")
+		cmd.StringOptPtr(&cfg.Memory, "m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)")
+
+		// args
+		cmd.StringArgPtr(&cfg.Image, "IMAGE", "", "")
+		cmd.StringArgPtr(&cfg.Command, "COMMAND", "", "The command to run")
+		cmd.StringsArgPtr(&cfg.Args, "ARG", nil, "The command arguments")
+
+		cmd.Action = func() {
+			fmt.Printf("Run using config: %+v", cfg)
+		}
+	})
+
+	docker.Run(os.Args)
+}
+
 func Example_beforeAfter() {
 	app := cli.App("app", "App")
 	bench := app.BoolOpt("b bench", false, "Measure execution time")

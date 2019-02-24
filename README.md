@@ -54,6 +54,53 @@ func main() {
 }
 ```
 
+### Pointers to existing variables
+
+This variant of the cp command uses the Ptr variants, where you can pass pointers to existing variables
+instead of declaring new ones for the options/arguments:
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	cli "github.com/jawher/mow.cli"
+)
+
+type Config struct {
+	Recursive bool
+	Src       []string
+	Dst       string
+}
+
+func main() {
+	var (
+		app = cli.App("cp", "Copy files around")
+		cfg Config
+	)
+	// Here's what differentiates mow.cli from other CLI libraries:
+	// This line is not just for help message generation.
+	// It also validates the call to reject calls with less than 2 arguments
+	// and split the arguments between SRC or DST
+	app.Spec = "[-r] SRC... DST"
+
+	// declare the -r flag as a boolean flag
+	app.BoolOptPtr(&cfg.Recursive, "r recursive", false, "Copy files recursively")
+	// declare the SRC argument as a multi-string argument
+	app.StringsArgPtr(&cfg.Src, "SRC", nil, "Source files to copy")
+	// declare the DST argument as a single string (string slice) arguments
+	app.StringArgPtr(&cfg.Dst, "DST", "", "Destination where to copy files to")
+
+	// Specify the action to execute when the app is invoked correctly
+	app.Action = func() {
+		fmt.Printf("Copying using config: %+v\n", cfg)
+	}
+	// Invoke the app passing in os.Args
+	app.Run(os.Args)
+}
+```
 
 ### Multi-Command Application
 In the next example, we create a multi-command application in the same style as
@@ -282,19 +329,28 @@ cp.Run(os.Args)
 ## Options
 To add one or more command line options (also known as flags), use one of the
 short-form StringOpt, StringsOpt, IntOpt, IntsOpt, or BoolOpt methods on App (or
-Cmd if adding flags to a command or subcommand). For example, to add a boolean
+Cmd if adding flags to a command or a subcommand). For example, to add a boolean
 flag to the cp command that specifies recursive mode, use the following:
 
 ```
 recursive := cp.BoolOpt("R recursive", false, "recursively copy the src to dst")
 ```
 
-The first argument is a space separated list of names for the option without the
-dashes. Generally, both short and long forms are specified, but this is not
-mandatory. Additional names (aliases) can be provide if desired, but these are
-not shown in the auto-generated help. The second argument is the default value
-for the option if it is not supplied by the user. And, the third argument is the
-description to be shown in help messages.
+or:
+
+```
+cp.BoolOptPtr(&cfg.recursive, "R recursive", false, "recursively copy the src to dst")
+```
+
+The first version returns a new pointer to a bool value which will be populated when the app is run,
+whereas the second version will populate a pointer to an existing variable you specify.
+
+The option name(s) is a space separated list of names (without the
+dashes). The one letter names can then be called with a single dash (short option, -R), the others with two dashes (long options, --recursive).
+
+You also specify the default value for the option if it is not supplied by the user.
+
+The last parameter is the description to be shown in help messages.
 
 There is also a second set of methods on App called String, Strings, Int, Ints,
 and Bool, which accept a long-form struct of the type: cli.StringOpt,
@@ -312,6 +368,21 @@ recursive = cp.Bool(cli.BoolOpt{
 })
 ```
 
+Or:
+
+```
+recursive = cp.BoolPtr(&recursive, cli.BoolOpt{
+    Name:       "R recursive",
+    Value:      false,
+    Desc:       "copy src files recursively",
+    EnvVar:     "VAR_RECURSIVE",
+    SetByUser:  &recursiveSetByUser,
+})
+```
+
+The first version returns a new pointer to a value which will be populated when the app is run,
+whereas the second version will populate a pointer to an existing variable you specify.
+
 Two features, EnvVar and SetByUser, can be defined in the long-form struct
 method. EnvVar is a space separated list of environment variables used to
 initialize the option if a value is not provided by the user. When help messages
@@ -320,9 +391,7 @@ is a pointer to a boolean variable that is set to true if the user specified the
 value on the command line. This can be useful to determine if the value of the
 option was explicitly set by the user or set via the default value.
 
-The result of both short- and long-forms is a pointer to a value, which will be
-populated after the command line arguments are parsed. You can only access the
-values stored in the pointers in the Action func, which is invoked after
+You can only access the values stored in the pointers in the Action func, which is invoked after
 argument parsing has been completed. This precludes using the value of one
 option as the default value of another.
 
@@ -370,9 +439,19 @@ src := cp.StringArg("SRC", "", "the file to copy")
 dst := cp.StringArg("DST", "", "the destination")
 ```
 
-The first argument is the name of the argument as displayed in help messages.
-Argument names must be specified as all uppercase.  The second argument is the
-default value for the argument if it is not supplied. And the third, argument is
+Or:
+
+```
+cp.StringArgPtr(&src, "SRC", "", "the file to copy")
+cp.StringArgPtr(&dst, "DST", "", "the destination")
+```
+
+The first version returns a new pointer to a value which will be populated when the app is run,
+whereas the second version will populate a pointer to an existing variable you specify.
+
+You then specify the argument as will be displayed in help messages.
+Argument names must be specified as all uppercase.  The next parameter is the
+default value for the argument if it is not supplied. And the last is
 the description to be shown in help messages.
 
 There is also a second set of methods on App called String, Strings, Int, Ints,
@@ -391,6 +470,21 @@ src = cp.Strings(StringsArg{
 })
 ```
 
+Or:
+
+```
+src = cp.StringsPtr(&src, StringsArg{
+    Name:      "SRC",
+    Desc:      "The source files to copy",
+    Value:     "default value",
+    EnvVar:    "VAR1 VAR2",
+    SetByUser: &srcSetByUser,
+})
+```
+
+The first version returns a new pointer to a value which will be populated when the app is run,
+whereas the second version will populate a pointer to an existing variable you specify.
+
 Two features, EnvVar and SetByUser, can be defined in the long-form struct
 method. EnvVar is a space separated list of environment variables used to
 initialize the argument if a value is not provided by the user. When help
@@ -400,9 +494,7 @@ specified the value on the command line. This can be useful to determine if the
 value of the argument was explicitly set by the user or set via the default
 value.
 
-The result of both short- and long-forms is a pointer to a value which will be
-populated after the command line arguments are parsed. You can only access the
-values stored in the pointers in the Action func, which is invoked after
+You can only access the values stored in the pointers in the Action func, which is invoked after
 argument parsing has been completed. This precludes using the value of one
 argument as the default value of another.
 
@@ -970,4 +1062,4 @@ This work is published under the MIT license.
 Please see the `LICENSE` file for details.
 
 * * *
-Automatically generated by [autoreadme](https://github.com/jimmyfrasche/autoreadme) on 2018.06.03
+Automatically generated by [autoreadme](https://github.com/jimmyfrasche/autoreadme) on 2019.02.24

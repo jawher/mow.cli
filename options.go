@@ -26,8 +26,11 @@ type BoolOpt struct {
 	SetByUser *bool
 }
 
-func (o BoolOpt) value() bool {
-	return o.Value
+func (o BoolOpt) value(into *bool) (flag.Value, *bool) {
+	if into == nil {
+		into = new(bool)
+	}
+	return values.NewBool(into, o.Value), into
 }
 
 // StringOpt describes a string option
@@ -47,8 +50,11 @@ type StringOpt struct {
 	SetByUser *bool
 }
 
-func (o StringOpt) value() string {
-	return o.Value
+func (o StringOpt) value(into *string) (flag.Value, *string) {
+	if into == nil {
+		into = new(string)
+	}
+	return values.NewString(into, o.Value), into
 }
 
 // IntOpt describes an int option
@@ -68,8 +74,11 @@ type IntOpt struct {
 	SetByUser *bool
 }
 
-func (o IntOpt) value() int {
-	return o.Value
+func (o IntOpt) value(into *int) (flag.Value, *int) {
+	if into == nil {
+		into = new(int)
+	}
+	return values.NewInt(into, o.Value), into
 }
 
 // StringsOpt describes a string slice option
@@ -90,8 +99,11 @@ type StringsOpt struct {
 	SetByUser *bool
 }
 
-func (o StringsOpt) value() []string {
-	return o.Value
+func (o StringsOpt) value(into *[]string) (flag.Value, *[]string) {
+	if into == nil {
+		into = new([]string)
+	}
+	return values.NewStrings(into, o.Value), into
 }
 
 // IntsOpt describes an int slice option
@@ -112,8 +124,12 @@ type IntsOpt struct {
 	SetByUser *bool
 }
 
-func (o IntsOpt) value() []int {
-	return o.Value
+func (o IntsOpt) value(into *[]int) (flag.Value, *[]int) {
+	if into == nil {
+		into = new([]int)
+	}
+	return values.NewInts(into, o.Value), into
+
 }
 
 // VarOpt describes an option where the type and format of the value is controlled by the developer
@@ -155,6 +171,23 @@ func (c *Cmd) BoolOpt(name string, value bool, desc string) *bool {
 }
 
 /*
+BoolOptPtr defines a bool option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) BoolOptPtr(into *bool, name string, value bool, desc string) {
+	c.BoolPtr(into, BoolOpt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 StringOpt defines a string option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
@@ -165,6 +198,23 @@ The result should be stored in a variable (a pointer to a string) which will be 
 */
 func (c *Cmd) StringOpt(name string, value string, desc string) *string {
 	return c.String(StringOpt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+StringOptPtr defines a string option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringOptPtr(into *string, name string, value string, desc string) {
+	c.StringPtr(into, StringOpt{
 		Name:  name,
 		Value: value,
 		Desc:  desc,
@@ -189,6 +239,23 @@ func (c *Cmd) IntOpt(name string, value int, desc string) *int {
 }
 
 /*
+IntOptPtr defines a int option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to an int) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntOptPtr(into *int, name string, value int, desc string) {
+	c.IntPtr(into, IntOpt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 StringsOpt defines a string slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
@@ -206,6 +273,23 @@ func (c *Cmd) StringsOpt(name string, value []string, desc string) *[]string {
 }
 
 /*
+StringsOptPtr defines a string slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) StringsOptPtr(into *[]string, name string, value []string, desc string) {
+	c.StringsPtr(into, StringsOpt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 IntsOpt defines an int slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
@@ -216,6 +300,23 @@ The result should be stored in a variable (a pointer to an int slice) which will
 */
 func (c *Cmd) IntsOpt(name string, value []int, desc string) *[]int {
 	return c.Ints(IntsOpt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+IntsOptPtr defines a int slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) IntsOptPtr(into *[]int, name string, value []int, desc string) {
+	c.IntsPtr(into, IntsOpt{
 		Name:  name,
 		Value: value,
 		Desc:  desc,
