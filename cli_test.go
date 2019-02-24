@@ -280,6 +280,46 @@ func TestAppWithIntOption(t *testing.T) {
 	}
 }
 
+func TestAppWithFloat64Option(t *testing.T) {
+
+	cases := []struct {
+		args             []string
+		expectedOptValue float64
+	}{
+		{[]string{"app"}, 3.14},
+		{[]string{"app", "-o", "16.0001"}, 16.0001},
+		{[]string{"app", "-o=16.0001"}, 16.0001},
+
+		{[]string{"app", "--option", "16.0001"}, 16.0001},
+		{[]string{"app", "--option=16.0001"}, 16.0001},
+	}
+
+	for _, cas := range cases {
+		runAppAndCheckValue(t, "short", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			return app.Float64Opt("o option", 3.14, "")
+		})
+		runAppAndCheckValue(t, "struct", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			return app.Float64(Float64Opt{
+				Name:  "o option",
+				Value: 3.14,
+			})
+		})
+		runAppAndCheckValue(t, "short-ptr", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			var val float64
+			app.Float64OptPtr(&val, "o option", 3.14, "")
+			return &val
+		})
+		runAppAndCheckValue(t, "struct-ptr", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			var val float64
+			app.Float64Ptr(&val, Float64Opt{
+				Name:  "o option",
+				Value: 3.14,
+			})
+			return &val
+		})
+	}
+}
+
 func TestAppWithStringsOption(t *testing.T) {
 
 	cases := []struct {
@@ -354,6 +394,46 @@ func TestAppWithIntsOption(t *testing.T) {
 			app.IntsPtr(&val, IntsOpt{
 				Name:  "o option",
 				Value: []int{1, 2},
+			})
+			return &val
+		})
+	}
+}
+
+func TestAppWithFloats64Option(t *testing.T) {
+
+	cases := []struct {
+		args             []string
+		expectedOptValue []float64
+	}{
+		{[]string{"app"}, []float64{1.1, 2.2}},
+		{[]string{"app", "-o", "10.05"}, []float64{10.05}},
+		{[]string{"app", "-o", "10.05", "-o=11.993"}, []float64{10.05, 11.993}},
+
+		{[]string{"app", "--option", "10.05"}, []float64{10.05}},
+		{[]string{"app", "--option", "10.05", "--option=11.993"}, []float64{10.05, 11.993}},
+	}
+
+	for _, cas := range cases {
+		runAppAndCheckValue(t, "short", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			return app.Floats64Opt("o option", []float64{1.1, 2.2}, "")
+		})
+		runAppAndCheckValue(t, "struct", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			return app.Floats64(Floats64Opt{
+				Name:  "o option",
+				Value: []float64{1.1, 2.2},
+			})
+		})
+		runAppAndCheckValue(t, "short-ptr", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			var val []float64
+			app.Floats64OptPtr(&val, "o option", []float64{1.1, 2.2}, "")
+			return &val
+		})
+		runAppAndCheckValue(t, "struct-ptr", cas.args, cas.expectedOptValue, func(app *Cli) interface{} {
+			var val []float64
+			app.Floats64Ptr(&val, Floats64Opt{
+				Name:  "o option",
+				Value: []float64{1.1, 2.2},
 			})
 			return &val
 		})
@@ -491,6 +571,50 @@ func TestAppWithIntArg(t *testing.T) {
 	}
 }
 
+func TestAppWithFloat64Arg(t *testing.T) {
+
+	cases := []struct {
+		args             []string
+		expectedArgValue float64
+	}{
+		{[]string{"app"}, 3.14},
+		{[]string{"app", "16.123456789"}, 16.123456789},
+	}
+
+	for _, cas := range cases {
+		runAppAndCheckValue(t, "short", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG]"
+
+			return app.Float64Arg("ARG", 3.14, "")
+		})
+		runAppAndCheckValue(t, "struct", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG]"
+
+			return app.Float64(Float64Arg{
+				Name:  "ARG",
+				Value: 3.14,
+			})
+		})
+		runAppAndCheckValue(t, "short-ptr", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG]"
+
+			var val float64
+			app.Float64ArgPtr(&val, "ARG", 3.14, "")
+			return &val
+		})
+		runAppAndCheckValue(t, "struct-ptr", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG]"
+
+			var val float64
+			app.Float64Ptr(&val, Float64Arg{
+				Name:  "ARG",
+				Value: 3.14,
+			})
+			return &val
+		})
+	}
+}
+
 func TestAppWithStringsArg(t *testing.T) {
 
 	cases := []struct {
@@ -575,6 +699,51 @@ func TestAppWithIntsArg(t *testing.T) {
 			app.IntsPtr(&val, IntsArg{
 				Name:  "ARG",
 				Value: []int{1, 2},
+			})
+			return &val
+		})
+	}
+}
+
+func TestAppWithFloats64Arg(t *testing.T) {
+
+	cases := []struct {
+		args             []string
+		expectedArgValue []float64
+	}{
+		{[]string{"app"}, []float64{1.1, 2.2}},
+		{[]string{"app", "10.123"}, []float64{10.123}},
+		{[]string{"app", "10.123", "11.995"}, []float64{10.123, 11.995}},
+	}
+
+	for _, cas := range cases {
+		runAppAndCheckValue(t, "short", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG...]"
+
+			return app.Floats64Arg("ARG", []float64{1.1, 2.2}, "")
+		})
+		runAppAndCheckValue(t, "struct", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG...]"
+
+			return app.Floats64(Floats64Arg{
+				Name:  "ARG",
+				Value: []float64{1.1, 2.2},
+			})
+		})
+		runAppAndCheckValue(t, "short-ptr", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG...]"
+
+			var val []float64
+			app.Floats64ArgPtr(&val, "ARG", []float64{1.1, 2.2}, "")
+			return &val
+		})
+		runAppAndCheckValue(t, "struct-ptr", cas.args, cas.expectedArgValue, func(app *Cli) interface{} {
+			app.Spec = "[ARG...]"
+
+			var val []float64
+			app.Floats64Ptr(&val, Floats64Arg{
+				Name:  "ARG",
+				Value: []float64{1.1, 2.2},
 			})
 			return &val
 		})

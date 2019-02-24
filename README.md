@@ -328,7 +328,7 @@ cp.Run(os.Args)
 
 ## Options
 To add one or more command line options (also known as flags), use one of the
-short-form StringOpt, StringsOpt, IntOpt, IntsOpt, or BoolOpt methods on App (or
+short-form StringOpt, StringsOpt, IntOpt, IntsOpt, Float64Opt, Floats64Opt, or BoolOpt methods on App (or
 Cmd if adding flags to a command or a subcommand). For example, to add a boolean
 flag to the cp command that specifies recursive mode, use the following:
 
@@ -354,7 +354,7 @@ The last parameter is the description to be shown in help messages.
 
 There is also a second set of methods on App called String, Strings, Int, Ints,
 and Bool, which accept a long-form struct of the type: cli.StringOpt,
-cli.StringsOpt, cli.IntOpt, cli.IntsOpt, cli.BoolOpt. The struct describes the
+cli.StringsOpt, cli.IntOpt, cli.IntsOpt, cli.Float64Opt, cli.Floats64Opt, cli.BoolOpt. The struct describes the
 option and allows the use of additional features not available in the short-form
 methods described above:
 
@@ -407,7 +407,7 @@ Boolean options:
 -it        single dash for multiple one letter names (option folding), this is equivalent to: -i -t
 ```
 
-String and int options:
+String, int and float options:
 
 ```
 -e=value       single dash one letter name, equal sign, followed by the value
@@ -417,7 +417,7 @@ String and int options:
 --extra value  double dash for longer option names, space followed by the value
 ```
 
-Slice options (StringsOpt, IntsOpt) where option is repeated to accumulate
+Slice options (StringsOpt, IntsOpt, Floats64Opt) where option is repeated to accumulate
 values in a slice:
 
 ```
@@ -430,7 +430,7 @@ values in a slice:
 
 ## Arguments
 To add one or more command line arguments (not prefixed by dashes), use one of
-the short-form StringArg, StringsArg, IntArg, IntsArg, or BoolArg methods on App
+the short-form StringArg, StringsArg, IntArg, IntsArg, Float64Arg, Floats64Arg, or BoolArg methods on App
 (or Cmd if adding arguments to a command or subcommand). For example, to add two
 string arguments to our cp command, use the following calls:
 
@@ -455,7 +455,7 @@ default value for the argument if it is not supplied. And the last is
 the description to be shown in help messages.
 
 There is also a second set of methods on App called String, Strings, Int, Ints,
-and Bool, which accept a long-form struct of the type: cli.StringArg,
+Float64, Floats64 and Bool, which accept a long-form struct of the type: cli.StringArg,
 cli.StringsArg, cli.IntArg, cli.IntsArg, cli.BoolArg. The struct describes the
 arguments and allows the use of additional features not available in the
 short-form methods described above:
@@ -961,8 +961,8 @@ using the grammar documented above.
 
 ## Custom Types
 By default, the following types are supported for options and arguments: bool,
-string, int, strings (slice of strings), and ints (slice of ints).  You can,
-however, extend this package to handle other types, e.g. time.Duration, float64,
+string, int, float64, strings (slice of strings), ints (slice of ints) and floats64 (slice of float64).
+You can, however, extend this package to handle other types, e.g. time.Duration, float64,
 or even your own struct types.
 
 To define your own custom type, you must implement the flag.Value interface for

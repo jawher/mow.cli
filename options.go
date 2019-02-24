@@ -81,6 +81,30 @@ func (o IntOpt) value(into *int) (flag.Value, *int) {
 	return values.NewInt(into, o.Value), into
 }
 
+// Float64Opt describes an float64 option
+type Float64Opt struct {
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option
+	EnvVar string
+	// The option's initial value
+	Value float64
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
+	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (o Float64Opt) value(into *float64) (flag.Value, *float64) {
+	if into == nil {
+		into = new(float64)
+	}
+	return values.NewFloat64(into, o.Value), into
+}
+
 // StringsOpt describes a string slice option
 type StringsOpt struct {
 	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
@@ -129,6 +153,32 @@ func (o IntsOpt) value(into *[]int) (flag.Value, *[]int) {
 		into = new([]int)
 	}
 	return values.NewInts(into, o.Value), into
+
+}
+
+// Floats64Opt describes an int slice option
+type Floats64Opt struct {
+	// A space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+	// The one letter names will then be called with a single dash (short option), the others with two (long options).
+	Name string
+	// The option description as will be shown in help messages
+	Desc string
+	// A space separated list of environment variables names to be used to initialize this option.
+	// The env variable should contain a comma separated list of values
+	EnvVar string
+	// The option's initial value
+	Value []float64
+	// A boolean to display or not the current value of the option in the help message
+	HideValue bool
+	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
+	SetByUser *bool
+}
+
+func (o Floats64Opt) value(into *[]float64) (flag.Value, *[]float64) {
+	if into == nil {
+		into = new([]float64)
+	}
+	return values.NewFloats64(into, o.Value), into
 
 }
 
@@ -256,6 +306,40 @@ func (c *Cmd) IntOptPtr(into *int, name string, value int, desc string) {
 }
 
 /*
+Float64Opt defines an float64 option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to an float64) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Float64Opt(name string, value float64, desc string) *float64 {
+	return c.Float64(Float64Opt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+Float64OptPtr defines a float64 option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to a float64) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Float64OptPtr(into *float64, name string, value float64, desc string) {
+	c.Float64Ptr(into, Float64Opt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
 StringsOpt defines a string slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
 
 The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
@@ -317,6 +401,40 @@ The into parameter points to a variable (a pointer to a int slice) which will be
 */
 func (c *Cmd) IntsOptPtr(into *[]int, name string, value []int, desc string) {
 	c.IntsPtr(into, IntsOpt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+Floats64Opt defines an float64 slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The result should be stored in a variable (a pointer to an float64 slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Floats64Opt(name string, value []float64, desc string) *[]float64 {
+	return c.Floats64(Floats64Opt{
+		Name:  name,
+		Value: value,
+		Desc:  desc,
+	})
+}
+
+/*
+Floats64OptPtr defines a int slice option on the command c named `name`, with an initial value of `value` and a description of `desc` which will be used in help messages.
+
+The name is a space separated list of the option names *WITHOUT* the dashes, e.g. `f force` and *NOT* `-f --force`.
+The one letter names will then be called with a single dash (short option), the others with two (long options).
+
+
+The into parameter points to a variable (a pointer to a int slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Floats64OptPtr(into *[]float64, name string, value []float64, desc string) {
+	c.Floats64Ptr(into, Floats64Opt{
 		Name:  name,
 		Value: value,
 		Desc:  desc,

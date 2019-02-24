@@ -134,6 +134,37 @@ func (ia *IntValue) String() string {
 }
 
 /******************************************************************************/
+/* Float64                                                                        */
+/******************************************************************************/
+
+// Float64Value is a flag.Value type holding int values
+type Float64Value float64
+
+var (
+	_ flag.Value = NewFloat64(new(float64), 0)
+)
+
+// NewFloat64 creates a new int value
+func NewFloat64(into *float64, v float64) *Float64Value {
+	*into = v
+	return (*Float64Value)(into)
+}
+
+// Set sets the value from a provided string
+func (ia *Float64Value) Set(s string) error {
+	i, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return err
+	}
+	*ia = Float64Value(i)
+	return nil
+}
+
+func (ia *Float64Value) String() string {
+	return fmt.Sprintf("%v", *ia)
+}
+
+/******************************************************************************/
 /* STRINGS                                                                    */
 /******************************************************************************/
 
@@ -226,5 +257,55 @@ func (ia *IntsValue) Clear() {
 
 // IsDefault return true if the int slice is empty
 func (ia *IntsValue) IsDefault() bool {
+	return len(*ia) == 0
+}
+
+/******************************************************************************/
+/* FLOATs64                                                                       */
+/******************************************************************************/
+
+// Floats64Value is a flag.Value type holding int values
+type Floats64Value []float64
+
+var (
+	_ flag.Value    = NewFloats64(new([]float64), nil)
+	_ MultiValued   = NewFloats64(new([]float64), nil)
+	_ DefaultValued = NewFloats64(new([]float64), nil)
+)
+
+// NewFloats64 creates a new multi-int value
+func NewFloats64(into *[]float64, v []float64) *Floats64Value {
+	*into = v
+	return (*Floats64Value)(into)
+}
+
+// Set sets the value from a provided string
+func (ia *Floats64Value) Set(s string) error {
+	i, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return err
+	}
+	*ia = append(*ia, i)
+	return nil
+}
+
+func (ia *Floats64Value) String() string {
+	res := "["
+	for idx, s := range *ia {
+		if idx > 0 {
+			res += ", "
+		}
+		res += fmt.Sprintf("%v", s)
+	}
+	return res + "]"
+}
+
+// Clear clears the slice
+func (ia *Floats64Value) Clear() {
+	*ia = nil
+}
+
+// IsDefault return true if the int slice is empty
+func (ia *Floats64Value) IsDefault() bool {
 	return len(*ia) == 0
 }

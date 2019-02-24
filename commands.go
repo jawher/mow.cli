@@ -71,6 +71,13 @@ type IntParam interface {
 }
 
 /*
+Float64Param represents an Float64 option or argument
+*/
+type Float64Param interface {
+	value(into *float64) (flag.Value, *float64)
+}
+
+/*
 StringsParam represents a string slice option or argument
 */
 type StringsParam interface {
@@ -78,10 +85,17 @@ type StringsParam interface {
 }
 
 /*
-IntsParam represents an int slice option or argument
+IntsParam represents an float64 slice option or argument
 */
 type IntsParam interface {
 	value(into *[]int) (flag.Value, *[]int)
+}
+
+/*
+Floats64Param represents an float64 slice option or argument
+*/
+type Floats64Param interface {
+	value(into *[]float64) (flag.Value, *[]float64)
 }
 
 /*
@@ -246,6 +260,46 @@ func (c *Cmd) IntPtr(into *int, p IntParam) {
 }
 
 /*
+Float64 can be used to add a float64 option or argument to a command.
+It accepts either a Float64Opt or a Float64Arg struct.
+
+The result should be stored in a variable (a pointer to a float64) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Float64(p Float64Param) *float64 {
+	value, into := p.value(nil)
+
+	switch x := p.(type) {
+	case Float64Opt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case Float64Arg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+
+	return into
+}
+
+/*
+Float64Ptr can be used to add a float64 option or argument to a command.
+It accepts either a pointer to a float64 var and a Float64Opt or a Float64Arg struct.
+
+The into parameter points to a variable (a pointer to a float64) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Float64Ptr(into *float64, p Float64Param) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case Float64Opt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case Float64Arg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
 Strings can be used to add a string slice option or argument to a command.
 It accepts either a StringsOpt or a StringsArg struct.
 
@@ -319,6 +373,46 @@ func (c *Cmd) IntsPtr(into *[]int, p IntsParam) {
 	case IntsOpt:
 		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
 	case IntsArg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+}
+
+/*
+Floats64 can be used to add an float64 slice option or argument to a command.
+It accepts either a Floats64Opt or a Floats64Arg struct.
+
+The result should be stored in a variable (a pointer to an float64 slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Floats64(p Floats64Param) *[]float64 {
+	value, into := p.value(nil)
+
+	switch x := p.(type) {
+	case Floats64Opt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case Floats64Arg:
+		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	default:
+		panic(fmt.Sprintf("Unhandled param %v", p))
+	}
+
+	return into
+}
+
+/*
+Floats64Ptr can be used to add a float64 slice option or argument to a command.
+It accepts either a pointer to a float64 slice var and a Floats64Opt or a Floats64Arg struct.
+
+The into parameter points to a variable (a pointer to a float64 slice) which will be populated when the app is run and the call arguments get parsed
+*/
+func (c *Cmd) Floats64Ptr(into *[]float64, p Floats64Param) {
+	value, _ := p.value(into)
+
+	switch x := p.(type) {
+	case Floats64Opt:
+		c.mkOpt(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
+	case Floats64Arg:
 		c.mkArg(container.Container{Name: x.Name, Desc: x.Desc, EnvVar: x.EnvVar, HideValue: x.HideValue, Value: value, ValueSetByUser: x.SetByUser})
 	default:
 		panic(fmt.Sprintf("Unhandled param %v", p))
