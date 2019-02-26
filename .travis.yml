@@ -1,14 +1,17 @@
 language: go
 go:
+- "1.12"
 - "1.11"
 - "1.10"
-- "1.9"
 
 sudo: false
 
+env:
+  - GO111MODULE=on
+
 install: make setup
 
-script: env GO111MODULE=on make check test-cover
+script: make check test-cover
 
 deploy:
   provider: releases
@@ -17,4 +20,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    go: "1.11"
+    go: "1.12"
