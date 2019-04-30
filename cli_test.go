@@ -887,6 +887,36 @@ func TestLongHelpMessage(t *testing.T) {
 	require.Equal(t, expected, []byte(err))
 }
 
+func TestMultiLineDescInHelpMessage(t *testing.T) {
+	var out, err string
+	defer captureAndRestoreOutput(&out, &err)()
+
+	exitCalled := false
+	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+
+	app := App("app", "App Desc")
+	app.LongDesc = "Longer App Desc"
+	app.Spec = "[-o] ARG"
+
+	app.String(StringOpt{Name: "o opt", Value: "default", EnvVar: "XXX_TEST", Desc: "Option\ndoes something\n  another line"})
+	app.Bool(BoolOpt{Name: "f force", Value: false, EnvVar: "YYY_TEST", Desc: "Force\ndoes something\n  another line"})
+	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument\nDescription\nMultiple\nLines"})
+
+	app.Action = func() {}
+	require.NoError(t,
+		app.Run([]string{"app", "-h"}))
+
+	if *genGolden {
+		require.NoError(t,
+			ioutil.WriteFile("testdata/multi-line-desc-help-output.txt.golden", []byte(err), 0644))
+	}
+
+	expected, e := ioutil.ReadFile("testdata/multi-line-desc-help-output.txt")
+	require.NoError(t, e, "Failed to read the expected help output from testdata/long-help-output.txt")
+
+	require.Equal(t, expected, []byte(err))
+}
+
 func TestVersionShortcut(t *testing.T) {
 	defer suppressOutput()()
 	exitCalled := false

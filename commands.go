@@ -3,6 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"io"
 	"strings"
 	"text/tabwriter"
 
@@ -545,7 +546,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 				env   = formatEnvVarsForHelp(arg.EnvVar)
 				value = formatValueForHelp(arg.HideValue, arg.Value)
 			)
-			fmt.Fprintf(w, "  %s\t%s\n", arg.Name, joinStrings(arg.Desc, env, value))
+			printTabbedRow(w, arg.Name, joinStrings(arg.Desc, env, value))
 		}
 	}
 
@@ -558,7 +559,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 				env      = formatEnvVarsForHelp(opt.EnvVar)
 				value    = formatValueForHelp(opt.HideValue, opt.Value)
 			)
-			fmt.Fprintf(w, "  %s\t%s\n", optNames, joinStrings(opt.Desc, env, value))
+			printTabbedRow(w, optNames, joinStrings(opt.Desc, env, value))
 		}
 	}
 
@@ -764,4 +765,17 @@ func joinStrings(parts ...string) string {
 		res += part
 	}
 	return res
+}
+
+func printTabbedRow(w io.Writer, s1 string, s2 string) {
+	lines := strings.Split(s2, "\n")
+	fmt.Fprintf(w, "  %s\t%s\n", s1, strings.TrimSpace(lines[0]))
+
+	if len(lines) == 1 {
+		return
+	}
+
+	for _, line := range lines[1:] {
+		fmt.Fprintf(w, "  %s\t%s\n", "", strings.TrimSpace(line))
+	}
 }
