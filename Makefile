@@ -32,12 +32,12 @@ readmecheck:
 	diff README.generated.md README.original.md
 
 setup:
-	go get github.com/gordonklaus/ineffassign
-	go get github.com/golang/lint/golint
-	go get golang.org/x/tools/cmd/cover
-	go get github.com/mattn/goveralls
-	go get github.com/modocache/gover
-	go get github.com/divan/autoreadme
+	go get -u -m github.com/gordonklaus/ineffassign
+	go get -u -m github.com/golang/lint/golint
+	go get -u -m golang.org/x/tools/cmd/cover
+	go get -u -m github.com/mattn/goveralls
+	go get -u -m github.com/modocache/gover
+	go get -u -m github.com/divan/autoreadme
 	go get -t -u ./...
 
 .PHONY: test check lint vet fmtcheck ineffassign readmecheck
