@@ -594,7 +594,7 @@ func formatOptNamesForHelp(o *container.Container) string {
 	case short != "" && long != "":
 		return fmt.Sprintf("%s, %s", short, long)
 	case short != "":
-		return fmt.Sprintf("%s", short)
+		return short
 	case long != "":
 		// 2 spaces instead of the short option (-x), one space for the comma (,) and one space for the after comma blank
 		return fmt.Sprintf("    %s", long)

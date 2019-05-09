@@ -94,7 +94,8 @@ func TestVar(t *testing.T) {
 	app.Action = func() {
 		ex = true
 	}
-	app.Run([]string{"cp", "-vvv", "1h", "10%", "5%"})
+	require.NoError(t,
+		app.Run([]string{"cp", "-vvv", "1h", "10%", "5%"}))
 
 	require.Equal(t, Counter(3), value)
 	require.Equal(t, Duration(1*time.Hour), duration)
@@ -156,7 +157,8 @@ func TestVarOverrideEnv(t *testing.T) {
 		require.Equal(t, Percent([]float64{0, 0.99}), percents)
 	}
 
-	app.Run([]string{"var", "0%", "99%"})
+	require.NoError(t,
+		app.Run([]string{"var", "0%", "99%"}))
 
 	require.True(t, ex, "Action should have been called")
 }

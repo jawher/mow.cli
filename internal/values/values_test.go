@@ -196,8 +196,10 @@ func TestStringsParam(t *testing.T) {
 	var into []string
 	param := NewStrings(&into, nil)
 
-	param.Set("a")
-	param.Set("b")
+	require.NoError(t,
+		param.Set("a"))
+	require.NoError(t,
+		param.Set("b"))
 
 	require.Equal(t, []string{"a", "b"}, into)
 	require.Equal(t, `["a", "b"]`, param.String())
