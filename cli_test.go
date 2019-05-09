@@ -987,7 +987,7 @@ func TestExitOnError(t *testing.T) {
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	require.NoError(t,
+	require.Error(t,
 		app.Run([]string{"x", "y", "z"}))
 	require.True(t, exitCalled, "exit should have been called")
 }
