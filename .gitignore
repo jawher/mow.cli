@@ -3,3 +3,4 @@ coverage.out
 *.coverprofile
 README.generated.md
 README.original.md
+bin/

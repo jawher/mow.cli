@@ -31,7 +31,8 @@ func TestTheCpCase(t *testing.T) {
 		require.Equal(t, "z", *dst)
 	}
 
-	app.Run([]string{"cp", "x", "y", "z"})
+	require.NoError(t,
+		app.Run([]string{"cp", "x", "y", "z"}))
 
 	require.True(t, ex, "Exec wasn't called")
 }
@@ -88,7 +89,8 @@ func TestInvalidSpec(t *testing.T) {
 		t.Fatalf("Should have panicked")
 	}()
 
-	app.Run([]string{"test", "-x", "-y", "hello"})
+	require.NoError(t,
+		app.Run([]string{"test", "-x", "-y", "hello"}))
 
 	t.Fatalf("Should have panicked")
 }
@@ -769,7 +771,8 @@ func testHelpAndVersionWithOptionsEnd(flag string, t *testing.T) {
 		require.Equal(t, flag, *cmd)
 	}
 
-	app.Run([]string{"x", "--", flag})
+	require.NoError(t,
+		app.Run([]string{"x", "--", flag}))
 
 	require.True(t, actionCalled, "action should have been called")
 	require.False(t, exitCalled, "exit should not have been called")
@@ -841,10 +844,12 @@ func TestHelpMessage(t *testing.T) {
 	app.Command("command2", "command2 description", func(cmd *Cmd) {})
 	app.Command("command3", "command3 description", func(cmd *Cmd) {})
 
-	app.Run([]string{"app", "-h"})
+	require.NoError(t,
+		app.Run([]string{"app", "-h"}))
 
 	if *genGolden {
-		ioutil.WriteFile("testdata/help-output.txt.golden", []byte(err), 0644)
+		require.NoError(t,
+			ioutil.WriteFile("testdata/help-output.txt.golden", []byte(err), 0644))
 	}
 
 	expected, e := ioutil.ReadFile("testdata/help-output.txt")
@@ -868,10 +873,12 @@ func TestLongHelpMessage(t *testing.T) {
 	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument"})
 
 	app.Action = func() {}
-	app.Run([]string{"app", "-h"})
+	require.NoError(t,
+		app.Run([]string{"app", "-h"}))
 
 	if *genGolden {
-		ioutil.WriteFile("testdata/long-help-output.txt.golden", []byte(err), 0644)
+		require.NoError(t,
+			ioutil.WriteFile("testdata/long-help-output.txt.golden", []byte(err), 0644))
 	}
 
 	expected, e := ioutil.ReadFile("testdata/long-help-output.txt")
@@ -893,7 +900,8 @@ func TestVersionShortcut(t *testing.T) {
 		actionCalled = true
 	}
 
-	app.Run([]string{"cp", "--version"})
+	require.NoError(t,
+		app.Run([]string{"cp", "--version"}))
 
 	require.False(t, actionCalled, "action should not have been called")
 	require.True(t, exitCalled, "exit should have been called")
@@ -916,7 +924,8 @@ func TestSubCommands(t *testing.T) {
 		}
 	})
 
-	app.Run([]string{"say", "hi"})
+	require.NoError(t,
+		app.Run([]string{"say", "hi"}))
 	require.True(t, hi, "hi should have been called")
 	require.False(t, bye, "byte should NOT have been called")
 }
@@ -978,7 +987,8 @@ func TestExitOnError(t *testing.T) {
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	app.Run([]string{"x", "y", "z"})
+	require.Error(t,
+		app.Run([]string{"x", "y", "z"}))
 	require.True(t, exitCalled, "exit should have been called")
 }
 
@@ -994,7 +1004,8 @@ func TestExitOnErrorWithHelp(t *testing.T) {
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	app.Run([]string{"x", "-h"})
+	require.NoError(t,
+		app.Run([]string{"x", "-h"}))
 	require.True(t, exitCalled, "exit should have been called")
 }
 
@@ -1011,7 +1022,8 @@ func TestExitOnErrorWithVersion(t *testing.T) {
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	app.Run([]string{"x", "-v"})
+	require.NoError(t,
+		app.Run([]string{"x", "-v"}))
 	require.True(t, exitCalled, "exit should have been called")
 }
 
@@ -1030,11 +1042,10 @@ func TestPanicOnError(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			require.False(t, called, "Exec should NOT have been called")
-		} else {
-
 		}
 	}()
-	app.Run([]string{"say"})
+	require.NoError(t,
+		app.Run([]string{"say"}))
 	t.Fatalf("wanted panic")
 }
 
@@ -1196,7 +1207,8 @@ func TestOptSetByUser(t *testing.T) {
 				called = true
 			}
 
-			app.Run(cas.args)
+			require.NoError(t,
+				app.Run(cas.args))
 
 			require.True(t, called, "action should have been called")
 			require.Equal(t, cas.expected, setByUser)
@@ -1377,7 +1389,8 @@ func TestArgSetByUser(t *testing.T) {
 				called = true
 			}
 
-			app.Run(cas.args)
+			require.NoError(t,
+				app.Run(cas.args))
 
 			require.True(t, called, "action should have been called")
 			require.Equal(t, cas.expected, setByUser)
@@ -1622,7 +1635,8 @@ func TestOptSetByEnv(t *testing.T) {
 				called = true
 			}
 
-			app.Run(cas.args)
+			require.NoError(t,
+				app.Run(cas.args))
 
 			typ := reflect.TypeOf(pointer)
 			if typ.Kind() != reflect.Ptr {
@@ -1893,7 +1907,8 @@ func TestArgSetByEnv(t *testing.T) {
 				called = true
 			}
 
-			app.Run(cas.args)
+			require.NoError(t,
+				app.Run(cas.args))
 
 			typ := reflect.TypeOf(pointer)
 			if typ.Kind() != reflect.Ptr {
@@ -1915,7 +1930,8 @@ func TestCommandAction(t *testing.T) {
 
 	app.Command("a", "", ActionCommand(func() { called = true }))
 
-	app.Run([]string{"app", "a"})
+	require.NoError(t,
+		app.Run([]string{"app", "a"}))
 
 	require.True(t, called, "commandAction should be called")
 
@@ -2044,13 +2060,15 @@ func TestBeforeAndAfterFlowOrder(t *testing.T) {
 	})
 	app.After = callChecker(t, 6, &counter)
 
-	app.Run([]string{"app", "c", "cc"})
+	require.NoError(t,
+		app.Run([]string{"app", "c", "cc"}))
 	require.Equal(t, 7, counter)
 }
 
 func TestBeforeAndAfterFlowOrderWhenOneBeforePanics(t *testing.T) {
 	defer func() {
-		recover()
+		r := recover()
+		require.Equal(t, 42, r)
 	}()
 
 	counter := 0
@@ -2073,7 +2091,8 @@ func TestBeforeAndAfterFlowOrderWhenOneBeforePanics(t *testing.T) {
 	})
 	app.After = callChecker(t, 4, &counter)
 
-	app.Run([]string{"app", "c", "cc"})
+	require.NoError(t,
+		app.Run([]string{"app", "c", "cc"}))
 	require.Equal(t, 5, counter)
 }
 
@@ -2099,7 +2118,8 @@ func TestBeforeAndAfterFlowOrderWhenOneAfterPanics(t *testing.T) {
 	})
 	app.After = callChecker(t, 6, &counter)
 
-	app.Run([]string{"app", "c", "cc"})
+	require.NoError(t,
+		app.Run([]string{"app", "c", "cc"}))
 	require.Equal(t, 7, counter)
 }
 
@@ -2125,7 +2145,8 @@ func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
 	})
 	app.After = callCheckerAndPanic(t, 666, 6, &counter)
 
-	app.Run([]string{"app", "c", "cc"})
+	require.NoError(t,
+		app.Run([]string{"app", "c", "cc"}))
 	require.Equal(t, 7, counter)
 }
 

@@ -29,11 +29,11 @@ func TestParseNoErrorWhenApplyReturnsTrue(t *testing.T) {
 
 func TestParseFillsContainers(t *testing.T) {
 	var (
-		boolSetByUser             = false
-		boolVar                   = false
-		stringsSetByUser          = false
-		stringsVar       []string = nil
-		boolCon                   = &container.Container{
+		boolSetByUser    = false
+		boolVar          = false
+		stringsSetByUser = false
+		stringsVar       []string
+		boolCon          = &container.Container{
 			Value:           values.NewBool(&boolVar, false),
 			ValueSetFromEnv: true,
 			ValueSetByUser:  &boolSetByUser,

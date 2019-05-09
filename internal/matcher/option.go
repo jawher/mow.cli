@@ -119,7 +119,7 @@ func (o *opt) matchShortOpt(args []string, idx int, c *ParseContext) (bool, int,
 
 	if strings.HasPrefix(arg[2:], "=") {
 		name := arg[0:2]
-		opt, _ := o.index[name]
+		opt := o.index[name]
 		if opt != o.theOne {
 			return false, 1, args
 		}

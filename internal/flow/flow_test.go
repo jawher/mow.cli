@@ -45,7 +45,10 @@ func TestStepCallsSuccessAfterDo(t *testing.T) {
 }
 
 func TestStepCallsErrorIfDoPanics(t *testing.T) {
-	defer func() { recover() }()
+	defer func() {
+		r := recover()
+		require.Equal(t, 42, r)
+	}()
 	calls := 0
 	step := &Step{
 		Do: func() {
