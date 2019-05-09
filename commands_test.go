@@ -1379,3 +1379,27 @@ func TestJoinStrings(t *testing.T) {
 		})
 	}
 }
+
+func TestPrintTabbedRow(t *testing.T) {
+	cases := []struct {
+		s1, s2   string
+		expected string
+	}{
+		{"", "", "  \t\n"},
+		{"a", "", "  a\t\n"},
+		{"a", "b", "  a\tb\n"},
+		{"a", "  b", "  a\tb\n"},
+		{"a", "b\n", "  a\tb\n  \t\n"},
+		{"a", "b\nc", "  a\tb\n  \tc\n"},
+	}
+
+	for _, cas := range cases {
+		t.Run(fmt.Sprintf("%q, %q", cas.s1, cas.s2), func(t *testing.T) {
+			t.Logf("Testing %q, %q", cas.s1, cas.s2)
+			var out strings.Builder
+			printTabbedRow(&out, cas.s1, cas.s2)
+
+			require.Equal(t, cas.expected, out.String())
+		})
+	}
+}
