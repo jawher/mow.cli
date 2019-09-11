@@ -107,7 +107,7 @@ In the next example, we create a multi-command application in the same style as
 familiar commands such as git and docker.  We build a fictional utility called
 uman to manage users in a system.  It provides two commands that can be invoked:
 list and get. The list command takes an optional flag to specify all users
-including disabled ones.  The get command requries one argument, the user ID,
+including disabled ones.  The get command requires one argument, the user ID,
 and takes an optional flag to specify a detailed listing.
 
 ```go
