@@ -8,6 +8,7 @@ import (
 
 	"github.com/jawher/mow.cli/internal/container"
 	"github.com/jawher/mow.cli/internal/flow"
+	"github.com/jawher/mow.cli/model"
 )
 
 /*
@@ -63,6 +64,18 @@ func (cli *Cli) Version(name, version string) {
 	names := mkOptStrs(name)
 	option := cli.optionsIdx[names[0]]
 	cli.version = &cliVersion{version, option}
+}
+
+func (cli *Cli) Model() model.App {
+	app := model.App{
+		Command: cli.Cmd.Model(),
+	}
+
+	if cli.version != nil {
+		app.Version = cli.version.version
+	}
+
+	return app
 }
 
 func (cli *Cli) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
