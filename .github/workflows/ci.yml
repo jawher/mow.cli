@@ -47,17 +47,23 @@ jobs:
   readme:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
-
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
           go-version: 1.14
         id: go
 
+      - name: Set GOPATH
+        run: echo ::set-env name=GOPATH::$GITHUB_WORKSPACE
+
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          path: "${{ env.GOPATH }}/src/github.com/jawher/mow.cli"
+
       - name: Readme Check
-        run: make readmecheck.setup readmecheck
+        run: export PATH="$GOPATH/bin:$PATH"; make readmecheck.setup readmecheck
+        working-directory: "${{ env.GOPATH }}/src/github.com/jawher/mow.cli"
 
   finish:
     needs: test
