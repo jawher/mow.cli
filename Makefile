@@ -26,3 +26,6 @@ setup:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.21.0
 
 .PHONY: test check lint vet fmtcheck ineffassign readmecheck
+
+readmecheck.setup:
+	go get github.com/jimmyfrasche/autoreadme
