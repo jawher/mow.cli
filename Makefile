@@ -8,9 +8,9 @@ doc:
 	autoreadme -f
 
 readmecheck:
-	sed '$ d' README.md > README.original.md
+	head -n -1 README.md > README.original.md
 	autoreadme -f
-	sed '$ d' README.md > README.generated.md
+	head -n -1 README.md > README.generated.md
 	diff README.generated.md README.original.md
 
 lint.setup:

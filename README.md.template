@@ -1,7 +1,7 @@
 # mow.cli
 ![CI](https://github.com/jawher/mow.cli/workflows/CI/badge.svg)
 [![GoDoc](https://pkg.go.dev/badge/github.com/jawher/mow.cli)](https://pkg.go.dev/github.com/jawher/mow.cli)
-[![Coverage Status](https://coveralls.io/repos/github/{{.RepoPath}}/badge.svg?branch=master)](https://coveralls.io/github/{{.RepoPath}}?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/jawher/mow.cli/badge.svg?branch=master)](https://coveralls.io/github/jawher/mow.cli?branch=master)
 
 {{.Synopsis}}
 
