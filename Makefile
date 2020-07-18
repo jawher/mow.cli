@@ -14,7 +14,7 @@ doc:
 
 readmecheck:
 	sed '$ d' README.md > README.original.md
-	autoreadme -f
+	"$(go env GOPATH)/bin/autoreadme" -f
 	sed '$ d' README.md > README.generated.md
 	diff README.generated.md README.original.md
 
