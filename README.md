@@ -155,7 +155,7 @@ func main() {
 	// Declare our second command, which is invocable with "uman get"
 	app.Command("get", "get a user details", func(cmd *cli.Cmd) {
 		var (
-			detailed = cmd.BoolOpt("detailed", false, "Disaply detailed info")
+			detailed = cmd.BoolOpt("detailed", false, "Display detailed info")
 			id       = cmd.StringArg("ID", "", "The user id to display")
 		)
 
