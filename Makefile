@@ -18,6 +18,6 @@ lint.setup:
 
 
 readmecheck.setup:
-	go get github.com/jimmyfrasche/autoreadme
+	go get github.com/jawher/autoreadme
 
 .PHONY: test check doc readmecheck lint.setup readmecheck.setup
