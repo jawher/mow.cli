@@ -1,0 +1,72 @@
+name: CI
+
+on: push
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go: ["1.12", "1.13", "1.14"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go ${{ matrix.go }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+        id: go
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Test with Go ${{ matrix.go }}
+        run: go test -v -coverprofile=profile.cov ./...
+
+      - name: Send coverage with Go ${{ matrix.go }}
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
+          flag-name: Go-${{ matrix.go }}
+          parallel: true
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
+        id: go
+
+      - name: lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.28
+
+  readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
+        id: go
+
+
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Set GOPATH
+        run: echo ::set-env name=GOPATH::$GITHUB_WORKSPACE/go
+
+      - name: Readme Check
+        run: export PATH="$GOPATH/bin:$PATH"; make readmecheck.setup readmecheck
+
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true
