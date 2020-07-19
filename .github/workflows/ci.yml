@@ -58,12 +58,9 @@ jobs:
 
       - name: Checkout the code
         uses: actions/checkout@v2
-        with:
-          path: "${{ env.GOPATH }}/src/github.com/jawher/mow.cli"
 
       - name: Readme Check
         run: export PATH="$GOPATH/bin:$PATH"; make readmecheck.setup readmecheck
-        working-directory: "${{ env.GOPATH }}/src/github.com/jawher/mow.cli"
 
   finish:
     needs: test
