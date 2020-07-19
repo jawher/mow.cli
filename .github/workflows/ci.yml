@@ -53,11 +53,12 @@ jobs:
           go-version: 1.14
         id: go
 
-      - name: Set GOPATH
-        run: echo ::set-env name=GOPATH::$GITHUB_WORKSPACE
 
       - name: Checkout the code
         uses: actions/checkout@v2
+
+      - name: Set GOPATH
+        run: echo ::set-env name=GOPATH::$GITHUB_WORKSPACE/go
 
       - name: Readme Check
         run: export PATH="$GOPATH/bin:$PATH"; make readmecheck.setup readmecheck
