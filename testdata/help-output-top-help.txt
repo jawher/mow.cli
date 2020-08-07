@@ -1,5 +1,5 @@
 
-Usage: app [-bdsuikqs] BOOL1 [STR1] INT3... COMMAND [arg...]
+Usage: app [-bdsuikqs] [BOOL1 STR1 INT3...] COMMAND [arg...]
 
 App Desc
                 

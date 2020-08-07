@@ -1,0 +1,7 @@
+
+Usage: app command3 child2 [OPTIONS]
+
+child2 description
+               
+Options:       
+  -o, --opt    opt desc

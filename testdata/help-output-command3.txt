@@ -1,0 +1,9 @@
+
+Usage: app command3 COMMAND [arg...]
+
+command3 description
+               
+Commands:      
+  child1       child1 description
+               
+Run 'app command3 COMMAND --help' for more information on a command.
