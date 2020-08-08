@@ -394,6 +394,8 @@ func (c *Cmd) mkArg(arg container.Container) {
 		panic(fmt.Sprintf("duplicate argument name %q", arg.Name))
 	}
 
+	arg.DefaultValue = values.DefaultValue(arg.Value)
+
 	arg.ValueSetFromEnv = values.SetFromEnv(arg.Value, arg.EnvVar)
 
 	c.args = append(c.args, &arg)

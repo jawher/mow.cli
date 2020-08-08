@@ -12,7 +12,6 @@ import (
 	"github.com/jawher/mow.cli/internal/fsm"
 	"github.com/jawher/mow.cli/internal/lexer"
 	"github.com/jawher/mow.cli/internal/parser"
-	"github.com/jawher/mow.cli/internal/values"
 )
 
 /*
@@ -546,7 +545,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 		for _, arg := range c.args {
 			var (
 				env   = formatEnvVarsForHelp(arg.EnvVar)
-				value = formatValueForHelp(arg.HideValue, arg.Value)
+				value = formatValueForHelp(arg.HideValue, arg.DefaultValue)
 			)
 			printTabbedRow(w, arg.Name, joinStrings(arg.Desc, env, value))
 		}
@@ -559,7 +558,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 			var (
 				optNames = formatOptNamesForHelp(opt)
 				env      = formatEnvVarsForHelp(opt.EnvVar)
-				value    = formatValueForHelp(opt.HideValue, opt.Value)
+				value    = formatValueForHelp(opt.HideValue, opt.DefaultValue)
 			)
 			printTabbedRow(w, optNames, joinStrings(opt.Desc, env, value))
 		}
@@ -619,18 +618,16 @@ func formatOptNamesForHelp(o *container.Container) string {
 	}
 }
 
-func formatValueForHelp(hide bool, v flag.Value) string {
+func formatValueForHelp(hide bool, v string) string {
 	if hide {
 		return ""
 	}
 
-	if dv, ok := v.(values.DefaultValued); ok {
-		if dv.IsDefault() {
-			return ""
-		}
+	if v == "" {
+		return ""
 	}
 
-	return fmt.Sprintf("(default %s)", v.String())
+	return fmt.Sprintf("(default %s)", v)
 }
 
 func formatEnvVarsForHelp(envVars string) string {

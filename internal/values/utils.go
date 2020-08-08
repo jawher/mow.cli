@@ -54,3 +54,12 @@ func setMultivalued(into MultiValued, values []string) error {
 
 	return nil
 }
+
+func DefaultValue(v flag.Value) string {
+	if dv, ok := v.(DefaultValued); ok {
+		if dv.IsDefault() {
+			return ""
+		}
+	}
+	return v.String()
+}

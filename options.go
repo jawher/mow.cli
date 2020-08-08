@@ -467,6 +467,7 @@ func mkOptStrs(optName string) []string {
 }
 
 func (c *Cmd) mkOpt(opt container.Container) {
+	opt.DefaultValue = values.DefaultValue(opt.Value)
 	opt.ValueSetFromEnv = values.SetFromEnv(opt.Value, opt.EnvVar)
 
 	opt.Names = mkOptStrs(opt.Name)
