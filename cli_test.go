@@ -790,10 +790,14 @@ var genGolden = flag.Bool("g", false, "Generate golden file(s)")
 
 func TestHelpMessage(t *testing.T) {
 	cases := []struct {
-		name   string
-		params []string
+		name     string
+		params   []string
+		env      map[string]string
+		exitCode int
 	}{
 		{name: "top-help", params: []string{"app", "-h"}},
+		{name: "top-help-i-user", params: []string{"app", "-i=5"}, exitCode: 2},
+		{name: "top-help-i-env", params: []string{"app"}, env: map[string]string{"INT1": "25"}, exitCode: 2},
 		{name: "command1", params: []string{"app", "command1", "-h"}},
 		{name: "command2", params: []string{"app", "command2", "-h"}},
 		{name: "command3", params: []string{"app", "command3", "-h"}},
@@ -807,9 +811,10 @@ func TestHelpMessage(t *testing.T) {
 			t.Logf("case: %+v", cas)
 			var out, stdErr string
 			defer captureAndRestoreOutput(&out, &stdErr)()
+			defer setAndRestoreEnv(cas.env)()
 
 			exitCalled := false
-			defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+			defer exitShouldBeCalledWith(t, cas.exitCode, &exitCalled)()
 
 			app := App("app", "App Desc")
 			app.Spec = "[-bdsuikqs] [BOOL1 STR1 INT3...]"
@@ -856,8 +861,6 @@ func TestHelpMessage(t *testing.T) {
 			app.Ints(IntsArg{Name: "INTS2", Value: []int{1, 2, 3}, EnvVar: "INTS2", Desc: "Ints Argument 2"})
 			app.Ints(IntsArg{Name: "INTS3", Value: []int{1}, EnvVar: "INTS3", Desc: "Ints Argument 3", HideValue: true})
 
-			app.Action = func() {}
-
 			app.Command("command1", "command1 description", func(cmd *Cmd) {})
 			app.Command("command2", "command2 description", func(cmd *Cmd) {})
 			app.Command("command3", "command3 description", func(cmd *Cmd) {
@@ -879,7 +882,6 @@ func TestHelpMessage(t *testing.T) {
 
 			filename := fmt.Sprintf("testdata/help-output-%s.txt", cas.name)
 
-			fmt.Printf("golden file: %s\n", filename)
 			if *genGolden {
 				require.NoError(t,
 					ioutil.WriteFile(filename, []byte(stdErr), 0644))
@@ -2234,6 +2236,20 @@ func exitShouldNotCalled(t *testing.T) func() {
 
 func suppressOutput() func() {
 	return captureAndRestoreOutput(nil, nil)
+}
+
+func setAndRestoreEnv(env map[string]string) func() {
+	backup := map[string]string{}
+	for k, v := range env {
+		backup[k] = os.Getenv(k)
+		os.Setenv(k, v)
+	}
+
+	return func() {
+		for k, v := range backup {
+			os.Setenv(k, v)
+		}
+	}
 }
 
 func captureAndRestoreOutput(out, err *string) func() {

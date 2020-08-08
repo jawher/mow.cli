@@ -14,4 +14,5 @@ type Container struct {
 	ValueSetFromEnv bool
 	ValueSetByUser  *bool
 	Value           flag.Value
+	DefaultValue    string
 }
