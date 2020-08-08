@@ -288,6 +288,14 @@ of ways:
     $ docker job log show
     $ docker job log clear
 
+Commands can be hidden in the help messages.
+This can prove useful to deprecate a command so that it does not appear to new users in the help, but still exists to not break existing scripts.
+To hide a command, set the Hidden field to true:
+
+    app.Command("login", "login to the backend (DEPRECATED: please use auth instead)", func(cmd *cli.Cmd)) {
+        cmd.Hidden = true
+    }
+
 As a convenience, to assign an Action to a func with no arguments, use
 ActionCommand when defining the Command. For example, the following two
 statements are equivalent:

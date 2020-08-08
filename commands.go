@@ -31,6 +31,8 @@ type Cmd struct {
 	Spec string
 	// The command long description to be shown when help is requested
 	LongDesc string
+	// Hide this command in the help messages
+	Hidden bool
 	// The command error handling strategy
 	ErrorHandling flag.ErrorHandling
 
@@ -563,15 +565,28 @@ func (c *Cmd) printHelp(longDesc bool) {
 		}
 	}
 
-	if len(c.commands) > 0 {
+	commands := make([]*Cmd, 0, len(c.commands))
+	for _, c := range c.commands {
+		if err := c.doInit(); err != nil {
+			panic(err)
+		}
+
+		if c.Hidden {
+			continue
+		}
+
+		commands = append(commands, c)
+	}
+
+	if len(commands) > 0 {
 		fmt.Fprint(w, "\t\nCommands:\t\n")
 
-		for _, c := range c.commands {
+		for _, c := range commands {
 			fmt.Fprintf(w, "  %s\t%s\n", strings.Join(c.aliases, ", "), c.desc)
 		}
 	}
 
-	if len(c.commands) > 0 {
+	if len(commands) > 0 {
 		fmt.Fprintf(w, "\t\nRun '%s COMMAND --help' for more information on a command.\n", path)
 	}
 

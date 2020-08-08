@@ -1,0 +1,7 @@
+
+Usage: app command3 child1 ARG1
+
+child1 description
+               
+Arguments:     
+  ARG1         arg1 desc
