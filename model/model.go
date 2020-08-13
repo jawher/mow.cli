@@ -11,6 +11,7 @@ type Command struct {
 	Spec      string
 	Desc      string
 	LongDesc  string
+	Hidden    bool
 	Options   []Option
 	Arguments []Argument
 	Commands  []Command

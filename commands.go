@@ -125,6 +125,7 @@ func (c *Cmd) Model() model.Command {
 		Spec:      c.Spec,
 		Desc:      c.desc,
 		LongDesc:  c.LongDesc,
+		Hidden:    c.Hidden,
 		Options:   make([]model.Option, len(c.options)),
 		Arguments: make([]model.Argument, len(c.args)),
 		Commands:  make([]model.Command, len(c.commands)),
