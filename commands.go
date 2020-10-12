@@ -464,6 +464,24 @@ func (c *Cmd) doInit() error {
 		return err
 	}
 
+	// add required args as parents to subcommands
+	for _, sub := range c.commands {
+		openSq := 0
+		for _, t := range tokens {
+			if t.Typ == lexer.TTOpenSq {
+				openSq++
+				continue
+			}
+			if t.Typ == lexer.TTCloseSq {
+				openSq--
+				continue
+			}
+			if t.Typ == lexer.TTArg && openSq == 0 {
+				sub.parents = append(sub.parents, t.Val)
+			}
+		}
+	}
+
 	params := parser.Params{
 		Spec:       c.Spec,
 		Options:    c.options,
@@ -586,7 +604,8 @@ func (c *Cmd) printHelp(longDesc bool) {
 	}
 
 	if len(commands) > 0 {
-		fmt.Fprintf(w, "\t\nRun '%s COMMAND --help' for more information on a command.\n", path)
+		pathToSub := strings.Join(commands[0].parents, " ")
+		fmt.Fprintf(w, "\t\nRun '%s COMMAND --help' for more information on a command.\n", pathToSub)
 	}
 
 	w.Flush()
