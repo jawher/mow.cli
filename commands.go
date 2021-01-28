@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -138,6 +139,12 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 		optionsIdx:    map[string]*container.Container{},
 		args:          []*container.Container{},
 		argsIdx:       map[string]*container.Container{},
+	})
+}
+
+func (c *Cmd) SortCommands() {
+	sort.Slice(c.commands, func(i, j int) bool {
+		return c.commands[i].name < c.commands[j].name
 	})
 }
 
