@@ -1,13 +1,16 @@
 package fsm
 
 import (
+	"errors"
 	"sort"
-
-	"fmt"
 
 	"github.com/jawher/mow.cli/internal/container"
 	"github.com/jawher/mow.cli/internal/matcher"
 	"github.com/jawher/mow.cli/internal/values"
+)
+
+var (
+	ErrIncorrectUsage = errors.New("incorrect usage")
 )
 
 /*
@@ -121,7 +124,7 @@ func (s *State) Parse(args []string) error {
 	pc := matcher.NewParseContext()
 	ok := s.apply(args, pc)
 	if !ok {
-		return fmt.Errorf("incorrect usage")
+		return ErrIncorrectUsage
 	}
 
 	if err := fillContainers(pc.Opts); err != nil {

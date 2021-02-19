@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -34,6 +35,8 @@ type Cmd struct {
 	Hidden bool
 	// The command error handling strategy
 	ErrorHandling flag.ErrorHandling
+
+	PrintHelpOnExit bool
 
 	init    CmdInitializer
 	name    string
@@ -677,7 +680,9 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 
 	if err := c.fsm.Parse(args[:nargsLen]); err != nil {
 		fmt.Fprintf(stdErr, "Error: %s\n", err.Error())
-		c.PrintHelp()
+		if c.PrintHelpOnExit || errors.Is(err, fsm.ErrIncorrectUsage) {
+			c.PrintHelp()
+		}
 		c.onError(err)
 		return err
 	}
