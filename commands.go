@@ -590,6 +590,8 @@ func (c *Cmd) printHelp(longDesc bool) {
 	}
 
 	w.Flush()
+
+	fmt.Fprint(stdErr, "\n")
 }
 
 func formatOptNamesForHelp(o *container.Container) string {
