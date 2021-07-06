@@ -464,24 +464,6 @@ func (c *Cmd) doInit() error {
 		return err
 	}
 
-	// add required args as parents to subcommands
-	for _, sub := range c.commands {
-		openSq := 0
-		for _, t := range tokens {
-			if t.Typ == lexer.TTOpenSq {
-				openSq++
-				continue
-			}
-			if t.Typ == lexer.TTCloseSq {
-				openSq--
-				continue
-			}
-			if t.Typ == lexer.TTArg && openSq == 0 {
-				sub.parents = append(sub.parents, t.Val)
-			}
-		}
-	}
-
 	params := parser.Params{
 		Spec:       c.Spec,
 		Options:    c.options,
@@ -494,6 +476,26 @@ func (c *Cmd) doInit() error {
 		return err
 	}
 	c.fsm = s
+
+	// add required args as parents of subcommands
+	openSq := 0
+	argParents := []string{}
+	for _, t := range tokens {
+		if t.Typ == lexer.TTOpenSq {
+			openSq++
+			continue
+		}
+		if t.Typ == lexer.TTCloseSq {
+			openSq--
+			continue
+		}
+		if t.Typ == lexer.TTArg && openSq == 0 {
+			argParents = append(argParents, t.Val)
+		}
+	}
+	for _, sub := range c.commands {
+		sub.parents = append(sub.parents, argParents...)
+	}
 	return nil
 }
 
