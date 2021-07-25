@@ -742,10 +742,6 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 
 }
 
-func (c *Cmd) helpRequested(args []string) bool {
-	return c.isFirstItemAmong(args, []string{"-h", "--help"})
-}
-
 func (c *Cmd) helpIndex(args []string) int {
 	searchSet := []string{"-h", "--help"}
 	for i, arg := range args {
