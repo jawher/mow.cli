@@ -6,11 +6,11 @@ jobs:
   test:
     strategy:
       matrix:
-        go: ["1.12", "1.13", "1.14"]
+        go: ["1.14", "1.15", "1.16"]
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go ${{ matrix.go }}
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
         id: go
@@ -36,21 +36,21 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.14
+          go-version: 1.16
         id: go
 
       - name: lint
-        uses: golangci/golangci-lint-action@v1
+        uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.28
+          version: v1.29
 
   readme:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
         with:
-          go-version: 1.14
+          go-version: 1.16
         id: go
 
 
@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set GOPATH
-        run: echo ::set-env name=GOPATH::$GITHUB_WORKSPACE/go
+        run: echo "GOPATH=$GITHUB_WORKSPACE/go" >> $GITHUB_ENV
 
       - name: Readme Check
         run: export PATH="$GOPATH/bin:$PATH"; make readmecheck.setup readmecheck
