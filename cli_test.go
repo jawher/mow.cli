@@ -752,36 +752,111 @@ func TestAppWithFloats64Arg(t *testing.T) {
 	}
 }
 
-func testHelpAndVersionWithOptionsEnd(flag string, t *testing.T) {
-	t.Logf("Testing help/version with --: flag=%q", flag)
-	defer suppressOutput()()
+func TestHelpCommandSkipsValidation(t *testing.T) {
+	t.Run("1 level deep", func(t *testing.T) {
+		for _, args := range [][]string{
+			{"app", "command", "-h"},
+			{"app", "--opt1", "command", "-h"},
+			{"app", "--opt1", "value1", "command", "-h"},
+			{"app", "--opt2", "command", "-h"},
+			{"app", "--opt2", "--opt3", "command", "-h"},
+			{"app", "--wrong", "command", "-h"},
+		} {
+			t.Run(fmt.Sprintf("%v", args), func(t *testing.T) {
+				app := App("app", "app desc")
+				app.StringArg("ARG", "", "arg desc")
+				app.StringOpt("opt1", "", "opt1 desc")
+				app.BoolOpt("opt2", false, "opt2 desc")
+				app.BoolOpt("opt3", false, "opt3 desc")
+				app.Command("command", "command desc", func(cmd *Cmd) {})
 
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+				var out, stdErr string
+				defer captureAndRestoreOutput(&out, &stdErr)()
 
-	app := App("x", "")
-	app.Version("v version", "1.0")
-	app.Spec = "CMD"
+				exitCalled := false
+				defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
-	cmd := app.String(StringArg{Name: "CMD", Value: "", Desc: ""})
+				require.NoError(t,
+					// calling help on a command should skip validating the parents required arguments
+					app.Run(args))
 
-	actionCalled := false
-	app.Action = func() {
-		actionCalled = true
-		require.Equal(t, flag, *cmd)
-	}
+				require.Equal(t, `
+Usage: app command
 
-	require.NoError(t,
-		app.Run([]string{"x", "--", flag}))
+command desc
+`, stdErr)
+			})
+		}
+	})
 
-	require.True(t, actionCalled, "action should have been called")
-	require.False(t, exitCalled, "exit should not have been called")
+	t.Run("2 level deep", func(t *testing.T) {
+		for _, args := range [][]string{
+			{"app", "command", "child", "-h"},
+			{"app", "--opt1", "command", "child", "-h"},
+			{"app", "--opt1", "value1", "command", "child", "-h"},
+			{"app", "--opt2", "command", "child", "-h"},
+			{"app", "--opt2", "--opt3", "command", "child", "-h"},
+			{"app", "--wrong", "command", "child", "-h"},
+		} {
+			t.Run(fmt.Sprintf("%v", args), func(t *testing.T) {
+				app := App("app", "app desc")
+				app.StringArg("ARG1", "", "arg1 desc")
+				app.StringOpt("opt1", "", "opt1 desc")
+				app.BoolOpt("opt2", false, "opt2 desc")
+				app.BoolOpt("opt3", false, "opt3 desc")
+
+				app.Command("command", "command desc", func(cmd *Cmd) {
+					cmd.StringArg("ARG2", "", "arg2 desc")
+
+					cmd.Command("child", "child desc", func(cmd *Cmd) {})
+				})
+
+				var out, stdErr string
+				defer captureAndRestoreOutput(&out, &stdErr)()
+
+				exitCalled := false
+				defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+
+				require.NoError(t,
+					// calling help on a command should skip validating the parents required arguments
+					app.Run(args))
+
+				require.Equal(t, `
+Usage: app command child
+
+child desc
+`, stdErr)
+			})
+		}
+	})
 }
 
 func TestHelpAndVersionWithOptionsEnd(t *testing.T) {
-	for _, flag := range []string{"-h", "--help", "-v", "--version"} {
-		t.Run(flag, func(t *testing.T) {
-			testHelpAndVersionWithOptionsEnd(flag, t)
+	for _, opt := range []string{"-h", "--help", "-v", "--version"} {
+		t.Run(opt, func(t *testing.T) {
+			t.Logf("Testing help/version with --: opt=%q", opt)
+			defer suppressOutput()()
+
+			exitCalled := false
+			defer exitShouldBeCalledWith(t, 0, &exitCalled)()
+
+			app := App("x", "")
+			app.Version("v version", "1.0")
+			app.Spec = "CMD"
+
+			cmd := app.String(StringArg{Name: "CMD", Value: "", Desc: ""})
+
+			actionCalled := false
+			app.Action = func() {
+				actionCalled = true
+				require.Equal(t, opt, *cmd)
+			}
+
+			require.NoError(t,
+				app.Run([]string{"x", "--", opt}))
+
+			require.True(t, actionCalled, "action should have been called")
+			require.False(t, exitCalled, "exit should not have been called")
 		})
 	}
 }
@@ -876,7 +951,7 @@ func TestHelpMessage(t *testing.T) {
 				cmd.Hidden = true
 			})
 
-			fmt.Printf("calling app with %+v\n", cas.params)
+			t.Logf("calling app with %+v", cas.params)
 			require.NoError(t,
 				app.Run(cas.params))
 

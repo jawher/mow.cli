@@ -4,3 +4,4 @@ coverage.out
 README.generated.md
 README.original.md
 bin/
+.idea/
