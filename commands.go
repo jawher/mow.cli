@@ -648,13 +648,32 @@ func formatEnvVarsForHelp(envVars string) string {
 }
 
 func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
-	if c.helpRequested(args) {
+	helpIndex := c.helpIndex(args)
+	nargsLen := c.getOptsAndArgs(args)
+
+	if helpIndex >= 0 && helpIndex < nargsLen {
 		c.PrintLongHelp()
 		c.onError(errHelpRequested)
 		return nil
 	}
 
-	nargsLen := c.getOptsAndArgs(args)
+	// help was requested, but not for this command, skip the validation
+	if helpIndex >= 0 {
+		arg := args[nargsLen]
+		for _, sub := range c.commands {
+			if !sub.isAlias(arg) {
+				continue
+			}
+
+			if err := sub.doInit(); err != nil {
+				panic(err)
+			}
+
+			return sub.parse(args[nargsLen+1:], entry, nil, nil)
+		}
+		// impossible case
+		panic("wut")
+	}
 
 	if err := c.fsm.Parse(args[:nargsLen]); err != nil {
 		fmt.Fprintf(stdErr, "Error: %s\n", err.Error())
@@ -723,17 +742,28 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 
 }
 
-func (c *Cmd) helpRequested(args []string) bool {
-	return c.isFlagSet(args, []string{"-h", "--help"})
+func (c *Cmd) helpIndex(args []string) int {
+	searchSet := []string{"-h", "--help"}
+	for i, arg := range args {
+		if arg == "--" {
+			return -1
+		}
+		for _, searchArg := range searchSet {
+			if arg == searchArg {
+				return i
+			}
+		}
+	}
+	return -1
 }
 
-func (c *Cmd) isFlagSet(args []string, searchArgs []string) bool {
+func (c *Cmd) isFirstItemAmong(args []string, searchSet []string) bool {
 	if len(args) == 0 {
 		return false
 	}
 
 	arg := args[0]
-	for _, searchArg := range searchArgs {
+	for _, searchArg := range searchSet {
 		if arg == searchArg {
 			return true
 		}
