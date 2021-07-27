@@ -12,6 +12,7 @@ import (
 	"github.com/jawher/mow.cli/internal/fsm"
 	"github.com/jawher/mow.cli/internal/lexer"
 	"github.com/jawher/mow.cli/internal/parser"
+	"github.com/jawher/mow.cli/model"
 )
 
 /*
@@ -112,6 +113,64 @@ CmdInitializer is a function that configures a command by adding options, argume
 to execute when the command is called
 */
 type CmdInitializer func(*Cmd)
+
+func (c *Cmd) Model() model.Command {
+	if err := c.doInit(); err != nil {
+		panic(err)
+	}
+
+	res := model.Command{
+		Name:      c.name,
+		Aliases:   c.aliases,
+		Spec:      c.Spec,
+		Desc:      c.desc,
+		LongDesc:  c.LongDesc,
+		Hidden:    c.Hidden,
+		Options:   make([]model.Option, len(c.options)),
+		Arguments: make([]model.Argument, len(c.args)),
+		Commands:  make([]model.Command, len(c.commands)),
+	}
+
+	for i, opt := range c.options {
+		var (
+			shortNames []string
+			longNames  []string
+		)
+
+		for _, n := range opt.Names {
+			if strings.HasPrefix(n, "--") {
+				longNames = append(longNames, n)
+				continue
+			}
+			shortNames = append(shortNames, n)
+		}
+
+		res.Options[i] = model.Option{
+			ShortNames:   shortNames,
+			LongNames:    longNames,
+			Desc:         opt.Desc,
+			EnvVar:       opt.EnvVar,
+			HideValue:    opt.HideValue,
+			DefaultValue: opt.Value.String(),
+		}
+	}
+
+	for i, arg := range c.args {
+		res.Arguments[i] = model.Argument{
+			Name:         arg.Name,
+			Desc:         arg.Desc,
+			EnvVar:       arg.EnvVar,
+			HideValue:    arg.HideValue,
+			DefaultValue: arg.Value.String(),
+		}
+	}
+
+	for i, cmd := range c.commands {
+		res.Commands[i] = cmd.Model()
+	}
+
+	return res
+}
 
 /*
 Command adds a new (sub) command to c where name is the command name (what you type in the console),
@@ -616,6 +675,7 @@ func formatOptNamesForHelp(o *container.Container) string {
 	default:
 		return ""
 	}
+
 }
 
 func formatValueForHelp(hide bool, v string) string {
