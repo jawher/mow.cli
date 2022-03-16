@@ -14,10 +14,10 @@ readmecheck:
 	diff README.generated.md README.original.md
 
 lint.setup:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.28.0
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.44.2
 
 
 readmecheck.setup:
-	go get github.com/jawher/autoreadme
+	go install github.com/jawher/autoreadme@latest
 
 .PHONY: test check doc readmecheck lint.setup readmecheck.setup
