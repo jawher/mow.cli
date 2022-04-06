@@ -36,11 +36,12 @@ name and description will be used to construct the help message for the app:
 func App(name, desc string) *Cli {
 	return &Cli{
 		Cmd: &Cmd{
-			name:          name,
-			desc:          desc,
-			optionsIdx:    map[string]*container.Container{},
-			argsIdx:       map[string]*container.Container{},
-			ErrorHandling: flag.ExitOnError,
+			name:            name,
+			desc:            desc,
+			optionsIdx:      map[string]*container.Container{},
+			argsIdx:         map[string]*container.Container{},
+			ErrorHandling:   flag.ExitOnError,
+			PrintHelpOnExit: true,
 		},
 	}
 }
