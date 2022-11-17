@@ -770,16 +770,10 @@ func TestHelpCommandSkipsValidation(t *testing.T) {
 				app.BoolOpt("opt3", false, "opt3 desc")
 				app.Command("command", "command desc", func(cmd *Cmd) {})
 
-				var out, stdErr string
-				defer captureAndRestoreOutput(&out, &stdErr)()
+				exitCode, _, stdErr, err := bufferizedRun(app, args)
 
-				exitCalled := false
-				defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
-				require.NoError(t,
-					// calling help on a command should skip validating the parents required arguments
-					app.Run(args))
-
+				require.NoError(t, err) // calling help on a command should skip validating the parents required arguments
+				require.Equal(t, exitCode, 0, "exit should have been called")
 				require.Equal(t, `
 Usage: app command
 
@@ -811,16 +805,10 @@ command desc
 					cmd.Command("child", "child desc", func(cmd *Cmd) {})
 				})
 
-				var out, stdErr string
-				defer captureAndRestoreOutput(&out, &stdErr)()
+				exitCode, _, stdErr, err := bufferizedRun(app, args)
 
-				exitCalled := false
-				defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
-				require.NoError(t,
-					// calling help on a command should skip validating the parents required arguments
-					app.Run(args))
-
+				require.NoError(t, err) // calling help on a command should skip validating the parents required arguments
+				require.Equal(t, exitCode, 0, "exit should have been called")
 				require.Equal(t, `
 Usage: app command child
 
@@ -835,10 +823,6 @@ func TestHelpAndVersionWithOptionsEnd(t *testing.T) {
 	for _, opt := range []string{"-h", "--help", "-v", "--version"} {
 		t.Run(opt, func(t *testing.T) {
 			t.Logf("Testing help/version with --: opt=%q", opt)
-			defer suppressOutput()()
-
-			exitCalled := false
-			defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
 			app := App("x", "")
 			app.Version("v version", "1.0")
@@ -852,11 +836,12 @@ func TestHelpAndVersionWithOptionsEnd(t *testing.T) {
 				require.Equal(t, opt, *cmd)
 			}
 
-			require.NoError(t,
-				app.Run([]string{"x", "--", opt}))
+			exitCode, _, _, err := bufferizedRun(app,
+				[]string{"x", "--", opt})
+			require.NoError(t, err)
 
 			require.True(t, actionCalled, "action should have been called")
-			require.False(t, exitCalled, "exit should not have been called")
+			require.Equal(t, exitCode, -1, "exit should not have been called")
 		})
 	}
 }
@@ -884,12 +869,7 @@ func TestHelpMessage(t *testing.T) {
 		cas := cas
 		t.Run(cas.name, func(t *testing.T) {
 			t.Logf("case: %+v", cas)
-			var out, stdErr string
-			defer captureAndRestoreOutput(&out, &stdErr)()
 			defer setAndRestoreEnv(cas.env)()
-
-			exitCalled := false
-			defer exitShouldBeCalledWith(t, cas.exitCode, &exitCalled)()
 
 			app := App("app", "App Desc")
 			app.Spec = "[-bdsuikqs] [BOOL1 STR1 INT3...]"
@@ -952,8 +932,8 @@ func TestHelpMessage(t *testing.T) {
 			})
 
 			t.Logf("calling app with %+v", cas.params)
-			require.NoError(t,
-				app.Run(cas.params))
+			exitCode, _, stdErr, err := bufferizedRun(app, cas.params)
+			require.NoError(t, err)
 
 			filename := fmt.Sprintf("testdata/help-output-%s.txt", cas.name)
 
@@ -965,18 +945,13 @@ func TestHelpMessage(t *testing.T) {
 			expected, e := ioutil.ReadFile(filename)
 			require.NoError(t, e, "Failed to read the expected help output from %s", filename)
 
+			require.Equal(t, exitCode, cas.exitCode, "exit should have been called with the expected code")
 			require.Equal(t, string(expected), stdErr)
 		})
 	}
 }
 
 func TestLongHelpMessage(t *testing.T) {
-	var out, err string
-	defer captureAndRestoreOutput(&out, &err)()
-
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
 	app := App("app", "App Desc")
 	app.LongDesc = "Longer App Desc"
 	app.Spec = "[-o] ARG"
@@ -985,27 +960,23 @@ func TestLongHelpMessage(t *testing.T) {
 	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument"})
 
 	app.Action = func() {}
-	require.NoError(t,
-		app.Run([]string{"app", "-h"}))
+
+	exitCode, _, stdErr, err := bufferizedRun(app,
+		[]string{"app", "-h"})
+	require.NoError(t, err)
 
 	if *genGolden {
 		require.NoError(t,
-			ioutil.WriteFile("testdata/long-help-output.txt.golden", []byte(err), 0644))
+			ioutil.WriteFile("testdata/long-help-output.txt.golden", []byte(stdErr), 0644))
 	}
 
 	expected, e := ioutil.ReadFile("testdata/long-help-output.txt")
 	require.NoError(t, e, "Failed to read the expected help output from testdata/long-help-output.txt")
-
-	require.Equal(t, expected, []byte(err))
+	require.Equal(t, exitCode, 0, "exit should have been called")
+	require.Equal(t, expected, []byte(stdErr))
 }
 
 func TestMultiLineDescInHelpMessage(t *testing.T) {
-	var out, err string
-	defer captureAndRestoreOutput(&out, &err)()
-
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
 	app := App("app", "App Desc")
 	app.LongDesc = "Longer App Desc"
 	app.Spec = "[-o] ARG"
@@ -1015,25 +986,23 @@ func TestMultiLineDescInHelpMessage(t *testing.T) {
 	app.String(StringArg{Name: "ARG", Value: "", Desc: "Argument\nDescription\nMultiple\nLines"})
 
 	app.Action = func() {}
-	require.NoError(t,
-		app.Run([]string{"app", "-h"}))
+
+	exitCode, _, stdErr, err := bufferizedRun(app,
+		[]string{"app", "-h"})
+	require.NoError(t, err)
 
 	if *genGolden {
 		require.NoError(t,
-			ioutil.WriteFile("testdata/multi-line-desc-help-output.txt.golden", []byte(err), 0644))
+			ioutil.WriteFile("testdata/multi-line-desc-help-output.txt.golden", []byte(stdErr), 0644))
 	}
 
 	expected, e := ioutil.ReadFile("testdata/multi-line-desc-help-output.txt")
 	require.NoError(t, e, "Failed to read the expected help output from testdata/long-help-output.txt")
-
-	require.Equal(t, expected, []byte(err))
+	require.Equal(t, exitCode, 0, "exit should have been called")
+	require.Equal(t, expected, []byte(stdErr))
 }
 
 func TestVersionShortcut(t *testing.T) {
-	defer suppressOutput()()
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
 	app := App("cp", "")
 	app.Version("v version", "cp 1.2.3")
 
@@ -1042,11 +1011,12 @@ func TestVersionShortcut(t *testing.T) {
 		actionCalled = true
 	}
 
-	require.NoError(t,
-		app.Run([]string{"cp", "--version"}))
+	exitCode, _, _, err := bufferizedRun(app,
+		[]string{"cp", "--version"})
+	require.NoError(t, err)
 
 	require.False(t, actionCalled, "action should not have been called")
-	require.True(t, exitCalled, "exit should have been called")
+	require.Equal(t, exitCode, 0, "exit should have been called")
 }
 
 func TestSubCommands(t *testing.T) {
@@ -1073,9 +1043,6 @@ func TestSubCommands(t *testing.T) {
 }
 
 func TestContinueOnError(t *testing.T) {
-	defer exitShouldNotCalled(t)()
-	defer suppressOutput()()
-
 	app := App("say", "")
 	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
 	app.Spec = "-f"
@@ -1085,15 +1052,13 @@ func TestContinueOnError(t *testing.T) {
 		called = true
 	}
 
-	err := app.Run([]string{"say"})
+	exitCode, _, _, err := bufferizedRun(app, []string{"say"})
 	require.NotNil(t, err)
 	require.False(t, called, "Exec should NOT have been called")
+	require.Equal(t, exitCode, -1, "Exit should not have been called")
 }
 
 func TestContinueOnErrorWithHelpAndVersion(t *testing.T) {
-	defer exitShouldNotCalled(t)()
-	defer suppressOutput()()
-
 	app := App("say", "")
 	app.Version("v", "1.0")
 	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
@@ -1105,58 +1070,47 @@ func TestContinueOnErrorWithHelpAndVersion(t *testing.T) {
 	}
 
 	{
-		err := app.Run([]string{"say", "-h"})
+		exitCode, _, _, err := bufferizedRun(app, []string{"say", "-h"})
 		require.Nil(t, err)
 		require.False(t, called, "Exec should NOT have been called")
+		require.Equal(t, exitCode, -1, "Exit should not have been called")
 	}
 
 	{
-		err := app.Run([]string{"say", "-v"})
+		exitCode, _, _, err := bufferizedRun(app, []string{"say", "-v"})
 		require.Nil(t, err)
 		require.False(t, called, "Exec should NOT have been called")
+		require.Equal(t, exitCode, -1, "Exit should not have been called")
 	}
 }
 
 func TestExitOnError(t *testing.T) {
-	defer suppressOutput()()
-
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
-
 	app := App("x", "")
 	app.ErrorHandling = flag.ExitOnError
 	app.Spec = "Y"
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	require.Error(t,
-		app.Run([]string{"x", "y", "z"}))
-	require.True(t, exitCalled, "exit should have been called")
+	exitCode, _, _, err := bufferizedRun(app,
+		[]string{"x", "y", "z"})
+	require.Error(t, err)
+	require.Equal(t, exitCode, 2, "exit should have been called")
 }
 
 func TestExitOnErrorWithHelp(t *testing.T) {
-	defer suppressOutput()()
-
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
 	app := App("x", "")
 	app.Spec = "Y"
 	app.ErrorHandling = flag.ExitOnError
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	require.NoError(t,
-		app.Run([]string{"x", "-h"}))
-	require.True(t, exitCalled, "exit should have been called")
+	exitCode, _, _, err := bufferizedRun(app,
+		[]string{"x", "-h"})
+	require.NoError(t, err)
+	require.Equal(t, exitCode, 0, "exit should have been called")
 }
 
 func TestExitOnErrorWithVersion(t *testing.T) {
-	defer suppressOutput()()
-
-	exitCalled := false
-	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
-
 	app := App("x", "")
 	app.Version("v", "1.0")
 	app.Spec = "Y"
@@ -1164,14 +1118,13 @@ func TestExitOnErrorWithVersion(t *testing.T) {
 
 	app.String(StringArg{Name: "Y", Value: "", Desc: ""})
 
-	require.NoError(t,
-		app.Run([]string{"x", "-v"}))
-	require.True(t, exitCalled, "exit should have been called")
+	exitCode, _, _, err := bufferizedRun(app,
+		[]string{"x", "-v"})
+	require.NoError(t, err)
+	require.Equal(t, exitCode, 0, "exit should have been called")
 }
 
 func TestPanicOnError(t *testing.T) {
-	defer suppressOutput()()
-
 	app := App("say", "")
 	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
 	app.Spec = "-f"
@@ -1186,8 +1139,9 @@ func TestPanicOnError(t *testing.T) {
 			require.False(t, called, "Exec should NOT have been called")
 		}
 	}()
-	require.NoError(t,
-		app.Run([]string{"say"}))
+	_, _, _, err := bufferizedRun(app,
+		[]string{"say"})
+	require.NoError(t, err)
 	t.Fatalf("wanted panic")
 }
 
@@ -2080,8 +2034,6 @@ func TestCommandAction(t *testing.T) {
 }
 
 func TestCommandAliases(t *testing.T) {
-	defer suppressOutput()()
-
 	cases := []struct {
 		args          []string
 		errorExpected bool
@@ -2117,7 +2069,7 @@ func TestCommandAliases(t *testing.T) {
 				}
 			})
 
-			err := app.Run(cas.args)
+			_, _, _, err := bufferizedRun(app, cas.args)
 
 			if cas.errorExpected {
 				require.Error(t, err, "Run() should have returned with an error")
@@ -2292,27 +2244,6 @@ func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
 	require.Equal(t, 7, counter)
 }
 
-func exitShouldBeCalledWith(t *testing.T, wantedExitCode int, called *bool) func() {
-	oldExiter := exiter
-	exiter = func(code int) {
-		require.Equal(t, wantedExitCode, code, "unwanted exit code")
-		*called = true
-	}
-	return func() { exiter = oldExiter }
-}
-
-func exitShouldNotCalled(t *testing.T) func() {
-	oldExiter := exiter
-	exiter = func(code int) {
-		t.Errorf("exit should not have been called")
-	}
-	return func() { exiter = oldExiter }
-}
-
-func suppressOutput() func() {
-	return captureAndRestoreOutput(nil, nil)
-}
-
 func setAndRestoreEnv(env map[string]string) func() {
 	backup := map[string]string{}
 	for k, v := range env {
@@ -2327,45 +2258,14 @@ func setAndRestoreEnv(env map[string]string) func() {
 	}
 }
 
-func captureAndRestoreOutput(out, err *string) func() {
-	oldStdOut := stdOut
-	oldStdErr := stdErr
-
-	if out == nil {
-		stdOut = ioutil.Discard
-	} else {
-		stdOut = trapWriter(out)
-	}
-	if err == nil {
-		stdErr = ioutil.Discard
-	} else {
-		stdErr = trapWriter(err)
-	}
-
-	return func() {
-		stdOut = oldStdOut
-		stdErr = oldStdErr
-	}
-}
-
-func trapWriter(writeTo *string) *writerTrap {
-	return &writerTrap{
-		buffer:  bytes.NewBuffer(nil),
-		writeTo: writeTo,
-	}
-}
-
-type writerTrap struct {
-	buffer  *bytes.Buffer
-	writeTo *string
-}
-
-func (w *writerTrap) Write(p []byte) (n int, err error) {
-	n, err = w.buffer.Write(p)
-	if err == nil {
-		*(w.writeTo) = w.buffer.String()
-	}
-	return
+func bufferizedRun(app *Cli, args []string) (exitCode int, stdout string, stderr string, err error) {
+	exitCode = -1
+	var stdOutBuf, stdErrBuf bytes.Buffer
+	app.exiter = func(code int) { exitCode = code }
+	app.stdOut = &stdOutBuf
+	app.stdErr = &stdErrBuf
+	err = app.Run(args)
+	return exitCode, stdOutBuf.String(), stdErrBuf.String(), err
 }
 
 func callChecker(t *testing.T, wanted int, counter *int) func() {

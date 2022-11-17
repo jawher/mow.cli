@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -17,9 +18,8 @@ import (
 )
 
 func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
-	defer suppressOutput()()
-
 	cmd := &Cmd{
+		cli:        &Cli{stdOut: ioutil.Discard, stdErr: ioutil.Discard},
 		name:       "test",
 		optionsIdx: map[string]*container.Container{},
 		argsIdx:    map[string]*container.Container{},
@@ -37,9 +37,8 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 }
 
 func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
-	defer suppressOutput()()
-
 	cmd := &Cmd{
+		cli:        &Cli{stdOut: ioutil.Discard, stdErr: ioutil.Discard},
 		name:       "test",
 		optionsIdx: map[string]*container.Container{},
 		argsIdx:    map[string]*container.Container{},
