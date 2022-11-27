@@ -35,6 +35,9 @@ type Cmd struct {
 	// The command error handling strategy
 	ErrorHandling flag.ErrorHandling
 
+	// The root of the CLI tree, used to look up some wiring (such as stdout, exit strategy, etc)
+	cli *Cli
+
 	init    CmdInitializer
 	name    string
 	aliases []string
@@ -128,7 +131,8 @@ the last argument, init, is a function that will be called by mow.cli to further
 func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 	aliases := strings.Fields(name)
 	c.commands = append(c.commands, &Cmd{
-		ErrorHandling: c.ErrorHandling,
+		ErrorHandling: c.ErrorHandling, // REVIEW: consider removing this; we can get it as `c.cli.ErrorHandling` now.
+		cli:           c.cli,
 		name:          aliases[0],
 		aliases:       aliases,
 		desc:          desc,
@@ -482,14 +486,14 @@ func (c *Cmd) doInit() error {
 func (c *Cmd) onError(err error) {
 	if err == errHelpRequested || err == errVersionRequested {
 		if c.ErrorHandling == flag.ExitOnError {
-			exiter(0)
+			c.cli.exiter(0)
 		}
 		return
 	}
 
 	switch c.ErrorHandling {
 	case flag.ExitOnError:
-		exiter(2)
+		c.cli.exiter(2)
 	case flag.PanicOnError:
 		panic(err)
 	}
@@ -517,27 +521,27 @@ func (c *Cmd) PrintLongHelp() {
 func (c *Cmd) printHelp(longDesc bool) {
 	full := append(c.parents, c.name)
 	path := strings.Join(full, " ")
-	fmt.Fprintf(stdErr, "\nUsage: %s", path)
+	fmt.Fprintf(c.cli.stdErr, "\nUsage: %s", path)
 
 	spec := strings.TrimSpace(c.Spec)
 	if len(spec) > 0 {
-		fmt.Fprintf(stdErr, " %s", spec)
+		fmt.Fprintf(c.cli.stdErr, " %s", spec)
 	}
 
 	if len(c.commands) > 0 {
-		fmt.Fprint(stdErr, " COMMAND [arg...]")
+		fmt.Fprint(c.cli.stdErr, " COMMAND [arg...]")
 	}
-	fmt.Fprint(stdErr, "\n\n")
+	fmt.Fprint(c.cli.stdErr, "\n\n")
 
 	desc := c.desc
 	if longDesc && len(c.LongDesc) > 0 {
 		desc = c.LongDesc
 	}
 	if len(desc) > 0 {
-		fmt.Fprintf(stdErr, "%s\n", desc)
+		fmt.Fprintf(c.cli.stdErr, "%s\n", desc)
 	}
 
-	w := tabwriter.NewWriter(stdErr, 15, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(c.cli.stdErr, 15, 1, 3, ' ', 0)
 
 	if len(c.args) > 0 {
 		fmt.Fprint(w, "\t\nArguments:\t\n")
@@ -676,7 +680,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	}
 
 	if err := c.fsm.Parse(args[:nargsLen]); err != nil {
-		fmt.Fprintf(stdErr, "Error: %s\n", err.Error())
+		fmt.Fprintf(c.cli.stdErr, "Error: %s\n", err.Error())
 		c.PrintHelp()
 		c.onError(err)
 		return err
@@ -686,7 +690,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 		Do:     c.Before,
 		Error:  outFlow,
 		Desc:   fmt.Sprintf("%s.Before", c.name),
-		Exiter: exiter,
+		Exiter: inFlow.Exiter,
 	}
 	inFlow.Success = newInFlow
 
@@ -695,7 +699,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 		Success: outFlow,
 		Error:   outFlow,
 		Desc:    fmt.Sprintf("%s.After", c.name),
-		Exiter:  exiter,
+		Exiter:  outFlow.Exiter,
 	}
 
 	args = args[nargsLen:]
@@ -706,7 +710,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 				Success: newOutFlow,
 				Error:   newOutFlow,
 				Desc:    fmt.Sprintf("%s.Action", c.name),
-				Exiter:  exiter,
+				Exiter:  inFlow.Exiter,
 			}
 
 			entry.Run(nil)
@@ -731,10 +735,10 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	switch {
 	case strings.HasPrefix(arg, "-"):
 		err = fmt.Errorf("Error: illegal option %s", arg)
-		fmt.Fprintln(stdErr, err.Error())
+		fmt.Fprintln(c.cli.stdErr, err.Error())
 	default:
 		err = fmt.Errorf("Error: illegal input %s", arg)
-		fmt.Fprintln(stdErr, err.Error())
+		fmt.Fprintln(c.cli.stdErr, err.Error())
 	}
 	c.PrintHelp()
 	c.onError(err)
