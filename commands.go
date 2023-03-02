@@ -35,10 +35,11 @@ type Cmd struct {
 	// The command error handling strategy
 	ErrorHandling flag.ErrorHandling
 
-	init    CmdInitializer
-	name    string
-	aliases []string
-	desc    string
+	init     CmdInitializer
+	initDone bool
+	name     string
+	aliases  []string
+	desc     string
 
 	commands   []*Cmd
 	options    []*container.Container
@@ -133,6 +134,7 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 		aliases:       aliases,
 		desc:          desc,
 		init:          init,
+		initDone:      false,
 		commands:      []*Cmd{},
 		options:       []*container.Container{},
 		optionsIdx:    map[string]*container.Container{},
@@ -440,7 +442,7 @@ func (c *Cmd) Var(p VarParam) {
 }
 
 func (c *Cmd) doInit() error {
-	if c.init != nil {
+	if c.init != nil && !c.initDone {
 		c.init(c)
 	}
 
