@@ -444,6 +444,7 @@ func (c *Cmd) Var(p VarParam) {
 func (c *Cmd) doInit() error {
 	if c.init != nil && !c.initDone {
 		c.init(c)
+		c.initDone = true
 	}
 
 	parents := append(c.parents, c.name)
