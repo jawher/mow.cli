@@ -517,27 +517,27 @@ func (c *Cmd) PrintLongHelp() {
 func (c *Cmd) printHelp(longDesc bool) {
 	full := append(c.parents, c.name)
 	path := strings.Join(full, " ")
-	fmt.Fprintf(stdErr, "\nUsage: %s", path)
+	fmt.Fprintf(Stderr, "\nUsage: %s", path)
 
 	spec := strings.TrimSpace(c.Spec)
 	if len(spec) > 0 {
-		fmt.Fprintf(stdErr, " %s", spec)
+		fmt.Fprintf(Stderr, " %s", spec)
 	}
 
 	if len(c.commands) > 0 {
-		fmt.Fprint(stdErr, " COMMAND [arg...]")
+		fmt.Fprint(Stderr, " COMMAND [arg...]")
 	}
-	fmt.Fprint(stdErr, "\n\n")
+	fmt.Fprint(Stderr, "\n\n")
 
 	desc := c.desc
 	if longDesc && len(c.LongDesc) > 0 {
 		desc = c.LongDesc
 	}
 	if len(desc) > 0 {
-		fmt.Fprintf(stdErr, "%s\n", desc)
+		fmt.Fprintf(Stderr, "%s\n", desc)
 	}
 
-	w := tabwriter.NewWriter(stdErr, 15, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(Stderr, 15, 1, 3, ' ', 0)
 
 	if len(c.args) > 0 {
 		fmt.Fprint(w, "\t\nArguments:\t\n")
@@ -676,7 +676,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	}
 
 	if err := c.fsm.Parse(args[:nargsLen]); err != nil {
-		fmt.Fprintf(stdErr, "Error: %s\n", err.Error())
+		fmt.Fprintf(Stderr, "Error: %s\n", err.Error())
 		c.PrintHelp()
 		c.onError(err)
 		return err
@@ -731,10 +731,10 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	switch {
 	case strings.HasPrefix(arg, "-"):
 		err = fmt.Errorf("Error: illegal option %s", arg)
-		fmt.Fprintln(stdErr, err.Error())
+		fmt.Fprintln(Stderr, err.Error())
 	default:
 		err = fmt.Errorf("Error: illegal input %s", arg)
-		fmt.Fprintln(stdErr, err.Error())
+		fmt.Fprintln(Stderr, err.Error())
 	}
 	c.PrintHelp()
 	c.onError(err)
