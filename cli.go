@@ -86,7 +86,7 @@ In most cases the library users won't need to call this method, unless
 a more complex validation is needed.
 */
 func (cli *Cli) PrintVersion() {
-	fmt.Fprintln(stdErr, cli.version.version)
+	fmt.Fprintln(Stderr, cli.version.version)
 }
 
 /*
@@ -130,5 +130,6 @@ var exiter = func(code int) {
 
 var (
 	stdOut io.Writer = os.Stdout
-	stdErr io.Writer = os.Stderr
+	// Stderr is the writer used for printing help information.
+	Stderr io.Writer = os.Stderr
 )

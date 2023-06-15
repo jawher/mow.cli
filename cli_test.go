@@ -2329,7 +2329,7 @@ func setAndRestoreEnv(env map[string]string) func() {
 
 func captureAndRestoreOutput(out, err *string) func() {
 	oldStdOut := stdOut
-	oldStdErr := stdErr
+	oldStdErr := Stderr
 
 	if out == nil {
 		stdOut = ioutil.Discard
@@ -2337,14 +2337,14 @@ func captureAndRestoreOutput(out, err *string) func() {
 		stdOut = trapWriter(out)
 	}
 	if err == nil {
-		stdErr = ioutil.Discard
+		Stderr = ioutil.Discard
 	} else {
-		stdErr = trapWriter(err)
+		Stderr = trapWriter(err)
 	}
 
 	return func() {
 		stdOut = oldStdOut
-		stdErr = oldStdErr
+		Stderr = oldStdErr
 	}
 }
 
