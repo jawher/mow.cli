@@ -24,6 +24,8 @@ type BoolOpt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o BoolOpt) value(into *bool) (flag.Value, *bool) {
@@ -48,6 +50,8 @@ type StringOpt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o StringOpt) value(into *string) (flag.Value, *string) {
@@ -72,6 +76,8 @@ type IntOpt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o IntOpt) value(into *int) (flag.Value, *int) {
@@ -96,6 +102,8 @@ type Float64Opt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o Float64Opt) value(into *float64) (flag.Value, *float64) {
@@ -121,6 +129,8 @@ type StringsOpt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o StringsOpt) value(into *[]string) (flag.Value, *[]string) {
@@ -146,6 +156,8 @@ type IntsOpt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o IntsOpt) value(into *[]int) (flag.Value, *[]int) {
@@ -172,6 +184,8 @@ type Floats64Opt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o Floats64Opt) value(into *[]float64) (flag.Value, *[]float64) {
@@ -197,6 +211,8 @@ type VarOpt struct {
 	HideValue bool
 	// Set to true if this option was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this option in the help messages
+	Hidden bool
 }
 
 func (o VarOpt) value() flag.Value {
