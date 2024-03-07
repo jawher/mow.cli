@@ -15,4 +15,5 @@ type Container struct {
 	ValueSetByUser  *bool
 	Value           flag.Value
 	DefaultValue    string
+	Hidden          bool
 }

@@ -24,6 +24,8 @@ type BoolArg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a BoolArg) value(into *bool) (flag.Value, *bool) {
@@ -47,6 +49,8 @@ type StringArg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a StringArg) value(into *string) (flag.Value, *string) {
@@ -70,6 +74,8 @@ type IntArg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a IntArg) value(into *int) (flag.Value, *int) {
@@ -93,6 +99,8 @@ type Float64Arg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a Float64Arg) value(into *float64) (flag.Value, *float64) {
@@ -117,6 +125,8 @@ type StringsArg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a StringsArg) value(into *[]string) (flag.Value, *[]string) {
@@ -141,6 +151,8 @@ type IntsArg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a IntsArg) value(into *[]int) (flag.Value, *[]int) {
@@ -165,6 +177,8 @@ type Floats64Arg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a Floats64Arg) value(into *[]float64) (flag.Value, *[]float64) {
@@ -189,6 +203,8 @@ type VarArg struct {
 	HideValue bool
 	// Set to true if this arg was set by the user (as opposed to being set from env or not set at all)
 	SetByUser *bool
+	// Hide this arg in the help messages
+	Hidden bool
 }
 
 func (a VarArg) value() flag.Value {
